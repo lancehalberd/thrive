@@ -1,0 +1,86 @@
+<html>
+<head>
+    <!-- Without this '×' may not be rendered correctly //-->
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <!-- <link href="https://fonts.googleapis.com/css?family=VT323&display=swap" rel="stylesheet"> //-->
+    <style>
+    body {
+        background: url('gfx/darkstone.png');
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-size: 16px;
+    }
+    .mainGame {
+        position: relative;
+        margin-left: auto;
+        margin-right: auto;
+        padding-top: 0;
+        width: 800px;
+        min-height: 800px;
+        background-color: black;
+        background-repeat: repeat;
+        border: 5px solid gold;
+        top: 0px;
+        -moz-user-select: none;
+        -khtml-user-select: none;
+        -webkit-user-select: none;
+        -o-user-user-select: none;
+        cursor: default;
+    }
+    .loading {
+        font-size: 50px;
+        color: white;
+    }
+    /* https://stackoverflow.com/questions/7615009/disable-interpolation-when-scaling-a-canvas */
+    canvas {
+        image-rendering: optimizeSpeed;             /* Older versions of FF          */
+        image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
+        image-rendering: -webkit-optimize-contrast; /* Safari                        */
+        image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
+        image-rendering: pixelated;                 /* Awesome future-browsers       */
+        -ms-interpolation-mode: nearest-neighbor;
+    }
+    </style>
+    <title>Thrive</title>
+    <meta property='og:title' content='Spirit Quest'/>
+    <meta property='og:image' content='https://chrisflash.com/alttptest/preview.png'>
+    <meta property='og:description' content='SNES Zelda Inspired Browser Game'/>
+    <meta property='og:image:width' content='1345' />
+    <meta property='og:image:height' content='1177' />
+    <meta property='og:type' content='website'/>
+</head>
+<body>
+<div class="js-mainGame  mainGame">
+    <script>
+        window.version = '0.3.83';
+        // Only show the loading text if it takes more than .2 seconds to load
+        setTimeout(function () {
+            if (document.querySelector('.js-gameContent').style.display === 'none') {
+                document.querySelector('.js-loading').style.display = '';
+            }
+        }, 200);
+        const mainScript = document.createElement('script');
+        mainScript.src = `client.js?v=${version}`;
+        document.body.append(mainScript);
+        const mainStyles = document.createElement('link');
+        mainStyles.type = 'text/css';
+        mainStyles.rel = 'stylesheet'
+        mainStyles.href = `styles.css?v=${version}`;
+        document.head.append(mainStyles);
+    </script>
+    <div class="js-loading loading" style="display: none; padding: 20px; font-family: sans-serif;">
+        Loading...
+    </div>
+    <div class="js-gameContent gameContent" style="display: none">
+        <div class="js-mouseContainer js-mainCanvasContainer mainCanvasContainer">
+            <canvas
+                class="js-mainCanvas mainCanvas"
+                width="800" height="800"
+                style="background-color: blue; transform-origin: 0 0; transform: scale(1);"
+            ></canvas>
+        </div>
+    </div>
+</div>
+</body>
+</html>
