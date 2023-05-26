@@ -27,7 +27,7 @@ export const turret: EnemyDefinition = {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             for (let i = 0; i < 3; i++) {
                 const theta = enemy.theta - Math.PI / 6 + Math.PI / 6 * i;
-                shootEnemyBullet(state, enemy, 100 * Math.cos(theta), 100 * Math.sin(theta));
+                shootEnemyBullet(state, enemy, 100 * Math.cos(theta), 100 * Math.sin(theta), {expirationTime: state.fieldTime + 2000});
             }
         }
     },

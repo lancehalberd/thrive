@@ -31,16 +31,25 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
     context.save();
         context.translate(CANVAS_WIDTH / 2 - state.hero.x, CANVAS_HEIGHT / 2 - state.hero.y);
         state.visibleDiscs.sort((A: Disc, B: Disc) => A.y - B.y);
+        const normalDiscs = state.visibleDiscs.filter(d => !d.boss);
+        const bossDiscs = state.visibleDiscs.filter(d => d.boss);
         for (const disc of state.visibleDiscs) {
             renderDiscEdge1(context, disc);
         }
         for (const disc of state.visibleDiscs) {
             renderDiscEdge2(context, disc);
         }
-        for (const disc of state.visibleDiscs) {
+        for (const disc of normalDiscs) {
             renderDisc(context, disc);
         }
-        for (const disc of state.visibleDiscs) {
+        for (const disc of normalDiscs) {
+            renderDiscCenter(context, disc);
+        }
+        // Render tops of boss discs over other discs to make the arena edge clear.
+        for (const disc of bossDiscs) {
+            renderDisc(context, disc);
+        }
+        for (const disc of bossDiscs) {
             renderDiscCenter(context, disc);
         }
         for (const portal of state.portals) {

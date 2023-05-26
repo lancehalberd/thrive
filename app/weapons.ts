@@ -168,13 +168,63 @@ export const daggers: Weapon[] = [
     createDagger(7, 'Tanto'),
 ];
 
+
+function generateKatanaShot(timingOffset: number, offset: number): Shot {
+    return {
+        timingOffset,
+        generateBullet(state: GameState, source: Hero|Enemy, weapon: Weapon): Bullet {
+            const speed = weapon.speed * (0.8 + 0.2 * source.attackChargeLevel);
+            return {
+                x: source.x + offset * Math.cos(source.theta + Math.PI / 2),
+                y: source.y + offset * Math.sin(source.theta + Math.PI / 2),
+                vx: speed * Math.cos(source.theta),
+                vy: speed * Math.sin(source.theta),
+                damage: Math.ceil(weapon.damage * source.attackChargeLevel * source.damage),
+                isEnemyPiercing: true,
+                radius: weapon.radius + (source.attackChargeLevel - 1),
+                source,
+                expirationTime: state.fieldTime + weapon.duration,
+                update: updateSimpleBullet,
+                hitTargets: new Set(),
+            };
+        },
+    }
+}
+const katanaShots: Shot[] = [
+    generateKatanaShot(0 / 2, 10),
+    generateKatanaShot(1 / 2, -10),
+];
+
+function createKatana(level: number, name: string): Weapon {
+    return {
+        type: 'katana',
+        level: Math.floor(level),
+        name,
+        shots: katanaShots,
+        attacksPerSecond: BASE_ATTACKS_PER_SECOND,
+        damage: Math.ceil(0.6 * level * BASE_WEAPON_DPS_PER_LEVEL / BASE_ATTACKS_PER_SECOND),
+        chargeLevel: 2,
+        speed: BASE_BULLET_SPEED * 0.8,
+        radius: BASE_BULLET_RADIUS,
+        duration: BASE_BULLET_DURATION,
+    };
+}
+
+export const katanas: Weapon[] = [
+    createKatana(1.5, 'Kitetsu I'),
+    createKatana(3, 'Yubashiri'),
+    createKatana(5, 'Kitetsu II'),
+    createKatana(7, 'Shusui'),
+    createKatana(11, 'Ichimonji'),
+];
+
 export const allWeapons: Weapon[][] = [
     swords,
     bows,
     daggers,
+    katanas,
 ];
 
-// TODO: Add katanas, 2 parallel bullets offset by 50% and centers 12px apart. 60% damage
 // TODO: Add morning star, shot spins around the source and loops at the attack speed interval, pierces enemies
 //       2 Charge levels increases radius by 16px each
 // TODO: Add staff, single piercing shot that gets bigger but weaker with distance 120% damage at close range, down to 20% at max range

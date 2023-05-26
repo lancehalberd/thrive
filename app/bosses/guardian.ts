@@ -86,7 +86,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
             if (enemy.modeTime % 800 === 0) {
                 shootBulletArc(state, enemy, enemy.theta, Math.PI / 6, 3, 200);
             }
-            if (enemy.modeTime >= 5000) {
+            if (enemy.modeTime >= 4000) {
                 enemy.setMode('choose');
             }
             return;

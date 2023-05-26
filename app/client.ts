@@ -21,7 +21,7 @@ import {
     HERO_DAMAGE_FRAME_COUNT,
 } from 'app/constants';
 import { initializeGame } from 'app/initialize';
-import { bows, daggers, swords } from 'app/weapons';
+import { allWeapons } from 'app/weapons';
 
 const testDiscs: Disc[] = [
     {x: 500, y: 500, radius: 500, links: []},
@@ -41,7 +41,7 @@ let state: GameState = {
         theta: 0,
         damageHistory: [],
         recentDamageTaken: 0,
-        weapon: Random.element([bows, daggers, swords])[0],
+        weapon: Random.element(allWeapons)[0],
         // Derived stats will get set later.
         life: 0,
         maxLife: 0,
