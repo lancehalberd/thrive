@@ -1,52 +1,18 @@
-Add iframes
-  Blink to 0.8 alpha down to 0.5 alpha based on % health taken as damage in the last 200ms
-  Store damage taken in each frame for last N frames and running total
-  Damage is only applied up to Math.min(hero.life / 2, 2 * damage), the rest is ignored.
-
-Spawn enemies during dungeon generation
-
-Update visibleDiscs
-
-Add doors to dead ends in dungeon -1 level, same level, +1 level
+Additional boss mechanics:
+    Summons turrets in a square around the disc that shoot 6 shot novas
+    Charges to the center of the disc and shoots two spirals of bullets with opposite rotations or one slow spiral and one fast spiral
 
 
-Shots pierce defeated enemies
-
-Add passive charge:
-    chargeLevel = Math.min(maxChargeLevel, Math.floor(attacksPerSecond * timeSinceLastShot / 1000));
-    maxChargeLevel starts at 2 and can increase to 5-10 perhaps
-
-Add weapons
-0: 20
-1: 35
-2: 60
-3: 100
-4: 150
-5: 230
-6: 350
-7: 500
-8: 700
-9: 950
-10: 1250
-11: 1550
-12: 1850
-13: 2000
-
-Add potions
-    Restore 20% life
-    5x, refilled on level or at fountains
+Display weapon info in bottom right corner
 
 Add rare potion drop from enemies
     Refills life if potions are full
     Grants bonus XP for any wasted life based on enemy level (potionXp is assigned on creation to 0.2 * enemyXP)
-
-Add 10% experience penalty per level gap.
-
-Add boss to dungeons before level + 1 doors
-
 
 Add world map generation
     world is infinite in the up and left and right directions
     store cells of 4000px wide sections that always connect left/right
     cell uses dungeon generation but forces connecting sides and optionally top/bottom if SRandom determines there is a connection in either place
     extra disc placed between cells is always there on connection and does not spawn monsters and may contain a fountain to refill life and potions
+
+Update visibleDiscs

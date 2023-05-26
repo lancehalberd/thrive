@@ -2,17 +2,26 @@ import { chaser } from 'app/enemies/chaser';
 import { circler } from 'app/enemies/circler';
 import { lord } from 'app/enemies/lord';
 import { turret } from 'app/enemies/turret';
-import { render, renderMinimap } from 'app/render/renderGame';
+import { checkToDropBasicLoot } from 'app/loot';
+import { render } from 'app/render/renderGame';
 import { mainCanvas, mainContext } from 'app/utils/canvas';
-import { createTreeDungeon, startDungeon } from 'app/utils/dungeon';
+import { createTreeDungeon, getTreeDungeonPortal, startDungeon } from 'app/utils/dungeon';
 import { createEnemy } from 'app/utils/enemy';
-import { findClosestDisc } from 'app/utils/geometry';
-import { gainExperience } from 'app/utils/hero';
+import { doCirclesIntersect, findClosestDisc, getClosestElement, getTargetVector } from 'app/utils/geometry';
+import { gainExperience, setDerivedHeroStats } from 'app/utils/hero';
 import { getMousePosition, isMouseDown, isRightMouseDown } from 'app/utils/mouse';
 import { isGameKeyDown, updateKeyboardState, wasGameKeyPressed } from 'app/utils/userInput';
 import Random from 'app/utils/Random';
-import { BASE_XP, CANVAS_HEIGHT, CANVAS_SCALE, CANVAS_WIDTH,FRAME_LENGTH, GAME_KEY } from 'app/constants';
+import {
+    BASE_MAX_POTIONS,
+    BASE_XP,
+    CANVAS_HEIGHT, CANVAS_SCALE, CANVAS_WIDTH,
+    FRAME_LENGTH,
+    GAME_KEY,
+    HERO_DAMAGE_FRAME_COUNT,
+} from 'app/constants';
 import { initializeGame } from 'app/initialize';
+import { bows, daggers, swords } from 'app/weapons';
 
 const testDiscs: Disc[] = [
     {x: 500, y: 500, radius: 500, links: []},
@@ -23,23 +32,33 @@ const testDiscs: Disc[] = [
 let state: GameState = {
     fieldTime: 0,
     hero: {
-        level: 0,
+        level: 1,
         experience: 0,
-        life: 20,
-        maxLife: 20,
         speed: 100,
-        armor: 1,
-        damage: 20,
-        attacksPerSecond: 2,
-        attackCooldown: 0,
         x: 500,
         y: 500,
         radius: 15,
         theta: 0,
+        damageHistory: [],
+        recentDamageTaken: 0,
+        weapon: Random.element([bows, daggers, swords])[0],
+        // Derived stats will get set later.
+        life: 0,
+        maxLife: 0,
+        armor: 0,
+        damage: 0,
+        attacksPerSecond: 0,
+        attackCooldown: 0,
+        chargingLevel: 1,
+        attackChargeLevel: 1,
+        potions: BASE_MAX_POTIONS,
     },
     heroBullets: [],
     enemies: [],
+    loot: [],
+    portals: [],
     enemyBullets: [],
+    fieldText: [],
     activeDiscs: testDiscs,
     visibleDiscs: testDiscs,
     gameHasBeenInitialized: false,
@@ -58,22 +77,19 @@ function getState(): GameState {
     return state;
 }
 
-function doCirclesIntersect(circleA: Circle, circleB: Circle): boolean {
-    const radius = circleA.radius + circleB.radius;
-    const dx = circleB.x - circleA.x, dy = circleB.y - circleA.y;
-    return dx * dx + dy * dy < radius * radius;
-}
-
 function update(): void {
     const state = getState();
     if (!state.gameHasBeenInitialized) {
         initializeGame(state);
-        startDungeon(state, createTreeDungeon(Math.random(), 4000, 0));
-        renderMinimap(state.activeDiscs);
+        setDerivedHeroStats(state);
+        startDungeon(state, createTreeDungeon(Math.random(), 2000, 1));
     }
     updateKeyboardState(state);
     if (wasGameKeyPressed(state, GAME_KEY.MENU)) {
         state.paused = !state.paused;
+        if (state.paused) {
+            render(mainContext, state);
+        }
     }
     if (state.paused) {
         return;
@@ -82,52 +98,17 @@ function update(): void {
     if (state.hero.life <= 0) {
         return;
     }
-    let dx = 0, dy = 0;
-    if (isGameKeyDown(state, GAME_KEY.UP)) {
-        dy--;
-    }
-    if (isGameKeyDown(state, GAME_KEY.DOWN)) {
-        dy++;
-    }
-    if (isGameKeyDown(state, GAME_KEY.LEFT)) {
-        dx--;
-    }
-    if (isGameKeyDown(state, GAME_KEY.RIGHT)) {
-        dx++;
-    }
-    const m = Math.sqrt(dx * dx + dy * dy);
-    if (m > 1) {
-        dx /= m;
-        dy /= m;
-    }
+    updateHero(state);
     updateEnemies(state);
     updateHeroBullets(state);
     updateEnemyBullets(state);
-    const speed = isRightMouseDown() ? state.hero.speed : 1.5 * state.hero.speed;
-    state.hero.x += dx * speed / FRAME_LENGTH;
-    state.hero.y += dy * speed / FRAME_LENGTH;
-    assignToDisc(state.hero, state.activeDiscs);
-    constrainToDisc(state.hero, state.hero.disc);
-
-    if (isMouseDown() && state.hero.attackCooldown <= state.fieldTime) {
-        state.hero.attackCooldown = state.fieldTime + 1000 / state.hero.attacksPerSecond;
-        const [x, y] = getMousePosition(mainCanvas, CANVAS_SCALE);
-        let dx = x - CANVAS_WIDTH / 2, dy = y - CANVAS_HEIGHT / 2;
-        const m = Math.sqrt(dx * dx + dy * dy);
-        if (m > 1) {
-            dx /= m;
-            dy /= m;
-        }
-        state.heroBullets.push({
-            x: state.hero.x + dx * state.hero.radius,
-            y: state.hero.y + dy * state.hero.radius,
-            damage: state.hero.damage,
-            radius: 5,
-            vx: dx * 200,
-            vy: dy * 200,
-            expirationTime: state.fieldTime + 1000,
-        });
+    state.fieldText = state.fieldText.filter(t => t.expirationTime > state.fieldTime);
+    for (const fieldText of state.fieldText) {
+        fieldText.x += fieldText.vx;
+        fieldText.y += fieldText.vy;
+        fieldText.time += FRAME_LENGTH;
     }
+
 
     if (state.enemies.filter(e => !e.master).length < 0) {
         for (const disc of state.activeDiscs) {
@@ -152,12 +133,149 @@ function update(): void {
             }
         }
     }
+
+    state.activeLoot = getClosestElement(state.hero, state.loot);
+    if (state.activeLoot && getTargetVector(state.hero, state.activeLoot).distance2 >= (state.activeLoot.radius + state.hero.radius + 10) ** 2) {
+        delete state.activeLoot;
+    }
+    if (state.activeLoot && wasGameKeyPressed(state, GAME_KEY.ACTIVATE)) {
+        state.activeLoot.activate(state, state.activeLoot);
+    } else if (state.activeLoot && wasGameKeyPressed(state, GAME_KEY.SELL)) {
+        const level = state.activeLoot.getLevel(state.activeLoot);
+        const experiencePenalty = Math.min(1, Math.max(0, (state.hero.level - level) * 0.1));
+        gainExperience(state,
+            Math.ceil(BASE_XP * (1 - experiencePenalty) * Math.pow(1.2, level) * 1.5)
+        );
+        state.loot.splice(state.loot.indexOf(state.activeLoot), 1);
+        delete state.activeLoot;
+    }
+}
+
+function addDamageNumber(state: GameState, target: Geometry, damage: number): void {
+    state.fieldText.push({
+        x: target.x - 5 + Math.random() * 10,
+        y: target.y - 10,
+        vx: 2 * Math.random() - 1,
+        vy: -1,
+        text: `${damage}`,
+        color: 'red',
+        borderColor: 'black',
+        expirationTime: state.fieldTime + 1000,
+        time: 0,
+    });
+}
+
+function updateHero(state: GameState): void {
+    const hero = state.hero;
+    // Hero damage frames
+    hero.damageHistory.unshift(0);
+    if (hero.damageHistory.length > HERO_DAMAGE_FRAME_COUNT) {
+        const oldDamage = hero.damageHistory.pop()!;
+        hero.recentDamageTaken -= oldDamage;
+    }
+
+    // Hero movement
+    let dx = 0, dy = 0;
+    if (isGameKeyDown(state, GAME_KEY.UP)) {
+        dy--;
+    }
+    if (isGameKeyDown(state, GAME_KEY.DOWN)) {
+        dy++;
+    }
+    if (isGameKeyDown(state, GAME_KEY.LEFT)) {
+        dx--;
+    }
+    if (isGameKeyDown(state, GAME_KEY.RIGHT)) {
+        dx++;
+    }
+    const m = Math.sqrt(dx * dx + dy * dy);
+    if (m > 1) {
+        dx /= m;
+        dy /= m;
+    }
+    const speed = isRightMouseDown() ? hero.speed : 1.5 * hero.speed;
+    hero.x += dx * speed / FRAME_LENGTH;
+    hero.y += dy * speed / FRAME_LENGTH;
+
+    // Hero attack
+    const [x, y] = getMousePosition(mainCanvas, CANVAS_SCALE);
+    let aimDx = x - CANVAS_WIDTH / 2, aimDy = y - CANVAS_HEIGHT / 2;
+    hero.theta = Math.atan2(aimDy, aimDx);
+    const attacksPerSecond = hero.weapon.attacksPerSecond * hero.attacksPerSecond;
+    if (isMouseDown()) {
+        const attackCooldownDuration = 1000 / attacksPerSecond;
+        if (hero.attackCooldown <= state.fieldTime) {
+            hero.attackCooldown = state.fieldTime + attackCooldownDuration;
+            hero.attackChargeLevel = Math.max(1, Math.floor(hero.chargingLevel));
+            state.hero.chargingLevel = 0;
+        }
+        const attackTime = attackCooldownDuration - (hero.attackCooldown - state.fieldTime);
+        for (const shot of hero.weapon.shots) {
+            const shotTime = attackCooldownDuration * (shot.timingOffset ?? 0);
+            if (shotTime >= attackTime - FRAME_LENGTH / 2 && shotTime < attackTime + FRAME_LENGTH / 2) {
+                state.heroBullets.push(shot.generateBullet(state, hero, hero.weapon));
+            }
+        }
+    } else {
+        hero.chargingLevel = Math.min(
+            hero.weapon.chargeLevel,
+            // Charging gets slower for each charge level.
+            //hero.chargingLevel + FRAME_LENGTH * attacksPerSecond / 1000 / Math.floor(hero.chargingLevel + 1)
+            hero.chargingLevel + FRAME_LENGTH * attacksPerSecond / 1000
+        );
+    }
+
+    if (!state.hero.disc?.boss) {
+        assignToDisc(state.hero, state.activeDiscs);
+    }
+    constrainToDisc(state.hero, state.hero.disc);
+
+    for (const portal of state.portals) {
+        const isActive = !state.activeLoot && doCirclesIntersect(state.hero, portal);
+        if (isActive && wasGameKeyPressed(state, GAME_KEY.ACTIVATE)) {
+            console.log('activate');
+            portal.activate(state);
+        }
+    }
+
+    if (hero.potions > 0 && hero.life < hero.maxLife && wasGameKeyPressed(state, GAME_KEY.POTION)) {
+        hero.life = Math.min(hero.maxLife, Math.ceil(hero.life + hero.maxLife * 0.2));
+        hero.potions--;
+    }
+}
+
+function damageHero(state: GameState, damage: number): void {
+    // Incoming damage is limited by both the amount of the damage and the players total health.
+    // Shots that deal X damage only deal damage if the player has taken less than 2X damage recently.
+    // A player cannot take more than 50% of their health over their recorded damage history.
+    const damageCap = Math.min(state.hero.maxLife / 2, 2 * damage);
+    const damageTaken = Math.max(0, Math.min(damage, damageCap - state.hero.recentDamageTaken));
+    state.hero.life -= damageTaken;
+    if (state.hero.life < 0) {
+        state.hero.life = 0;
+    }
+    state.hero.damageHistory[0] += damageTaken;
+    state.hero.recentDamageTaken += damageTaken;
+    addDamageNumber(state, state.hero, damageTaken);
 }
 
 function updateEnemies(state: GameState): void {
+    const boss = state.hero.disc?.boss;
     for (const enemy of state.enemies) {
+        // Freeze enemies outside of the boss fight.
+        if (boss && enemy.disc?.boss !== boss) {
+            continue;
+        }
+        // Freeze bosses that are not activated.
+        if (!boss && enemy.disc?.boss === enemy) {
+            continue;
+        }
+        enemy.modeTime += FRAME_LENGTH;
         enemy.definition.update(state, enemy);
-        assignToDisc(enemy, state.activeDiscs);
+        // No changing discs during boss fights.
+        if (!boss) {
+            assignToDisc(enemy, state.activeDiscs);
+        }
         constrainToDisc(enemy, enemy.disc);
     }
 }
@@ -165,20 +283,40 @@ function updateEnemies(state: GameState): void {
 function updateHeroBullets(state: GameState): void {
     const activeBullets = state.heroBullets.filter(b => b.expirationTime >= state.fieldTime);
     state.heroBullets = [];
+    const boss = state.hero.disc?.boss;
     for (const bullet of activeBullets) {
         bullet.x += bullet.vx / FRAME_LENGTH;
         bullet.y += bullet.vy / FRAME_LENGTH;
         let bulletAbsorbed = false;
         for (const enemy of state.enemies) {
+            // Freeze enemies outside of the boss fight.
+            if (boss && enemy.disc?.boss !== boss) {
+                continue;
+            }
+            // Freeze bosses that are not activated.
+            if (!boss && enemy.disc?.boss === enemy) {
+                continue;
+            }
+            if (bullet.hitTargets.has(enemy)) {
+                continue;
+            }
             if (doCirclesIntersect(enemy, bullet)) {
+                bullet.hitTargets.add(enemy);
                 enemy.life -= bullet.damage;
+                addDamageNumber(state, enemy, bullet.damage);
                 if (enemy.life <= 0) {
+                    const experiencePenalty = Math.min(1, Math.max(0, (state.hero.level - enemy.level) * 0.1));
                     gainExperience(state,
-                        Math.ceil(BASE_XP * Math.pow(1.2, enemy.level) * (enemy.definition.experienceFactor ?? 1))
+                        Math.ceil(BASE_XP * (1 - experiencePenalty) * Math.pow(1.2, enemy.level) * (enemy.definition.experienceFactor ?? 1))
                     );
+                    checkToDropBasicLoot(state, enemy);
+                    if (enemy.disc?.boss === enemy) {
+                        delete enemy.disc.boss;
+                        state.portals.push(getTreeDungeonPortal(enemy.disc.x, enemy.disc.y, enemy.level - 1, Math.random()));
+                    }
                 } else {
                     // Shots are not absorbed by defeated enemies.
-                    bulletAbsorbed = true;
+                    bulletAbsorbed = !bullet.isEnemyPiercing;
                 }
             }
         }
@@ -198,11 +336,7 @@ function updateEnemyBullets(state: GameState): void {
         let hitTarget = false;
         if (doCirclesIntersect(state.hero, bullet)) {
             hitTarget = true;
-            state.hero.life -= bullet.damage;
-            if (state.hero.life <= 0) {
-                state.hero.life = 0;
-                // game over.
-            }
+            damageHero(state, bullet.damage);
         }
         if (!hitTarget) {
             state.enemyBullets.push(bullet);
@@ -233,7 +367,10 @@ function constrainToDisc(geometry: Geometry, disc?: Disc) {
 function renderLoop() {
     try {
         window.requestAnimationFrame(renderLoop);
-        render(mainContext, getState());
+        const state = getState();
+        if (!state.paused) {
+            render(mainContext, state);
+        }
     } catch (e) {
         console.log(e);
         debugger;

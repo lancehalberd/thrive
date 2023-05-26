@@ -1,14 +1,18 @@
+import { BASE_DROP_CHANCE } from 'app/constants';
 import { fillCircle } from 'app/render/renderGame';
 import { shootEnemyBullet } from 'app/utils/enemy';
 import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 
 
 export const turret: EnemyDefinition = {
+    name: 'Turret',
     statFactors: {
         maxLife: 2,
         damage: 1,
         attacksPerSecond: 1,
     },
+    initialParams: {},
+    dropChance: 2 * BASE_DROP_CHANCE,
     experienceFactor: 2,
     radius: 25,
     update(state: GameState, enemy: Enemy): void {
@@ -23,7 +27,7 @@ export const turret: EnemyDefinition = {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             for (let i = 0; i < 3; i++) {
                 const theta = enemy.theta - Math.PI / 6 + Math.PI / 6 * i;
-                shootEnemyBullet(state, enemy, 100 * Math.cos(theta), 100 * Math.sin(theta), 2000);
+                shootEnemyBullet(state, enemy, 100 * Math.cos(theta), 100 * Math.sin(theta));
             }
         }
     },

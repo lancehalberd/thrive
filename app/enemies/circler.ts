@@ -5,11 +5,14 @@ import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 
 
 export const circler: EnemyDefinition = {
+    name: 'Circler',
     statFactors: {
         maxLife: 1,
         damage: 1,
         attacksPerSecond: 2,
+        speed: 0.6,
     },
+    initialParams: {},
     radius: 20,
     update(state: GameState, enemy: Enemy): void {
         if (!enemy.disc) {
@@ -40,8 +43,8 @@ export const circler: EnemyDefinition = {
 
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootEnemyBullet(state, enemy, 100 * Math.cos(enemy.theta), 100 * Math.sin(enemy.theta), 1000);
-            shootEnemyBullet(state, enemy, 100 * Math.cos(enemy.theta + Math.PI), 100 * Math.sin(enemy.theta + Math.PI), 1000);
+            shootEnemyBullet(state, enemy, 100 * Math.cos(enemy.theta), 100 * Math.sin(enemy.theta));
+            shootEnemyBullet(state, enemy, 100 * Math.cos(enemy.theta + Math.PI), 100 * Math.sin(enemy.theta + Math.PI));
         }
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {

@@ -1,7 +1,9 @@
-import { FRAME_LENGTH } from 'app/constants';
+import { BASE_ENEMY_BULLET_DURATION, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_SPEED, FRAME_LENGTH } from 'app/constants';
+import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
+import { updateSimpleBullet } from 'app/weapons';
 
-export function createEnemy(x: number, y: number, definition: EnemyDefinition, level: number): Enemy {
-    const heroDamage = Math.ceil(20 * Math.pow(1.05, level));
+export function createEnemy<EnemyParams>(x: number, y: number, definition: EnemyDefinition<EnemyParams>, level: number): Enemy<EnemyParams> {
+    const heroDamage = Math.ceil(level * 20 * Math.pow(1.05, level));
     const heroAttacksPerSecond = 2 + 0.02 * level;
     const heroMaxLife = 20 * (level + 1);
     const dps = heroAttacksPerSecond * heroDamage;
@@ -9,12 +11,13 @@ export function createEnemy(x: number, y: number, definition: EnemyDefinition, l
     const maxLife = Math.ceil((dps * targetDuration) * (definition.statFactors.maxLife ?? 1));
     return {
         definition,
+        params: {...definition.initialParams},
         x,
         y,
         maxLife,
         life: maxLife,
         level,
-        speed: 75 * (definition.statFactors.speed ?? 1) * (0.9 + 0.2 * Math.random()),
+        speed: BASE_ENEMY_SPEED * (definition.statFactors.speed ?? 1) * (0.9 + 0.2 * Math.random()),
         armor: level,
         damage: Math.floor(
             (heroMaxLife / 10 + heroMaxLife / 10 * level / 100) * (definition.statFactors.damage ?? 1)
@@ -24,10 +27,18 @@ export function createEnemy(x: number, y: number, definition: EnemyDefinition, l
         radius: definition.radius,
         theta: 0,
         minions: [],
+        chargingLevel: 1,
+        attackChargeLevel: 1,
+        mode: 'choose',
+        modeTime: 0,
+        setMode(this: Enemy, mode: string): void {
+            this.mode = mode;
+            this.modeTime = 0;
+        }
     };
 }
 
-export function shootEnemyBullet(state: GameState, enemy: Enemy, vx: number, vy: number, duration: number = 1000) {
+export function shootEnemyBullet(state: GameState, enemy: Enemy, vx: number, vy: number, stats: Partial<Bullet> = {}) {
     //const mag = Math.sqrt(vx * vx + vy * vy);
     state.enemyBullets.push({
         //x: enemy.x + vx / mag * enemy.radius,
@@ -35,14 +46,35 @@ export function shootEnemyBullet(state: GameState, enemy: Enemy, vx: number, vy:
         x: enemy.x,
         y: enemy.y,
         damage: enemy.damage,
-        radius: 5,
+        radius: BASE_ENEMY_BULLET_RADIUS,
         vx,
         vy,
-        expirationTime: state.fieldTime + duration,
+        expirationTime: state.fieldTime + BASE_ENEMY_BULLET_DURATION,
+        update: updateSimpleBullet,
+        hitTargets: new Set(),
+        ...stats,
     });
+}
+
+export function shootBulletArc(state: GameState, enemy: Enemy, theta: number, angle: number, count: number, speed: number, stats: Partial<Bullet> = {}) {
+    for (let i = 0; i < count; i++) {
+        const bulletTheta = count > 1 ? (theta - angle / 2 + angle * i / (count - 1)) : theta;
+        shootEnemyBullet(state, enemy, speed * Math.cos(bulletTheta), speed * Math.sin(bulletTheta), stats);
+    }
 }
 
 export function moveEnemyInCurrentDirection(state: GameState, enemy: Enemy): void {
     enemy.x += enemy.speed * Math.cos(enemy.theta) / FRAME_LENGTH;
     enemy.y += enemy.speed * Math.sin(enemy.theta) / FRAME_LENGTH;
+}
+
+export function moveEnemyInDirection(state: GameState, enemy: Enemy, theta: number = enemy.theta): void {
+    enemy.x += enemy.speed * Math.cos(theta) / FRAME_LENGTH;
+    enemy.y += enemy.speed * Math.sin(theta) / FRAME_LENGTH;
+}
+
+export function chaseTarget(state: GameState, enemy: Enemy, target: Circle): void {
+    const {x, y} = getTargetVector(enemy, target);
+    enemy.theta = turnTowardsAngle(enemy.theta, 0.2, Math.atan2(y, x));
+    moveEnemyInDirection(state, enemy);
 }

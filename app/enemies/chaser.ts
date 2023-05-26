@@ -3,13 +3,14 @@ import { fillCircle } from 'app/render/renderGame';
 import { shootEnemyBullet } from 'app/utils/enemy';
 import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 
-
 export const chaser: EnemyDefinition = {
+    name: 'Chaser',
     statFactors: {
         maxLife: 1,
         damage: 1,
         attacksPerSecond: 1,
     },
+    initialParams: {},
     radius: 20,
     update(state: GameState, enemy: Enemy): void {
         if (!enemy.disc) {
@@ -26,7 +27,7 @@ export const chaser: EnemyDefinition = {
 
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootEnemyBullet(state, enemy, 100 * Math.cos(enemy.theta), 100 * Math.sin(enemy.theta), 1000);
+            shootEnemyBullet(state, enemy, 100 * Math.cos(enemy.theta), 100 * Math.sin(enemy.theta));
         }
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {

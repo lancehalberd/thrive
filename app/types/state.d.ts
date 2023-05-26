@@ -13,15 +13,6 @@ interface Geometry extends Circle {
     // The disc this object is currently on.
     disc?: Disc
 }
-
-interface Bullet extends Circle {
-    vx: number
-    vy: number
-    damage: number
-    // Bullet will be removed after this timestamp
-    expirationTime: number
-}
-
 interface Vitals {
     life: number
     maxLife: number
@@ -36,17 +27,37 @@ interface Vitals {
 interface Hero extends CoreHeroStats, Vitals, Geometry {
     // The angle the hero is facing.
     theta: number
+    damageHistory: number[]
+    recentDamageTaken: number
+    weapon: Weapon
+    // How much the player has charged since he last attacked, which will be applied to the next weapon cycle.
+    chargingLevel: number
+    // How charged the player's current attacks are, which lasts for 1 full weapon cycle.
+    attackChargeLevel: number
+    potions: number
 }
-interface Enemy extends Vitals, Geometry {
+interface Enemy<EnemyParams=any> extends Vitals, Geometry {
     level: number
-    definition: EnemyDefinition
+    definition: EnemyDefinition<EnemyParams>
+    params: EnemyParams,
     // The angle the enemy is facing.
     theta: number
     minions: Enemy[]
     master?: Enemy
+    // How much the enemy has charged since he last attacked, which will be applied to the next weapon cycle.
+    chargingLevel: number
+    // How charged the enemy's current attacks are, which lasts for 1 full weapon cycle.
+    attackChargeLevel: number
+    mode: string
+    modeTime: number
+    setMode(this: Enemy, mode: string)
+    isBoss?: boolean
 }
-interface EnemyDefinition {
+interface EnemyDefinition<EnemyParams=any> {
+    name: string
     statFactors: Partial<Vitals>
+    initialParams: EnemyParams
+    dropChance?: number
     experienceFactor?: number
     solid?: boolean
     radius: number
@@ -54,12 +65,28 @@ interface EnemyDefinition {
     render: (context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => void
 }
 
+interface FieldText {
+    x: number
+    y: number
+    vx: number
+    vy: number
+    expirationTime: number
+    time: number
+    text: string
+    color?: string
+    borderColor?: string
+}
+
 interface GameState {
     fieldTime: number
     hero: Hero
     heroBullets: Bullet[]
     enemies: Enemy[]
+    loot: Loot[]
+    activeLoot?: Loot
+    portals: Portal[];
     enemyBullets: Bullet[]
+    fieldText: FieldText[]
     activeDiscs: Disc[]
     visibleDiscs: Disc[]
     gameHasBeenInitialized: boolean
@@ -77,4 +104,5 @@ interface GameState {
 
 interface Disc extends Geometry {
     links: Disc[]
+    boss?: Enemy
 }

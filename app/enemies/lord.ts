@@ -1,16 +1,19 @@
-import { FRAME_LENGTH } from 'app/constants';
+import { BASE_DROP_CHANCE, FRAME_LENGTH } from 'app/constants';
 import { fillCircle } from 'app/render/renderGame';
 import { createEnemy, moveEnemyInCurrentDirection, shootEnemyBullet } from 'app/utils/enemy';
 import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 
 
 export const lord: EnemyDefinition = {
+    name: 'Lord',
     statFactors: {
         maxLife: 3,
         damage: 1,
         attacksPerSecond: 0.4,
         speed: 0.4,
     },
+    initialParams: {},
+    dropChance: 2 * BASE_DROP_CHANCE,
     experienceFactor: 5,
     radius: 20,
     update(state: GameState, enemy: Enemy): void {
@@ -56,17 +59,20 @@ export const lord: EnemyDefinition = {
     }
 };
 
-function chaseTarget(state: GameState, enemy: Enemy, target: Circle): void {
+function turnTowardsTarget(state: GameState, enemy: Enemy, target: Circle): void {
     const {x, y} = getTargetVector(enemy, target);
     enemy.theta = turnTowardsAngle(enemy.theta, 0.2, Math.atan2(y, x));
 }
 
 export const lordsMinion: EnemyDefinition = {
+    name: 'Peasant',
     statFactors: {
         maxLife: 0.5,
         damage: 0.5,
         attacksPerSecond: 0.5,
     },
+    initialParams: {},
+    dropChance: 0,
     experienceFactor: 0.1,
     radius: 15,
     update(state: GameState, enemy: Enemy): void {
@@ -82,22 +88,22 @@ export const lordsMinion: EnemyDefinition = {
                 // Enemy moves in its current direction unless it gets too far from the master.
                 const {distance2} = getTargetVector(enemy, master);
                 if (distance2 >= 300 * 300) {
-                    chaseTarget(state, enemy, master);
+                    turnTowardsTarget(state, enemy, master);
                 }
             } else {
                 // Chase the player when it can attack soon.
-                chaseTarget(state, enemy, state.hero);
+                turnTowardsTarget(state, enemy, state.hero);
             }
             moveEnemyInCurrentDirection(state, enemy);
             if (enemy.attackCooldown <= state.fieldTime) {
                 enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-                shootEnemyBullet(state, enemy, 100 * Math.cos(enemy.theta), 100 * Math.sin(enemy.theta), 1000);
+                shootEnemyBullet(state, enemy, 100 * Math.cos(enemy.theta), 100 * Math.sin(enemy.theta));
             }
         } else if (master) {
             // Enemy moves in its current direction unless it gets too far from the master.
             const {distance2} = getTargetVector(enemy, master);
             if (distance2 >= 200 * 200) {
-                chaseTarget(state, enemy, master);
+                turnTowardsTarget(state, enemy, master);
             }
             moveEnemyInCurrentDirection(state, enemy);
         }

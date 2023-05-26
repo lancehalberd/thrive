@@ -1,44 +1,80 @@
+import { guardian } from 'app/bosses/guardian';
 import { chaser } from 'app/enemies/chaser';
+import { chest } from 'app/enemies/chest';
 import { circler } from 'app/enemies/circler';
 import { lord } from 'app/enemies/lord';
 import { turret } from 'app/enemies/turret';
+import { renderMinimap } from 'app/render/renderGame';
 import { createEnemy } from 'app/utils/enemy';
 import { findClosestDisc, getTargetVector } from 'app/utils/geometry';
+import { refillAllPotions } from 'app/utils/hero';
 import SRandom from 'app/utils/SRandom';
 
-const platformSizes = [300, 500, 800];
+const platformSizes = [200, 350, 500];
+
+export function getTreeDungeonPortal(x: number, y: number, level: number, seed: number) {
+    level = Math.max(0, Math.min(100, level));
+    return {
+        x, y, radius: 40,
+        level,
+        name: 'Tree',
+        activate(state: GameState) {
+            startDungeon(state, createTreeDungeon(Math.random(), 2000 + 40 * level, level));
+        },
+    };
+}
 
 export function createTreeDungeon(seed: number, radius: number, level: number): Dungeon {
     const discs: Disc[] = [];
+    const portals: Portal[] = [];
     const enemies: Enemy[] = [];
     const entrance: Entrance = {x: 0, y: 0, radius: 16};
-
     const dungeonRandomizer = SRandom.seed(seed);
+    if (level > 1) {
+        portals.push(getTreeDungeonPortal(0, 0, level - 1, dungeonRandomizer.generateAndMutate()));
+    }
+
 
 
     const startingPlatform: Disc = {
         x: 0,
         y: 0,
-        radius: dungeonRandomizer.element(platformSizes),
+        radius: 400,
         links: [],
     }
     discs.push(startingPlatform);
-    for (let i = 0; i < 100; i++) {
+    let finished = false;
+    for (let i = 0; i < 100 && (!finished || i < 20); i++) {
         dungeonRandomizer.nextSeed();
         const theta = 2 * Math.PI * dungeonRandomizer.generateAndMutate();
-        const newDisc = {
+        const newDisc: Disc = {
             x: radius * Math.cos(theta),
             y: radius * Math.sin(theta),
             radius: dungeonRandomizer.element(platformSizes),
             links: [],
         };
         projectDiscToClosestDisc(discs, newDisc, dungeonRandomizer.range(16, 128));
+        if (newDisc.x * newDisc.x + newDisc.y * newDisc.y >= radius * radius) {
+            // Only one disc is allowed to spawn outside of the radius.
+            if (!finished) {
+                finished = true;
+                newDisc.radius = 400;
+                projectDiscToClosestDisc(discs, newDisc, dungeonRandomizer.range(16, 128));
+                newDisc.boss = createEnemy(newDisc.x, newDisc.y, guardian, Math.min(100, level + 2));
+                newDisc.boss.isBoss = true;
+                enemies.push(newDisc.boss);
+                discs.push(newDisc);
+            }
+            continue;
+        }
         discs.push(newDisc);
         // TODO: Add different enemy generators and apply them at random.
         if (dungeonRandomizer.generateAndMutate() < 0.3) {
             enemies.push(createEnemy(newDisc.x, newDisc.y, turret, level));
         } else if (dungeonRandomizer.generateAndMutate() < 0.3) {
             enemies.push(createEnemy(newDisc.x, newDisc.y, lord, level));
+        } else if (dungeonRandomizer.generateAndMutate() < 0.3) {
+            enemies.push(createEnemy(newDisc.x, newDisc.y, chest, level));
         }
         if (dungeonRandomizer.generateAndMutate() < 0.5) {
             enemies.push(createEnemy(newDisc.x + 50, newDisc.y, chaser, level));
@@ -48,16 +84,15 @@ export function createTreeDungeon(seed: number, radius: number, level: number): 
             enemies.push(createEnemy(newDisc.x, newDisc.y + 50, circler, level));
             enemies.push(createEnemy(newDisc.x, newDisc.y - 50, circler, level));
         }
-        if (newDisc.x * newDisc.x + newDisc.y * newDisc.y >= radius * radius) {
-            break;
-        }
     }
-
     linkDiscs(discs);
     return {
+        name: 'tree',
+        level,
         discs,
         enemies,
         entrance,
+        portals,
     };
 }
 
@@ -67,6 +102,10 @@ export function startDungeon(state: GameState, dungeon: Dungeon): void {
     state.activeDiscs = dungeon.discs;
     state.visibleDiscs = dungeon.discs;
     state.enemies = dungeon.enemies;
+    state.loot = [];
+    state.portals = dungeon.portals;
+    renderMinimap(state.visibleDiscs);
+    refillAllPotions(state);
 }
 
 export function projectDiscToClosestDisc(discs: Disc[], newDisc: Disc, overlap: number): void {
