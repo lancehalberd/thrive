@@ -1,13 +1,13 @@
 
 
-export function addDamageNumber(state: GameState, target: Geometry, damage: number): void {
+export function addDamageNumber(state: GameState, target: Geometry, damage: number, isCrit = false): void {
     state.fieldText.push({
         x: target.x - 5 + Math.random() * 10,
         y: target.y - 10,
         vx: 2 * Math.random() - 1,
         vy: -1,
         text: `${damage}`,
-        color: 'red',
+        color: isCrit ? 'yellow' : 'red',
         borderColor: 'black',
         expirationTime: state.fieldTime + 1000,
         time: 0,

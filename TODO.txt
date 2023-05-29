@@ -1,9 +1,6 @@
-Add weapon proficiency
-    Same XP curve as for levels, but applied to equipped weapon type
-        Max XP gain is 5% required for next level.
-    5% reduced attack speed for each level proficiency is below the weapon level to a minimum of 10%
-    5% more damage for each level of proficiency
-    1% increased attack speed for each level of proficiency
+Implement armor shredding
+
+Support increased charge damage
 
 Additional boss mechanics:
     Summons turrets in a square around the disc that shoot 6 shot novas

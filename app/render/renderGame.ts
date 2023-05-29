@@ -4,7 +4,12 @@ import { fillCircle } from 'app/render/renderGeometry';
 import { renderInventorySlot, renderItemDetails } from 'app/render/renderInventory';
 import { createCanvasAndContext } from 'app/utils/canvas';
 import { doCirclesIntersect, isPointInRect } from 'app/utils/geometry';
-import { getExperienceForNextLevel } from 'app/utils/hero';
+import { weaponTypeLabels, weaponTypes } from 'app/weapons';
+import {
+    getExperienceForNextLevel,
+    getExperienceForNextWeaponLevel,
+    getWeaponProficiency,
+} from 'app/utils/hero';
 
 
 const minimapSize = 500;
@@ -155,6 +160,29 @@ function renderHUD(context: CanvasRenderingContext2D, state: GameState): void {
     const requiredExperience = getExperienceForNextLevel(state.hero.level);
     renderBar(context, experienceRect, state.hero.experience / requiredExperience, 'orange', '#888');
 
+
+    let y = CANVAS_HEIGHT - 20;
+    const displayedWeaponTypes = state.paused ? weaponTypes : [state.hero.equipment.weapon.weaponType];
+    for (const weaponType of displayedWeaponTypes) {
+        const weaponXpRect: Rect = {x: 5, y, h: 10, w: 160};
+        const weaponProficiency = getWeaponProficiency(state, weaponType);
+        const requiredWeaponXp = getExperienceForNextWeaponLevel(weaponProficiency.level);
+        renderBar(context, weaponXpRect, weaponProficiency.experience / requiredWeaponXp, 'orange', '#888');
+        context.fillStyle = 'white';
+        context.textBaseline = 'middle';
+        context.textAlign = 'left';
+        context.font = '16px sans-serif';
+        context.fillText(weaponTypeLabels[weaponType] + ' skill ' + weaponProficiency.level, 5, y - 8);
+        y -= 30
+    }
+
+    context.fillStyle = 'white';
+    context.textBaseline = 'middle';
+    context.textAlign = 'left';
+    context.font = '16px sans-serif';
+    context.fillText('Armor ' + state.hero.armor, 5, y - 8);
+
+
     context.strokeStyle = 'red';
     context.fillStyle = 'red';
     for (let i = 0; i < BASE_MAX_POTIONS; i++) {
@@ -165,8 +193,8 @@ function renderHUD(context: CanvasRenderingContext2D, state: GameState): void {
     }
 
     const boss = state.hero.disc?.boss;
-    if (boss) {
-        const lifeRect: Rect = {x: 5, y: CANVAS_HEIGHT - 30, h: 24, w: CANVAS_WIDTH - 10};
+    if (!state.paused && boss) {
+        const lifeRect: Rect = {x: 210, y: CANVAS_HEIGHT - 30, h: 24, w: CANVAS_WIDTH - 420};
         let color = '#0F0';
         if (boss.life <= boss.maxLife / 4) {
             color = '#F00';

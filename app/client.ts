@@ -10,7 +10,7 @@ import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
 import { createTreeDungeon, getTreeDungeonPortal, startDungeon } from 'app/utils/dungeon';
 import { createEnemy } from 'app/utils/enemy';
 import { doCirclesIntersect, findClosestDisc, getClosestElement, getTargetVector } from 'app/utils/geometry';
-import { damageHero, gainExperience, gainItemExperience, setDerivedHeroStats } from 'app/utils/hero';
+import { damageHero, gainExperience, gainWeaponExperience, setDerivedHeroStats } from 'app/utils/hero';
 import { getMousePosition, isMouseDown, isRightMouseDown } from 'app/utils/mouse';
 import { isGameKeyDown, updateKeyboardState, wasGameKeyPressed } from 'app/utils/userInput';
 import Random from 'app/utils/Random';
@@ -47,6 +47,7 @@ let state: GameState = {
             weapon: Random.element(allWeapons)[0],
         },
         weapons: [],
+        weaponProficiency: {},
         armors: [],
         // Derived stats will get set later.
         life: 0,
@@ -58,7 +59,13 @@ let state: GameState = {
         chargingLevel: 1,
         attackChargeLevel: 1,
         potions: BASE_MAX_POTIONS,
-        isShooting: false
+        isShooting: false,
+        // Base crit damage/chance is on weapons, this just stores
+        // bonuses from enchantments+weapon proficiencies.
+        critChance: 0,
+        critDamage: 0,
+        chargeDamage: 0,
+        armorShredEffect: 0,
     },
     heroBullets: [],
     enemies: [],
@@ -169,7 +176,7 @@ function update(): void {
         state.loot.splice(state.loot.indexOf(state.activeLoot), 1);
         delete state.activeLoot;
     } else if (state.activeLoot && wasGameKeyPressed(state, GAME_KEY.SELL)) {
-        gainItemExperience(state, state.activeLoot.getLevel());
+        state.activeLoot.sell();
         state.loot.splice(state.loot.indexOf(state.activeLoot), 1);
         delete state.activeLoot;
     }
@@ -302,12 +309,12 @@ function updateHeroBullets(state: GameState): void {
                 bullet.hitTargets.add(enemy);
                 const damage = applyArmorToDamage(state, bullet.damage, enemy.armor);
                 enemy.life -= damage;
-                addDamageNumber(state, enemy, damage);
+                addDamageNumber(state, enemy, damage, bullet.isCrit);
                 if (enemy.life <= 0) {
                     const experiencePenalty = Math.min(1, Math.max(0, (state.hero.level - enemy.level) * 0.1));
-                    gainExperience(state,
-                        Math.ceil(BASE_XP * (1 - experiencePenalty) * Math.pow(1.2, enemy.level) * (enemy.definition.experienceFactor ?? 1))
-                    );
+                    const experience = BASE_XP * Math.pow(1.2, enemy.level) * (enemy.definition.experienceFactor ?? 1);
+                    gainExperience(state, Math.ceil(experience * (1 - experiencePenalty)));
+                    gainWeaponExperience(state, state.hero.equipment.weapon.weaponType, enemy.level, experience);
                     checkToDropBasicLoot(state, enemy);
                     if (enemy.disc?.boss === enemy) {
                         delete enemy.disc.boss;

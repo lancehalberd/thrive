@@ -1,6 +1,8 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from 'app/constants';
 import { drawRect, fillCircle } from 'app/render/renderGeometry';
 import { embossText } from 'app/render/renderText';
+import { armorTypeLabels } from 'app/armor';
+import { weaponTypeLabels } from 'app/weapons';
 
 export function renderInventorySlot(context: CanvasRenderingContext2D, {x, y, w, h, item}: InventorySlot): void {
     context.fillStyle = 'white';
@@ -68,19 +70,6 @@ export function renderItemDetails(context: CanvasRenderingContext2D, item: Item,
         const line = textLines[i];
         context.fillText(line, x + 10, y + 10 + 20 * i);
     }
-}
-
-const armorTypeLabels: {[key in ArmorType]: string} = {
-    lightArmor: 'Light Armor',
-    mediumArmor: 'Armor',
-    heavyArmor: 'Heavy Armor',
-}
-
-const weaponTypeLabels: {[key in WeaponType]: string} = {
-    katana: 'Katana',
-    dagger: 'Dagger',
-    sword: 'Sword',
-    bow: 'Bow',
 }
 
 function getItemTextLines(item: Item): string[] {

@@ -60,3 +60,9 @@ export const allArmors: Armor[][] = [
     mediumArmors,
     heavyArmors,
 ];
+
+export const armorTypeLabels: {[key in ArmorType]: string} = {
+    lightArmor: 'Light Armor',
+    mediumArmor: 'Armor',
+    heavyArmor: 'Heavy Armor',
+}

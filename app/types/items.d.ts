@@ -8,16 +8,17 @@ interface Bullet extends Circle {
     source?: Hero|Enemy
     update(state: GameState, bullet: Bullet): void
     hitTargets: Set<any>
+    isCrit?: boolean
 }
 
 interface Shot {
     // [0, 1) defaults to 0.
     // This shot will fire this percent of the way between default shot times for this shots attacksPerSecond
     timingOffset?: number
-    generateBullet(state: GameState, source: Hero|Enemy, weapon: Weapon): Bullet
+    generateBullet(state: GameState, source: Hero, weapon: Weapon): Bullet
 }
 
-type WeaponType = 'katana'|'dagger'|'sword'|'bow';
+type WeaponType = 'katana'|'dagger'|'sword'|'bow'|'morningStar'|'staff';
 type ArmorType = 'lightArmor'|'mediumArmor'|'heavyArmor';
 
 interface Weapon {
@@ -25,6 +26,8 @@ interface Weapon {
     weaponType: WeaponType
     level: number
     attacksPerSecond: number
+    critChance: number
+    critDamage: number
     damage: number
     chargeLevel: number
     speed: number
@@ -49,7 +52,7 @@ type Item = Armor | Weapon;
 interface BaseLoot extends Geometry {
     activate(state: GameState): void
     render(context: CanvasRenderingContext2D, state: GameState): void
-    getLevel(): number
+    sell(): void
 }
 
 interface ArmorLoot extends BaseLoot {

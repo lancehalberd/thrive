@@ -6,6 +6,7 @@ import {
     BASE_BULLET_DURATION,
     FRAME_LENGTH,
 } from 'app/constants';
+import { rollForCritDamage } from 'app/utils/hero';
 
 export function updateSimpleBullet(state: GameState, bullet: Bullet): void {
     bullet.x += bullet.vx / FRAME_LENGTH;
@@ -32,15 +33,17 @@ Example damage spread for weapon tiers:
 
 const bowShots: Shot[] = [
     {
-        generateBullet(state: GameState, source: Hero|Enemy, weapon: Weapon): Bullet {
+        generateBullet(state: GameState, source: Hero, weapon: Weapon): Bullet {
             const speed = weapon.speed * (0.6 + 0.4 * source.attackChargeLevel);
+            const critDamage = rollForCritDamage(state, 0.1 * source.attackChargeLevel);
             return {
                 x: source.x,
                 y: source.y,
                 radius: weapon.radius + (source.attackChargeLevel - 1),
                 vx: speed * Math.cos(source.theta),
                 vy: speed * Math.sin(source.theta),
-                damage: Math.ceil(weapon.damage * source.attackChargeLevel * source.damage),
+                damage: Math.ceil(weapon.damage * source.attackChargeLevel * source.damage * critDamage),
+                isCrit: critDamage > 1,
                 isEnemyPiercing: true,
                 source,
                 expirationTime: state.fieldTime + weapon.duration,
@@ -60,6 +63,8 @@ function createBow(level: number, name: string): Weapon {
         name,
         shots: bowShots,
         attacksPerSecond,
+        critChance: 0.2,
+        critDamage: 0.5,
         damage: Math.ceil(0.8 * level * BASE_WEAPON_DPS_PER_LEVEL / attacksPerSecond),
         chargeLevel: 3,
         speed: 1.5 * BASE_BULLET_SPEED,
@@ -78,14 +83,16 @@ export const bows: Weapon[] = [
 
 const swordShots: Shot[] = [
     {
-        generateBullet(state: GameState, source: Hero|Enemy, weapon: Weapon): Bullet {
+        generateBullet(state: GameState, source: Hero, weapon: Weapon): Bullet {
+            const critDamage = rollForCritDamage(state);
             return {
                 x: source.x,
                 y: source.y,
                 radius: weapon.radius * source.attackChargeLevel,
                 vx: weapon.speed * Math.cos(source.theta),
                 vy: weapon.speed * Math.sin(source.theta),
-                damage: Math.ceil(weapon.damage * source.attackChargeLevel * source.damage),
+                damage: Math.ceil(weapon.damage * source.attackChargeLevel * source.damage * critDamage),
+                isCrit: critDamage > 1,
                 isEnemyPiercing: (source.attackChargeLevel >= 2),
                 source,
                 expirationTime: state.fieldTime + weapon.duration,
@@ -104,6 +111,8 @@ function createSword(level: number, name: string): Weapon {
         name,
         shots: swordShots,
         attacksPerSecond: BASE_ATTACKS_PER_SECOND,
+        critChance: 0.05,
+        critDamage: 0.5,
         damage: Math.ceil(level * BASE_WEAPON_DPS_PER_LEVEL / BASE_ATTACKS_PER_SECOND),
         chargeLevel: 2,
         speed: BASE_BULLET_SPEED,
@@ -122,13 +131,15 @@ export const swords: Weapon[] = [
 function generateDaggerShot(timingOffset: number, thetaOffset: number): Shot {
     return {
         timingOffset,
-        generateBullet(state: GameState, source: Hero|Enemy, weapon: Weapon): Bullet {
+        generateBullet(state: GameState, source: Hero, weapon: Weapon): Bullet {
+            const critDamage = rollForCritDamage(state);
             return {
                 x: source.x,
                 y: source.y,
                 vx: weapon.speed * Math.cos(source.theta + thetaOffset / source.attackChargeLevel / source.attackChargeLevel),
                 vy: weapon.speed * Math.sin(source.theta + thetaOffset / source.attackChargeLevel / source.attackChargeLevel),
-                damage: Math.ceil(weapon.damage * source.attackChargeLevel * source.damage),
+                damage: Math.ceil(weapon.damage * source.attackChargeLevel * source.damage * critDamage),
+                isCrit: critDamage > 1,
                 radius: weapon.radius + (source.attackChargeLevel - 1),
                 source,
                 expirationTime: state.fieldTime + weapon.duration,
@@ -156,6 +167,8 @@ function createDagger(level: number, name: string): Weapon {
         name,
         shots: daggerShots,
         attacksPerSecond: BASE_ATTACKS_PER_SECOND,
+        critChance: 0.05,
+        critDamage: 0.5,
         damage: Math.ceil(0.2 * level * BASE_WEAPON_DPS_PER_LEVEL / BASE_ATTACKS_PER_SECOND),
         chargeLevel: 2,
         speed: Math.ceil(BASE_BULLET_SPEED * 0.7),
@@ -175,14 +188,16 @@ export const daggers: Weapon[] = [
 function generateKatanaShot(timingOffset: number, offset: number): Shot {
     return {
         timingOffset,
-        generateBullet(state: GameState, source: Hero|Enemy, weapon: Weapon): Bullet {
+        generateBullet(state: GameState, source: Hero, weapon: Weapon): Bullet {
             const speed = weapon.speed * (0.8 + 0.2 * source.attackChargeLevel);
+            const critDamage = rollForCritDamage(state);
             return {
                 x: source.x + offset * Math.cos(source.theta + Math.PI / 2),
                 y: source.y + offset * Math.sin(source.theta + Math.PI / 2),
                 vx: speed * Math.cos(source.theta),
                 vy: speed * Math.sin(source.theta),
-                damage: Math.ceil(weapon.damage * source.attackChargeLevel * source.damage),
+                damage: Math.ceil(weapon.damage * source.attackChargeLevel * source.damage * critDamage),
+                isCrit: critDamage > 1,
                 isEnemyPiercing: true,
                 radius: weapon.radius + (source.attackChargeLevel - 1),
                 source,
@@ -206,7 +221,9 @@ function createKatana(level: number, name: string): Weapon {
         name,
         shots: katanaShots,
         attacksPerSecond: BASE_ATTACKS_PER_SECOND,
-        damage: Math.ceil(0.6 * level * BASE_WEAPON_DPS_PER_LEVEL / BASE_ATTACKS_PER_SECOND),
+        critChance: 0.05,
+        critDamage: 1,
+        damage: Math.ceil(0.5 * level * BASE_WEAPON_DPS_PER_LEVEL / BASE_ATTACKS_PER_SECOND),
         chargeLevel: 2,
         speed: BASE_BULLET_SPEED * 0.8,
         radius: BASE_BULLET_RADIUS,
@@ -222,12 +239,30 @@ export const katanas: Weapon[] = [
     createKatana(11, 'Ichimonji'),
 ];
 
+export const weaponTypes: WeaponType[] = [
+    'bow',
+    'dagger',
+    'katana',
+    'sword',
+];
+
+export const weaponTypeLabels: {[key in WeaponType]: string} = {
+    bow: 'Bow',
+    dagger: 'Dagger',
+    katana: 'Katana',
+    morningStar: 'Morning Star',
+    staff: 'Staff',
+    sword: 'Sword',
+}
+
 export const allWeapons: Weapon[][] = [
     swords,
     bows,
     daggers,
     katanas,
 ];
+
+
 
 // TODO: Add morning star, shot spins around the source and loops at the attack speed interval, pierces enemies
 //       2 Charge levels increases radius by 16px each

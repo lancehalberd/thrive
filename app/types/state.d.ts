@@ -2,6 +2,10 @@ interface CoreHeroStats {
     level: number
     experience: number
 }
+interface WeaponProficiency {
+    level: number
+    experience: number
+}
 
 interface Vitals {
     life: number
@@ -19,6 +23,7 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     theta: number
     damageHistory: number[]
     recentDamageTaken: number
+    weaponProficiency: {[key in WeaponType]?: WeaponProficiency}
     equipment: {
         weapon: Weapon
         armor?: Armor
@@ -31,6 +36,10 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     attackChargeLevel: number
     potions: number
     isShooting: boolean
+    critChance: number
+    critDamage: number
+    chargeDamage: number
+    armorShredEffect: number
 }
 interface Enemy<EnemyParams=any> extends Vitals, Geometry {
     level: number

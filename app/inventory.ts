@@ -79,14 +79,14 @@ export function updateInventory(state: GameState): void {
                 const index = state.hero.weapons.indexOf(hoverItem);
                 if (index >= 0) {
                     state.hero.weapons.splice(index, 1);
-                    gainItemExperience(state, hoverItem.level);
+                    gainItemExperience(state, hoverItem);
                 }
             }
             if (hoverItem.type === 'armor') {
                 const index = state.hero.armors.indexOf(hoverItem);
                 if (index >= 0) {
                     state.hero.armors.splice(index, 1);
-                    gainItemExperience(state, hoverItem.level);
+                    gainItemExperience(state, hoverItem);
                 }
             }
         }

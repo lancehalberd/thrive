@@ -1,5 +1,6 @@
 import { allArmors } from 'app/armor';
 import { BASE_DROP_CHANCE } from 'app/constants';
+import { gainItemExperience } from 'app/utils/hero';
 import {
     renderArmorShort,
     renderArmorLong,
@@ -56,8 +57,8 @@ export function dropArmorLoot(state: GameState, source: Enemy, level: number): v
                 renderArmorShort(context, this.x, this.y, this.armor);
             }
         },
-        getLevel(this: ArmorLoot): number {
-            return this.armor.level;
+        sell(this: ArmorLoot): void {
+            gainItemExperience(state, this.armor);
         }
     });
 }
@@ -92,8 +93,8 @@ export function dropWeaponLoot(state: GameState, source: Enemy, level: number): 
                 renderWeaponShort(context, this.x, this.y, this.weapon);
             }
         },
-        getLevel(this: WeaponLoot): number {
-            return this.weapon.level;
+        sell(this: WeaponLoot): void {
+            gainItemExperience(state, this.weapon);
         }
     });
 }
