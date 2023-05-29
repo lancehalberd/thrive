@@ -30,6 +30,7 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     // How charged the player's current attacks are, which lasts for 1 full weapon cycle.
     attackChargeLevel: number
     potions: number
+    isShooting: boolean
 }
 interface Enemy<EnemyParams=any> extends Vitals, Geometry {
     level: number

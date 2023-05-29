@@ -58,6 +58,7 @@ let state: GameState = {
         chargingLevel: 1,
         attackChargeLevel: 1,
         potions: BASE_MAX_POTIONS,
+        isShooting: false
     },
     heroBullets: [],
     enemies: [],
@@ -106,6 +107,10 @@ function update(): void {
     } else {
         state.mouse.wasPressed = false;
         state.mouse.isDown = false;
+        state.hero.isShooting = false;
+    }
+    if (state.mouse.wasPressed) {
+        state.hero.isShooting = true;
     }
     if (wasGameKeyPressed(state, GAME_KEY.MENU)) {
         state.paused = !state.paused;
@@ -208,7 +213,7 @@ function updateHero(state: GameState): void {
     hero.theta = Math.atan2(aimDy, aimDx);
     const weapon = hero.equipment.weapon;
     const attacksPerSecond = weapon.attacksPerSecond * hero.attacksPerSecond;
-    if (isMouseDown()) {
+    if (state.hero.isShooting) {
         const attackCooldownDuration = 1000 / attacksPerSecond;
         if (hero.attackCooldown <= state.fieldTime) {
             hero.attackCooldown = state.fieldTime + attackCooldownDuration;

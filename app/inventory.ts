@@ -76,6 +76,7 @@ export function updateInventory(state: GameState): void {
     }
     if (hoverItem) {
         if (state.mouse.wasPressed) {
+            state.hero.isShooting = false;
             if (hoverItem.type === 'weapon') {
                 const index = state.hero.weapons.indexOf(hoverItem);
                 if (index >= 0) {
