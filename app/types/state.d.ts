@@ -11,6 +11,7 @@ interface Vitals {
     life: number
     maxLife: number
     speed: number
+    baseArmor: number
     armor: number
     damage: number
     attacksPerSecond: number

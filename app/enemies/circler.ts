@@ -9,6 +9,7 @@ export const circler: EnemyDefinition = {
     statFactors: {
         maxLife: 1,
         damage: 1,
+        armor: 0,
         attacksPerSecond: 2,
         speed: 0.6,
     },

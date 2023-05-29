@@ -9,6 +9,7 @@ interface Bullet extends Circle {
     update(state: GameState, bullet: Bullet): void
     hitTargets: Set<any>
     isCrit?: boolean
+    armorShred: number
 }
 
 interface Shot {

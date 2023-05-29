@@ -10,6 +10,7 @@ export const turret: EnemyDefinition = {
         maxLife: 2,
         damage: 1,
         attacksPerSecond: 1,
+        armor: 2,
     },
     initialParams: {},
     dropChance: 2 * BASE_DROP_CHANCE,

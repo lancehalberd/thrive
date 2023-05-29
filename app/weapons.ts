@@ -13,6 +13,18 @@ export function updateSimpleBullet(state: GameState, bullet: Bullet): void {
     bullet.y += bullet.vy / FRAME_LENGTH;
 }
 
+function getArmorShred(state: GameState, chargeLevel: number): number {
+    return state.hero.armorShredEffect * (0.01 + 0.02 * chargeLevel);
+}
+
+
+function getChargeDamage(state: GameState, chargeLevel: number): number {
+    if (chargeLevel <= 1) {
+        return 1;
+    }
+    return chargeLevel + state.hero.chargeDamage;
+}
+
 /*
 Example damage spread for weapon tiers:
 0: 20
@@ -42,13 +54,14 @@ const bowShots: Shot[] = [
                 radius: weapon.radius + (source.attackChargeLevel - 1),
                 vx: speed * Math.cos(source.theta),
                 vy: speed * Math.sin(source.theta),
-                damage: Math.ceil(weapon.damage * source.attackChargeLevel * source.damage * critDamage),
+                damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage),
                 isCrit: critDamage > 1,
                 isEnemyPiercing: true,
                 source,
                 expirationTime: state.fieldTime + weapon.duration,
                 update: updateSimpleBullet,
                 hitTargets: new Set(),
+                armorShred: getArmorShred(state, source.attackChargeLevel),
             };
         },
     }
@@ -91,13 +104,14 @@ const swordShots: Shot[] = [
                 radius: weapon.radius * source.attackChargeLevel,
                 vx: weapon.speed * Math.cos(source.theta),
                 vy: weapon.speed * Math.sin(source.theta),
-                damage: Math.ceil(weapon.damage * source.attackChargeLevel * source.damage * critDamage),
+                damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage),
                 isCrit: critDamage > 1,
                 isEnemyPiercing: (source.attackChargeLevel >= 2),
                 source,
                 expirationTime: state.fieldTime + weapon.duration,
                 update: updateSimpleBullet,
                 hitTargets: new Set(),
+                armorShred: getArmorShred(state, source.attackChargeLevel),
             };
         },
     }
@@ -138,13 +152,14 @@ function generateDaggerShot(timingOffset: number, thetaOffset: number): Shot {
                 y: source.y,
                 vx: weapon.speed * Math.cos(source.theta + thetaOffset / source.attackChargeLevel / source.attackChargeLevel),
                 vy: weapon.speed * Math.sin(source.theta + thetaOffset / source.attackChargeLevel / source.attackChargeLevel),
-                damage: Math.ceil(weapon.damage * source.attackChargeLevel * source.damage * critDamage),
+                damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage),
                 isCrit: critDamage > 1,
                 radius: weapon.radius + (source.attackChargeLevel - 1),
                 source,
                 expirationTime: state.fieldTime + weapon.duration,
                 update: updateSimpleBullet,
                 hitTargets: new Set(),
+                armorShred: getArmorShred(state, source.attackChargeLevel),
             };
         },
     }
@@ -196,7 +211,7 @@ function generateKatanaShot(timingOffset: number, offset: number): Shot {
                 y: source.y + offset * Math.sin(source.theta + Math.PI / 2),
                 vx: speed * Math.cos(source.theta),
                 vy: speed * Math.sin(source.theta),
-                damage: Math.ceil(weapon.damage * source.attackChargeLevel * source.damage * critDamage),
+                damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage),
                 isCrit: critDamage > 1,
                 isEnemyPiercing: true,
                 radius: weapon.radius + (source.attackChargeLevel - 1),
@@ -204,6 +219,7 @@ function generateKatanaShot(timingOffset: number, offset: number): Shot {
                 expirationTime: state.fieldTime + weapon.duration,
                 update: updateSimpleBullet,
                 hitTargets: new Set(),
+                armorShred: getArmorShred(state, source.attackChargeLevel),
             };
         },
     }

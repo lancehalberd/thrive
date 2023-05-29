@@ -52,6 +52,7 @@ let state: GameState = {
         // Derived stats will get set later.
         life: 0,
         maxLife: 0,
+        baseArmor: 0,
         armor: 0,
         damage: 0,
         attacksPerSecond: 0,
@@ -309,6 +310,14 @@ function updateHeroBullets(state: GameState): void {
                 bullet.hitTargets.add(enemy);
                 const damage = applyArmorToDamage(state, bullet.damage, enemy.armor);
                 enemy.life -= damage;
+                let armorShred = bullet.armorShred;
+                if (enemy.armor <= enemy.baseArmor / 2) {
+                    armorShred /= 2;
+                }
+                if (enemy.armor <= enemy.baseArmor / 4) {
+                    armorShred /= 2;
+                }
+                enemy.armor = Math.max(enemy.baseArmor / 10, enemy.armor * (1 - armorShred));
                 addDamageNumber(state, enemy, damage, bullet.isCrit);
                 if (enemy.life <= 0) {
                     const experiencePenalty = Math.min(1, Math.max(0, (state.hero.level - enemy.level) * 0.1));

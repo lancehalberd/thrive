@@ -9,6 +9,7 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
     const dps = heroAttacksPerSecond * heroDamage;
     const targetDuration = 2 + level * 8 / 100;
     const maxLife = Math.ceil((dps * targetDuration) * (definition.statFactors.maxLife ?? 1));
+    const baseArmor = 2 * level * (definition.statFactors.armor ?? 1);
     return {
         definition,
         params: {...definition.initialParams},
@@ -18,7 +19,8 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
         life: maxLife,
         level,
         speed: BASE_ENEMY_SPEED * (definition.statFactors.speed ?? 1) * (0.9 + 0.2 * Math.random()),
-        armor: level,
+        baseArmor,
+        armor: baseArmor,
         damage: Math.floor(
             (heroMaxLife / 10 + heroMaxLife / 10 * level / 100) * (definition.statFactors.damage ?? 1)
         ),
@@ -52,6 +54,9 @@ export function shootEnemyBullet(state: GameState, enemy: Enemy, vx: number, vy:
         expirationTime: state.fieldTime + BASE_ENEMY_BULLET_DURATION,
         update: updateSimpleBullet,
         hitTargets: new Set(),
+        // Armor shred is not functional against the player, although maybe it could be added
+        // with player recovering armor over time.
+        armorShred: 0,
         ...stats,
     });
 }

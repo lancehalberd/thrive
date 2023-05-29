@@ -1,7 +1,3 @@
-Implement armor shredding
-
-Support increased charge damage
-
 Additional boss mechanics:
     Summons turrets in a square around the disc that shoot 6 shot novas
     Charges to the center of the disc and shoots two spirals of bullets with opposite rotations or one slow spiral and one fast spiral
