@@ -1,12 +1,15 @@
 import { BASE_MAX_POTIONS, CANVAS_HEIGHT, CANVAS_WIDTH, SIGHT_RADIUS } from 'app/constants';
+import { getInventorySlots } from 'app/inventory';
+import { fillCircle } from 'app/render/renderGeometry';
+import { renderInventorySlot, renderItemDetails } from 'app/render/renderInventory';
 import { createCanvasAndContext } from 'app/utils/canvas';
-import { doCirclesIntersect } from 'app/utils/geometry';
+import { doCirclesIntersect, isPointInRect } from 'app/utils/geometry';
 import { getExperienceForNextLevel } from 'app/utils/hero';
 
 
 const minimapSize = 500;
 const smallMapRect = {x: CANVAS_WIDTH - 155, y: 5, w: 150, h: 150};
-const largeMapRect = {x: (CANVAS_WIDTH - 400) / 2, y: (CANVAS_HEIGHT - 400) / 2, w: 400, h: 400};
+const largeMapRect = {x: (CANVAS_WIDTH - 400) / 2, y: 100, w: 400, h: 400};
 const [mapCanvas, mapContext] = createCanvasAndContext(minimapSize, minimapSize);
 const mapScale = 20;
 
@@ -69,9 +72,9 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
             if (loot === state.activeLoot) {
                 continue;
             }
-            loot.render(context, state, loot);
+            loot.render(context, state);
         }
-        state.activeLoot?.render(context, state, state.activeLoot);
+        state.activeLoot?.render(context, state);
         for (const enemy of state.enemies) {
             enemy.definition.render(context, state, enemy);
         }
@@ -176,6 +179,24 @@ function renderHUD(context: CanvasRenderingContext2D, state: GameState): void {
         context.textAlign = 'left';
         context.font = '20px sans-serif';
         context.fillText(boss.definition.name + ' ' + boss.life + ' / ' + boss.maxLife, lifeRect.x + 2, lifeRect.y + lifeRect.h / 2 + 2);
+    }
+
+    let hoverItem: Item|undefined = undefined;
+    for (const slot of getInventorySlots(state)) {
+        renderInventorySlot(context, slot);
+        if (slot.item && isPointInRect(slot, state.mouse)) {
+            hoverItem = slot.item;
+        }
+    }
+    if (hoverItem) {
+        let equippedItem: Item|undefined;
+        if (hoverItem.type === 'weapon') {
+            equippedItem = state.hero.equipment.weapon;
+        }
+        if (hoverItem.type === 'armor') {
+            equippedItem = state.hero.equipment.armor;
+        }
+        renderItemDetails(context, hoverItem, state.mouse, equippedItem);
     }
 }
 
@@ -283,13 +304,6 @@ function renderFieldText(context: CanvasRenderingContext2D, fieldText: FieldText
         context.fillStyle = fieldText.color;
         context.fillText(fieldText.text, fieldText.x, fieldText.y);
     }
-}
-
-export function fillCircle(context: CanvasRenderingContext2D, circle: Circle, color: string) {
-    context.fillStyle = color;
-    context.beginPath();
-    context.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI);
-    context.fill();
 }
 
 const discDepth = 40;

@@ -3,12 +3,14 @@ import { circler } from 'app/enemies/circler';
 import { lord } from 'app/enemies/lord';
 import { turret } from 'app/enemies/turret';
 import { checkToDropBasicLoot } from 'app/loot';
+import { updateInventory } from 'app/inventory';
 import { render } from 'app/render/renderGame';
 import { mainCanvas, mainContext } from 'app/utils/canvas';
+import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
 import { createTreeDungeon, getTreeDungeonPortal, startDungeon } from 'app/utils/dungeon';
 import { createEnemy } from 'app/utils/enemy';
 import { doCirclesIntersect, findClosestDisc, getClosestElement, getTargetVector } from 'app/utils/geometry';
-import { gainExperience, setDerivedHeroStats } from 'app/utils/hero';
+import { damageHero, gainExperience, gainItemExperience, setDerivedHeroStats } from 'app/utils/hero';
 import { getMousePosition, isMouseDown, isRightMouseDown } from 'app/utils/mouse';
 import { isGameKeyDown, updateKeyboardState, wasGameKeyPressed } from 'app/utils/userInput';
 import Random from 'app/utils/Random';
@@ -41,7 +43,11 @@ let state: GameState = {
         theta: 0,
         damageHistory: [],
         recentDamageTaken: 0,
-        weapon: Random.element(allWeapons)[0],
+        equipment: {
+            weapon: Random.element(allWeapons)[0],
+        },
+        weapons: [],
+        armors: [],
         // Derived stats will get set later.
         life: 0,
         maxLife: 0,
@@ -63,6 +69,12 @@ let state: GameState = {
     visibleDiscs: testDiscs,
     gameHasBeenInitialized: false,
     paused: false,
+    mouse: {
+        x: CANVAS_WIDTH / 2,
+        y: CANVAS_HEIGHT / 2,
+        isDown: false,
+        wasPressed: false,
+    },
     keyboard: {
         gameKeyValues: [],
         gameKeysDown: new Set(),
@@ -85,12 +97,21 @@ function update(): void {
         startDungeon(state, createTreeDungeon(Math.random(), 2000, 1));
     }
     updateKeyboardState(state);
+    const [x, y] = getMousePosition(mainCanvas, CANVAS_SCALE);
+    state.mouse.x = x;
+    state.mouse.y = y;
+    if (isMouseDown()) {
+        state.mouse.wasPressed = !state.mouse.isDown;
+        state.mouse.isDown = true;
+    } else {
+        state.mouse.wasPressed = false;
+        state.mouse.isDown = false;
+    }
     if (wasGameKeyPressed(state, GAME_KEY.MENU)) {
         state.paused = !state.paused;
-        if (state.paused) {
-            render(mainContext, state);
-        }
     }
+
+    updateInventory(state);
     if (state.paused) {
         return;
     }
@@ -139,30 +160,14 @@ function update(): void {
         delete state.activeLoot;
     }
     if (state.activeLoot && wasGameKeyPressed(state, GAME_KEY.ACTIVATE)) {
-        state.activeLoot.activate(state, state.activeLoot);
+        state.activeLoot.activate(state);
+        state.loot.splice(state.loot.indexOf(state.activeLoot), 1);
+        delete state.activeLoot;
     } else if (state.activeLoot && wasGameKeyPressed(state, GAME_KEY.SELL)) {
-        const level = state.activeLoot.getLevel(state.activeLoot);
-        const experiencePenalty = Math.min(1, Math.max(0, (state.hero.level - level) * 0.1));
-        gainExperience(state,
-            Math.ceil(BASE_XP * (1 - experiencePenalty) * Math.pow(1.2, level) * 1.5)
-        );
+        gainItemExperience(state, state.activeLoot.getLevel());
         state.loot.splice(state.loot.indexOf(state.activeLoot), 1);
         delete state.activeLoot;
     }
-}
-
-function addDamageNumber(state: GameState, target: Geometry, damage: number): void {
-    state.fieldText.push({
-        x: target.x - 5 + Math.random() * 10,
-        y: target.y - 10,
-        vx: 2 * Math.random() - 1,
-        vy: -1,
-        text: `${damage}`,
-        color: 'red',
-        borderColor: 'black',
-        expirationTime: state.fieldTime + 1000,
-        time: 0,
-    });
 }
 
 function updateHero(state: GameState): void {
@@ -198,10 +203,11 @@ function updateHero(state: GameState): void {
     hero.y += dy * speed / FRAME_LENGTH;
 
     // Hero attack
-    const [x, y] = getMousePosition(mainCanvas, CANVAS_SCALE);
+    const {x, y} = state.mouse;
     let aimDx = x - CANVAS_WIDTH / 2, aimDy = y - CANVAS_HEIGHT / 2;
     hero.theta = Math.atan2(aimDy, aimDx);
-    const attacksPerSecond = hero.weapon.attacksPerSecond * hero.attacksPerSecond;
+    const weapon = hero.equipment.weapon;
+    const attacksPerSecond = weapon.attacksPerSecond * hero.attacksPerSecond;
     if (isMouseDown()) {
         const attackCooldownDuration = 1000 / attacksPerSecond;
         if (hero.attackCooldown <= state.fieldTime) {
@@ -210,15 +216,15 @@ function updateHero(state: GameState): void {
             state.hero.chargingLevel = 0;
         }
         const attackTime = attackCooldownDuration - (hero.attackCooldown - state.fieldTime);
-        for (const shot of hero.weapon.shots) {
+        for (const shot of weapon.shots) {
             const shotTime = attackCooldownDuration * (shot.timingOffset ?? 0);
             if (shotTime >= attackTime - FRAME_LENGTH / 2 && shotTime < attackTime + FRAME_LENGTH / 2) {
-                state.heroBullets.push(shot.generateBullet(state, hero, hero.weapon));
+                state.heroBullets.push(shot.generateBullet(state, hero, weapon));
             }
         }
     } else {
         hero.chargingLevel = Math.min(
-            hero.weapon.chargeLevel,
+            weapon.chargeLevel,
             // Charging gets slower for each charge level.
             //hero.chargingLevel + FRAME_LENGTH * attacksPerSecond / 1000 / Math.floor(hero.chargingLevel + 1)
             hero.chargingLevel + FRAME_LENGTH * attacksPerSecond / 1000
@@ -244,20 +250,7 @@ function updateHero(state: GameState): void {
     }
 }
 
-function damageHero(state: GameState, damage: number): void {
-    // Incoming damage is limited by both the amount of the damage and the players total health.
-    // Shots that deal X damage only deal damage if the player has taken less than 2X damage recently.
-    // A player cannot take more than 50% of their health over their recorded damage history.
-    const damageCap = Math.min(state.hero.maxLife / 2, 2 * damage);
-    const damageTaken = Math.max(0, Math.min(damage, damageCap - state.hero.recentDamageTaken));
-    state.hero.life -= damageTaken;
-    if (state.hero.life < 0) {
-        state.hero.life = 0;
-    }
-    state.hero.damageHistory[0] += damageTaken;
-    state.hero.recentDamageTaken += damageTaken;
-    addDamageNumber(state, state.hero, damageTaken);
-}
+
 
 function updateEnemies(state: GameState): void {
     const boss = state.hero.disc?.boss;
@@ -302,8 +295,9 @@ function updateHeroBullets(state: GameState): void {
             }
             if (doCirclesIntersect(enemy, bullet)) {
                 bullet.hitTargets.add(enemy);
-                enemy.life -= bullet.damage;
-                addDamageNumber(state, enemy, bullet.damage);
+                const damage = applyArmorToDamage(state, bullet.damage, enemy.armor);
+                enemy.life -= damage;
+                addDamageNumber(state, enemy, damage);
                 if (enemy.life <= 0) {
                     const experiencePenalty = Math.min(1, Math.max(0, (state.hero.level - enemy.level) * 0.1));
                     gainExperience(state,
@@ -368,9 +362,7 @@ function renderLoop() {
     try {
         window.requestAnimationFrame(renderLoop);
         const state = getState();
-        if (!state.paused) {
-            render(mainContext, state);
-        }
+        render(mainContext, state);
     } catch (e) {
         console.log(e);
         debugger;

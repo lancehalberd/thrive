@@ -1,4 +1,4 @@
-import { fillCircle } from 'app/render/renderGame';
+import { fillCircle } from 'app/render/renderGeometry';
 
 
 export const chest: EnemyDefinition = {

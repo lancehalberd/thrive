@@ -1,9 +1,24 @@
+
+
+Keep inventory in same place when paused but extend out to the left
+    Right most slots are first, right most 3 slots can be seen all the time, additional 7 slots appear when paused.
+
+Add weapon proficiency
+    Same XP curve as for levels, but applied to equipped weapon type
+        Max XP gain is 5% required for next level.
+    5% reduced attack speed for each level proficiency is below the weapon level to a minimum of 10%
+    5% more damage for each level of proficiency
+    1% increased attack speed for each level of proficiency
+
+Prevent attacking when clicking on inventory panels:
+    add hero.isShooting, set to true when mouse is pressed, set to false if mouse is pressed on inventory, set to false on mouse up.
+
 Additional boss mechanics:
     Summons turrets in a square around the disc that shoot 6 shot novas
     Charges to the center of the disc and shoots two spirals of bullets with opposite rotations or one slow spiral and one fast spiral
 
 
-Display weapon info in bottom right corner
+
 
 Add rare potion drop from enemies
     Refills life if potions are full

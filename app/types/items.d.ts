@@ -17,8 +17,12 @@ interface Shot {
     generateBullet(state: GameState, source: Hero|Enemy, weapon: Weapon): Bullet
 }
 
+type WeaponType = 'katana'|'dagger'|'sword'|'bow';
+type ArmorType = 'lightArmor'|'mediumArmor'|'heavyArmor';
+
 interface Weapon {
-    type: string
+    type: 'weapon'
+    weaponType: WeaponType
     level: number
     attacksPerSecond: number
     damage: number
@@ -30,18 +34,37 @@ interface Weapon {
     shots: Shot[]
 }
 
+interface Armor {
+    type: 'armor'
+    armorType: ArmorType
+    level: number
+    life: number
+    armor: number
+    speedFactor: number
+    name: string
+}
+
+type Item = Armor | Weapon;
+
 interface BaseLoot extends Geometry {
-    activate(state: GameState, loot: BaseLoot): void
-    render(context: CanvasRenderingContext2D, state: GameState, loot: BaseLoot): void
-    getLevel(loot: BaseLoot): number
+    activate(state: GameState): void
+    render(context: CanvasRenderingContext2D, state: GameState): void
+    getLevel(): number
+}
+
+interface ArmorLoot extends BaseLoot {
+    type: 'armor'
+    armor: Armor
 }
 
 interface WeaponLoot extends BaseLoot {
     type: 'weapon'
     weapon: Weapon
-    activate(state: GameState, loot: WeaponLoot): void
-    render(context: CanvasRenderingContext2D, state: GameState, loot: WeaponLoot): void
-    getLevel(loot: WeaponLoot): number
 }
 
-type Loot = WeaponLoot;
+interface InventorySlot extends Rect {
+    item?: Weapon|Armor
+}
+
+
+type Loot = ArmorLoot | WeaponLoot;

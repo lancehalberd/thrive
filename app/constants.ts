@@ -4,6 +4,8 @@ export const CANVAS_WIDTH = 800;
 export const CANVAS_HEIGHT = 800;
 export const CANVAS_SCALE = 1;
 export const SIGHT_RADIUS = 400;
+export const SLOT_SIZE = 40;
+export const SLOT_PADDING = 10;
 
 export const GAME_KEY = {
     MENU: 0,
@@ -17,7 +19,7 @@ export const GAME_KEY = {
     POTION: 8,
 };
 
-export const BASE_DROP_CHANCE = 0.1;
+export const BASE_DROP_CHANCE = 1;
 
 export const HERO_DAMAGE_FRAME_COUNT = 20;
 export const BASE_MAX_POTIONS = 5;

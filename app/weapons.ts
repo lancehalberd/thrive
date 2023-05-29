@@ -54,7 +54,8 @@ const bowShots: Shot[] = [
 function createBow(level: number, name: string): Weapon {
     const attacksPerSecond = BASE_ATTACKS_PER_SECOND * 0.8;
     return {
-        type: 'bow',
+        type: 'weapon',
+        weaponType: 'bow',
         level: Math.floor(level),
         name,
         shots: bowShots,
@@ -97,7 +98,8 @@ const swordShots: Shot[] = [
 
 function createSword(level: number, name: string): Weapon {
     return {
-        type: 'sword',
+        type: 'weapon',
+        weaponType: 'sword',
         level,
         name,
         shots: swordShots,
@@ -124,8 +126,8 @@ function generateDaggerShot(timingOffset: number, thetaOffset: number): Shot {
             return {
                 x: source.x,
                 y: source.y,
-                vx: weapon.speed * Math.cos(source.theta + thetaOffset / source.attackChargeLevel),
-                vy: weapon.speed * Math.sin(source.theta + thetaOffset / source.attackChargeLevel),
+                vx: weapon.speed * Math.cos(source.theta + thetaOffset / source.attackChargeLevel / source.attackChargeLevel),
+                vy: weapon.speed * Math.sin(source.theta + thetaOffset / source.attackChargeLevel / source.attackChargeLevel),
                 damage: Math.ceil(weapon.damage * source.attackChargeLevel * source.damage),
                 radius: weapon.radius + (source.attackChargeLevel - 1),
                 source,
@@ -148,7 +150,8 @@ const daggerShots: Shot[] = [
 
 function createDagger(level: number, name: string): Weapon {
     return {
-        type: 'dagger',
+        type: 'weapon',
+        weaponType: 'dagger',
         level: Math.floor(level),
         name,
         shots: daggerShots,
@@ -197,7 +200,8 @@ const katanaShots: Shot[] = [
 
 function createKatana(level: number, name: string): Weapon {
     return {
-        type: 'katana',
+        type: 'weapon',
+        weaponType: 'katana',
         level: Math.floor(level),
         name,
         shots: katanaShots,

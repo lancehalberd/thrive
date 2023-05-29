@@ -1,5 +1,5 @@
 import { BASE_DROP_CHANCE, FRAME_LENGTH } from 'app/constants';
-import { fillCircle } from 'app/render/renderGame';
+import { fillCircle } from 'app/render/renderGeometry';
 import { createEnemy, moveEnemyInCurrentDirection, shootEnemyBullet } from 'app/utils/enemy';
 import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 

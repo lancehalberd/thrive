@@ -1,4 +1,7 @@
 
+export function isPointInRect({x, y, w, h}: Rect, p: {x: number, y: number}): boolean {
+    return p.x >= x && p.x <= (x + w) && p.y >= y && p.y <= (y + h);
+}
 
 export function doCirclesIntersect(circleA: Circle, circleB: Circle): boolean {
     const radius = circleA.radius + circleB.radius;

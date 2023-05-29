@@ -3,16 +3,6 @@ interface CoreHeroStats {
     experience: number
 }
 
-interface Circle {
-    x: number
-    y: number
-    radius: number
-}
-
-interface Geometry extends Circle {
-    // The disc this object is currently on.
-    disc?: Disc
-}
 interface Vitals {
     life: number
     maxLife: number
@@ -29,7 +19,12 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     theta: number
     damageHistory: number[]
     recentDamageTaken: number
-    weapon: Weapon
+    equipment: {
+        weapon: Weapon
+        armor?: Armor
+    }
+    weapons: Weapon[],
+    armors: Armor[],
     // How much the player has charged since he last attacked, which will be applied to the next weapon cycle.
     chargingLevel: number
     // How charged the player's current attacks are, which lasts for 1 full weapon cycle.
@@ -91,6 +86,12 @@ interface GameState {
     visibleDiscs: Disc[]
     gameHasBeenInitialized: boolean
     paused: boolean
+    mouse: {
+        x: number
+        y: number
+        isDown: boolean
+        wasPressed: boolean
+    }
     keyboard: {
         gameKeyValues: number[]
         gameKeysDown: Set<number>

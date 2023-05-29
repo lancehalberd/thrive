@@ -74,7 +74,7 @@ export function createTreeDungeon(seed: number, radius: number, level: number): 
         } else if (dungeonRandomizer.generateAndMutate() < 0.3) {
             enemies.push(createEnemy(newDisc.x, newDisc.y, lord, level));
         } else if (dungeonRandomizer.generateAndMutate() < 0.3) {
-            enemies.push(createEnemy(newDisc.x, newDisc.y, chest, level));
+            enemies.push(createEnemy(newDisc.x, newDisc.y, chest, level + 1));
         }
         if (dungeonRandomizer.generateAndMutate() < 0.5) {
             enemies.push(createEnemy(newDisc.x + 50, newDisc.y, chaser, level));

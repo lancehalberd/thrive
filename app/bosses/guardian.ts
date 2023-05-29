@@ -1,5 +1,5 @@
 import { BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_SPEED } from 'app/constants';
-import { fillCircle } from 'app/render/renderGame';
+import { fillCircle } from 'app/render/renderGeometry';
 import { chaseTarget, moveEnemyInDirection, shootBulletArc, shootEnemyBullet } from 'app/utils/enemy';
 import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 import Random from 'app/utils/Random';
