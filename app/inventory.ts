@@ -22,47 +22,24 @@ export function getInventorySlots(state: GameState): InventorySlot[] {
             item: state.hero.equipment.armor,
         }
     ];
-    if (state.paused) {
-        const slotCount = 8;
-        const y = 500 + SLOT_PADDING / 2;
-        for (let i = 0; i < slotCount; i++) {
-            const x = (CANVAS_WIDTH - slotCount * slotSpacing + SLOT_PADDING) / 2 + i * slotSpacing;
-            slots.push({
-                x,
-                y,
-                w: SLOT_SIZE,
-                h: SLOT_SIZE,
-                item: state.hero.weapons[i],
-            });
-            slots.push({
-                x,
-                y: y + slotSpacing,
-                w: SLOT_SIZE,
-                h: SLOT_SIZE,
-                item: state.hero.armors[i],
-            });
-        }
-    } else {
-        const slotCount = 3;
-        const y = CANVAS_HEIGHT - 2 * slotSpacing;
-        for (let i = 0; i < slotCount; i++) {
-            const x = CANVAS_WIDTH - slotCount * slotSpacing + i * slotSpacing;
-            slots.push({
-                x,
-                y,
-                w: SLOT_SIZE,
-                h: SLOT_SIZE,
-                item: state.hero.weapons[i],
-            });
-            slots.push({
-                x,
-                y: y + slotSpacing,
-                w: SLOT_SIZE,
-                h: SLOT_SIZE,
-                item: state.hero.armors[i],
-            });
-        }
-
+    const slotCount = state.paused ? 10 : 3;
+    const y = CANVAS_HEIGHT - 2 * slotSpacing;
+    for (let i = 0; i < slotCount; i++) {
+        const x = CANVAS_WIDTH - (i + 1) * slotSpacing;
+        slots.push({
+            x,
+            y,
+            w: SLOT_SIZE,
+            h: SLOT_SIZE,
+            item: state.hero.weapons[i],
+        });
+        slots.push({
+            x,
+            y: y + slotSpacing,
+            w: SLOT_SIZE,
+            h: SLOT_SIZE,
+            item: state.hero.armors[i],
+        });
     }
     return slots;
 }

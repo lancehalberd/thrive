@@ -9,7 +9,7 @@ import { getExperienceForNextLevel } from 'app/utils/hero';
 
 const minimapSize = 500;
 const smallMapRect = {x: CANVAS_WIDTH - 155, y: 5, w: 150, h: 150};
-const largeMapRect = {x: (CANVAS_WIDTH - 400) / 2, y: 100, w: 400, h: 400};
+const largeMapRect = {x: (CANVAS_WIDTH - 400) / 2, y: (CANVAS_HEIGHT - 400) / 2, w: 400, h: 400};
 const [mapCanvas, mapContext] = createCanvasAndContext(minimapSize, minimapSize);
 const mapScale = 20;
 
