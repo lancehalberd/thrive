@@ -1,4 +1,5 @@
 import { CANVAS_HEIGHT, CANVAS_WIDTH, GAME_KEY, SLOT_PADDING, SLOT_SIZE } from 'app/constants';
+import { applyEnchantmentToEquipment } from 'app/enchantments';
 import { isPointInRect } from 'app/utils/geometry';
 import { gainItemExperience, setDerivedHeroStats } from 'app/utils/hero';
 import { wasGameKeyPressed } from 'app/utils/userInput';
@@ -8,22 +9,22 @@ const slotSpacing = SLOT_SIZE + SLOT_PADDING;
 export function getInventorySlots(state: GameState): InventorySlot[] {
     const slots: InventorySlot[] = [
         {
-            x: CANVAS_WIDTH - 2 * slotSpacing,
-            y: CANVAS_HEIGHT - 3 * slotSpacing,
+            x: SLOT_PADDING,
+            y: CANVAS_HEIGHT - slotSpacing,
             w: SLOT_SIZE,
             h: SLOT_SIZE,
             item: state.hero.equipment.weapon,
         },
         {
-            x: CANVAS_WIDTH - slotSpacing,
-            y: CANVAS_HEIGHT - 3 * slotSpacing,
+            x: SLOT_PADDING,
+            y: CANVAS_HEIGHT - 2 * slotSpacing,
             w: SLOT_SIZE,
             h: SLOT_SIZE,
             item: state.hero.equipment.armor,
         }
     ];
-    const slotCount = state.paused ? 10 : 3;
-    const y = CANVAS_HEIGHT - 2 * slotSpacing;
+    let slotCount = state.paused ? 10 : 3;
+    let y = CANVAS_HEIGHT - 2 * slotSpacing;
     for (let i = 0; i < slotCount; i++) {
         const x = CANVAS_WIDTH - (i + 1) * slotSpacing;
         slots.push({
@@ -41,7 +42,29 @@ export function getInventorySlots(state: GameState): InventorySlot[] {
             item: state.hero.armors[i],
         });
     }
+    // Enchantment slots.
+    slotCount = state.paused ? 10 : 2;
+    y = CANVAS_HEIGHT - 3 * slotSpacing;
+    for (let i = 0; i < slotCount; i++) {
+        const x = CANVAS_WIDTH - (i + 1) * slotSpacing;
+        slots.push({
+            x,
+            y,
+            w: SLOT_SIZE,
+            h: SLOT_SIZE,
+            item: state.hero.enchantments[i],
+        });
+    }
     return slots;
+}
+
+function removeEnchantment(state: GameState, enchantment: Enchantment): boolean {
+    const index = state.hero.enchantments.indexOf(enchantment);
+    if (index < 0) {
+        return false;
+    }
+    state.hero.enchantments.splice(index, 1);
+    return true;
 }
 
 export function updateInventory(state: GameState): void {
@@ -51,9 +74,23 @@ export function updateInventory(state: GameState): void {
             hoverItem = slot.item;
         }
     }
+    const activeEnchantment = state.hero.activeEnchantment;
+    // Active enchantment is cleared every time the mouse is clicked.
+    if (state.mouse.wasPressed) {
+        delete state.hero.activeEnchantment;
+    }
     if (hoverItem) {
         if (state.mouse.wasPressed) {
             state.hero.isShooting = false;
+            if (activeEnchantment) {
+                if (hoverItem.type !== 'enchantment') {
+                    if (applyEnchantmentToEquipment(activeEnchantment, hoverItem)) {
+                        removeEnchantment(state, activeEnchantment);
+                        setDerivedHeroStats(state);
+                    }
+                }
+                return;
+            }
             if (hoverItem.type === 'weapon') {
                 const index = state.hero.weapons.indexOf(hoverItem);
                 if (index >= 0) {
@@ -74,6 +111,9 @@ export function updateInventory(state: GameState): void {
                     setDerivedHeroStats(state);
                 }
             }
+            if (hoverItem.type === 'enchantment') {
+                state.hero.activeEnchantment = hoverItem;
+            }
         } else if (wasGameKeyPressed(state, GAME_KEY.SELL)) {
             if (hoverItem.type === 'weapon') {
                 const index = state.hero.weapons.indexOf(hoverItem);
@@ -86,6 +126,11 @@ export function updateInventory(state: GameState): void {
                 const index = state.hero.armors.indexOf(hoverItem);
                 if (index >= 0) {
                     state.hero.armors.splice(index, 1);
+                    gainItemExperience(state, hoverItem);
+                }
+            }
+            if (hoverItem.type === 'enchantment') {
+                if (removeEnchantment(state, hoverItem)) {
                     gainItemExperience(state, hoverItem);
                 }
             }

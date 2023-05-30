@@ -1,4 +1,5 @@
 import { BASE_MAX_POTIONS, BASE_XP } from 'app/constants';
+import { applyEnchantmentsToStats } from 'app/enchantments';
 import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
 
 
@@ -63,7 +64,6 @@ export function setDerivedHeroStats(state: GameState): void {
     } else {
         state.hero.speed *= 1.2;
     }
-    state.hero.life = Math.round(lifePercentage * state.hero.maxLife);
 
     // Bow gives 0.1% -> 10% increased crit chance
     state.hero.critChance = getWeaponProficiency(state, 'bow').level * 0.001;
@@ -77,6 +77,12 @@ export function setDerivedHeroStats(state: GameState): void {
     state.hero.chargeDamage = getWeaponProficiency(state, 'staff').level * 0.01;
     // Sword gives 1% -> 100% increased damage
     state.hero.damage *= (1 + getWeaponProficiency(state, 'sword').level * 0.01);
+
+    // Enchantments are applied last to stats.
+    applyEnchantmentsToStats(state);
+
+    // Make sure updating stats doesn't change the hero's life percentage beyond rounding it.
+    state.hero.life = Math.round(lifePercentage * state.hero.maxLife);
 }
 
 export function getExperienceForNextLevel(currentLevel: number): number {

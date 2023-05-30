@@ -2,7 +2,7 @@ import { chaser } from 'app/enemies/chaser';
 import { circler } from 'app/enemies/circler';
 import { lord } from 'app/enemies/lord';
 import { turret } from 'app/enemies/turret';
-import { checkToDropBasicLoot } from 'app/loot';
+import { checkToDropBasicLoot, dropEnchantmentLoot } from 'app/loot';
 import { updateInventory } from 'app/inventory';
 import { render } from 'app/render/renderGame';
 import { mainCanvas, mainContext } from 'app/utils/canvas';
@@ -12,7 +12,7 @@ import { createEnemy } from 'app/utils/enemy';
 import { doCirclesIntersect, findClosestDisc, getClosestElement, getTargetVector } from 'app/utils/geometry';
 import { damageHero, gainExperience, gainWeaponExperience, setDerivedHeroStats } from 'app/utils/hero';
 import { getMousePosition, isMouseDown, isRightMouseDown } from 'app/utils/mouse';
-import { isGameKeyDown, updateKeyboardState, wasGameKeyPressed } from 'app/utils/userInput';
+import { isGameKeyDown, isKeyboardKeyDown, updateKeyboardState, wasGameKeyPressed, KEY } from 'app/utils/userInput';
 import Random from 'app/utils/Random';
 import {
     BASE_MAX_POTIONS,
@@ -49,6 +49,7 @@ let state: GameState = {
         weapons: [],
         weaponProficiency: {},
         armors: [],
+        enchantments: [],
         // Derived stats will get set later.
         life: 0,
         maxLife: 0,
@@ -67,6 +68,7 @@ let state: GameState = {
         critDamage: 0,
         chargeDamage: 0,
         armorShredEffect: 0,
+        potionEffect: 1,
     },
     heroBullets: [],
     enemies: [],
@@ -122,6 +124,21 @@ function update(): void {
     }
     if (wasGameKeyPressed(state, GAME_KEY.MENU)) {
         state.paused = !state.paused;
+    }
+    if (isKeyboardKeyDown(KEY.SHIFT) && isKeyboardKeyDown(KEY.B)) {
+        const bossDisc = state.activeDiscs.find(d => d.boss);
+        if (bossDisc) {
+            state.hero.x = bossDisc.x;
+            state.hero.y = bossDisc.y;
+        }
+    }
+    if (isKeyboardKeyDown(KEY.SHIFT) && isKeyboardKeyDown(KEY.K)) {
+        for (const enemy of state.enemies) {
+            if (enemy.disc === state.hero.disc) {
+                defeatEnemy(state, enemy);
+            }
+        }
+        state.enemies = state.enemies.filter(e => e.life > 0);
     }
 
     updateInventory(state);
@@ -252,13 +269,12 @@ function updateHero(state: GameState): void {
     for (const portal of state.portals) {
         const isActive = !state.activeLoot && doCirclesIntersect(state.hero, portal);
         if (isActive && wasGameKeyPressed(state, GAME_KEY.ACTIVATE)) {
-            console.log('activate');
             portal.activate(state);
         }
     }
 
     if (hero.potions > 0 && hero.life < hero.maxLife && wasGameKeyPressed(state, GAME_KEY.POTION)) {
-        hero.life = Math.min(hero.maxLife, Math.ceil(hero.life + hero.maxLife * 0.2));
+        hero.life = Math.min(hero.maxLife, Math.ceil(hero.life + hero.maxLife * 0.2 * hero.potionEffect));
         hero.potions--;
     }
 }
@@ -295,6 +311,9 @@ function updateHeroBullets(state: GameState): void {
         bullet.y += bullet.vy / FRAME_LENGTH;
         let bulletAbsorbed = false;
         for (const enemy of state.enemies) {
+            if (enemy.isInvulnerable) {
+                continue;
+            }
             // Freeze enemies outside of the boss fight.
             if (boss && enemy.disc?.boss !== boss) {
                 continue;
@@ -320,15 +339,7 @@ function updateHeroBullets(state: GameState): void {
                 enemy.armor = Math.max(enemy.baseArmor / 10, enemy.armor * (1 - armorShred));
                 addDamageNumber(state, enemy, damage, bullet.isCrit);
                 if (enemy.life <= 0) {
-                    const experiencePenalty = Math.min(1, Math.max(0, (state.hero.level - enemy.level) * 0.1));
-                    const experience = BASE_XP * Math.pow(1.2, enemy.level) * (enemy.definition.experienceFactor ?? 1);
-                    gainExperience(state, Math.ceil(experience * (1 - experiencePenalty)));
-                    gainWeaponExperience(state, state.hero.equipment.weapon.weaponType, enemy.level, experience);
-                    checkToDropBasicLoot(state, enemy);
-                    if (enemy.disc?.boss === enemy) {
-                        delete enemy.disc.boss;
-                        state.portals.push(getTreeDungeonPortal(enemy.disc.x, enemy.disc.y, enemy.level - 1, Math.random()));
-                    }
+                    defeatEnemy(state, enemy);
                 } else {
                     // Shots are not absorbed by defeated enemies.
                     bulletAbsorbed = !bullet.isEnemyPiercing;
@@ -340,6 +351,31 @@ function updateHeroBullets(state: GameState): void {
         }
     }
     state.enemies = state.enemies.filter(e => e.life > 0);
+}
+
+function defeatEnemy(state: GameState, enemy: Enemy): void {
+    enemy.life = 0;
+    const experiencePenalty = Math.min(1, Math.max(0, (state.hero.level - enemy.level) * 0.1));
+    const experience = BASE_XP * Math.pow(1.2, enemy.level) * (enemy.definition.experienceFactor ?? 1);
+    gainExperience(state, Math.ceil(experience * (1 - experiencePenalty)));
+    gainWeaponExperience(state, state.hero.equipment.weapon.weaponType, enemy.level, experience);
+    checkToDropBasicLoot(state, enemy);
+    if (enemy.disc?.boss === enemy) {
+        delete enemy.disc.boss;
+        state.portals.push(getTreeDungeonPortal(enemy.disc.x, enemy.disc.y, enemy.level - 1, Math.random()));
+        // Destroy all boss minions when it is defeated. They will not grant experience as they are not
+        // killed by taking shot damage.
+        for (const minion of enemy.minions) {
+            minion.life = 0;
+        }
+        const enchantment = enemy.definition.getEnchantment?.(state, enemy);
+        if (enchantment) {
+            dropEnchantmentLoot(state, {
+                x: enemy.disc.x,
+                y: enemy.disc.y + 100,
+            }, enchantment)
+        }
+    }
 }
 
 function updateEnemyBullets(state: GameState): void {

@@ -22,7 +22,7 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
         baseArmor,
         armor: baseArmor,
         damage: Math.floor(
-            (heroMaxLife / 10 + heroMaxLife / 10 * level / 100) * (definition.statFactors.damage ?? 1)
+            (heroMaxLife / 10 + heroMaxLife / 10 * level / 100 + level) * (definition.statFactors.damage ?? 1)
         ),
         attacksPerSecond: (1 + 0.05 * level) * (definition.statFactors.attacksPerSecond ?? 1),
         attackCooldown: 0,
@@ -33,6 +33,7 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
         attackChargeLevel: 1,
         mode: 'choose',
         modeTime: 0,
+        isInvulnerable: definition.isInvulnerable,
         setMode(this: Enemy, mode: string): void {
             this.mode = mode;
             this.modeTime = 0;
@@ -83,3 +84,14 @@ export function chaseTarget(state: GameState, enemy: Enemy, target: Circle): voi
     enemy.theta = turnTowardsAngle(enemy.theta, 0.2, Math.atan2(y, x));
     moveEnemyInDirection(state, enemy);
 }
+
+
+export function moveEnemyToTarget(state: GameState, enemy: Enemy, {x, y}: Point): boolean {
+    const dx = x - enemy.x, dy = y - enemy.y;
+    enemy.theta = turnTowardsAngle(enemy.theta, 0.2, Math.atan2(dy, dx));
+    const distance = Math.sqrt(dx * dx + dy* dy);
+    enemy.x += Math.min(enemy.speed / FRAME_LENGTH, distance) * Math.cos(enemy.theta);
+    enemy.y += Math.min(enemy.speed / FRAME_LENGTH, distance) * Math.sin(enemy.theta);
+    return distance <= enemy.speed / FRAME_LENGTH;
+}
+

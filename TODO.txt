@@ -1,7 +1,3 @@
-Additional boss mechanics:
-    Summons turrets in a square around the disc that shoot 6 shot novas
-    Charges to the center of the disc and shoots two spirals of bullets with opposite rotations or one slow spiral and one fast spiral
-
 Add rare potion drop from enemies
     Refills life if potions are full
     Grants bonus XP for any wasted life based on enemy level (potionXp is assigned on creation to 0.2 * enemyXP)

@@ -83,6 +83,7 @@ function createBow(level: number, name: string): Weapon {
         speed: 1.5 * BASE_BULLET_SPEED,
         radius: BASE_BULLET_RADIUS,
         duration: BASE_BULLET_DURATION,
+        enchantmentSlots: [],
     };
 }
 
@@ -132,6 +133,7 @@ function createSword(level: number, name: string): Weapon {
         speed: BASE_BULLET_SPEED,
         radius: Math.ceil(1.2 * BASE_BULLET_RADIUS),
         duration: BASE_BULLET_DURATION,
+        enchantmentSlots: [],
     };
 }
 
@@ -189,6 +191,7 @@ function createDagger(level: number, name: string): Weapon {
         speed: Math.ceil(BASE_BULLET_SPEED * 0.7),
         radius: BASE_BULLET_RADIUS,
         duration: BASE_BULLET_DURATION,
+        enchantmentSlots: [],
     };
 }
 
@@ -244,6 +247,7 @@ function createKatana(level: number, name: string): Weapon {
         speed: BASE_BULLET_SPEED * 0.8,
         radius: BASE_BULLET_RADIUS,
         duration: BASE_BULLET_DURATION,
+        enchantmentSlots: [],
     };
 }
 

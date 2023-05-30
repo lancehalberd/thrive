@@ -30,7 +30,8 @@ export const lord: EnemyDefinition = {
         enemy.y += enemy.speed * Math.sin(enemy.theta) / FRAME_LENGTH;
 
         enemy.minions = enemy.minions.filter(m => m.life > 0);
-        if (enemy.attackCooldown <= state.fieldTime && enemy.minions.length < 5) {
+        const maxMinions = Math.min(5, 2 + Math.floor(enemy.level / 3));
+        if (enemy.attackCooldown <= state.fieldTime && enemy.minions.length < maxMinions) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             for (const theta of [enemy.theta + Math.PI / 2, enemy.theta - Math.PI / 2]) {
                 const minion = createEnemy(

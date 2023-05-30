@@ -31,6 +31,8 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     }
     weapons: Weapon[],
     armors: Armor[],
+    enchantments: Enchantment[],
+    activeEnchantment?: Enchantment,
     // How much the player has charged since he last attacked, which will be applied to the next weapon cycle.
     chargingLevel: number
     // How charged the player's current attacks are, which lasts for 1 full weapon cycle.
@@ -41,6 +43,7 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     critDamage: number
     chargeDamage: number
     armorShredEffect: number
+    potionEffect: number
 }
 interface Enemy<EnemyParams=any> extends Vitals, Geometry {
     level: number
@@ -58,6 +61,7 @@ interface Enemy<EnemyParams=any> extends Vitals, Geometry {
     modeTime: number
     setMode(this: Enemy, mode: string)
     isBoss?: boolean
+    isInvulnerable?: boolean
 }
 interface EnemyDefinition<EnemyParams=any> {
     name: string
@@ -67,7 +71,10 @@ interface EnemyDefinition<EnemyParams=any> {
     experienceFactor?: number
     solid?: boolean
     radius: number
+    isInvulnerable?: boolean
     update: (state: GameState, enemy: Enemy) => void
+    // Set on bosses that drop enchantments
+    getEnchantment?: (state: GameState, enemy: Enemy) => Enchantment
     render: (context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => void
 }
 

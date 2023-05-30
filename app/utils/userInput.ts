@@ -16,6 +16,7 @@ export const KEY = {
     BACK_SLASH: 220,
     RIGHT_BRACKET: 221,
     A: 'A'.charCodeAt(0),
+    B: 'B'.charCodeAt(0),
     C: 'C'.charCodeAt(0),
     D: 'D'.charCodeAt(0),
     E: 'E'.charCodeAt(0),

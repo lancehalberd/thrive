@@ -1,4 +1,4 @@
-import { BASE_MAX_POTIONS, CANVAS_HEIGHT, CANVAS_WIDTH, SIGHT_RADIUS } from 'app/constants';
+import { BASE_MAX_POTIONS, CANVAS_HEIGHT, CANVAS_WIDTH, SIGHT_RADIUS, SLOT_SIZE, SLOT_PADDING } from 'app/constants';
 import { getInventorySlots } from 'app/inventory';
 import { fillCircle } from 'app/render/renderGeometry';
 import { renderInventorySlot, renderItemDetails } from 'app/render/renderInventory';
@@ -161,26 +161,40 @@ function renderHUD(context: CanvasRenderingContext2D, state: GameState): void {
     renderBar(context, experienceRect, state.hero.experience / requiredExperience, 'orange', '#888');
 
 
-    let y = CANVAS_HEIGHT - 20;
-    const displayedWeaponTypes = state.paused ? weaponTypes : [state.hero.equipment.weapon.weaponType];
-    for (const weaponType of displayedWeaponTypes) {
-        const weaponXpRect: Rect = {x: 5, y, h: 10, w: 160};
-        const weaponProficiency = getWeaponProficiency(state, weaponType);
-        const requiredWeaponXp = getExperienceForNextWeaponLevel(weaponProficiency.level);
-        renderBar(context, weaponXpRect, weaponProficiency.experience / requiredWeaponXp, 'orange', '#888');
-        context.fillStyle = 'white';
-        context.textBaseline = 'middle';
-        context.textAlign = 'left';
-        context.font = '16px sans-serif';
-        context.fillText(weaponTypeLabels[weaponType] + ' skill ' + weaponProficiency.level, 5, y - 8);
-        y -= 30
-    }
-
+    let y = CANVAS_HEIGHT - 25;
+    let x = SLOT_SIZE + 2 * SLOT_PADDING;
+    const weaponXpRect: Rect = {x, y, h: 10, w: 160};
+    const weaponProficiency = getWeaponProficiency(state, state.hero.equipment.weapon.weaponType);
+    const requiredWeaponXp = getExperienceForNextWeaponLevel(weaponProficiency.level);
+    renderBar(context, weaponXpRect, weaponProficiency.experience / requiredWeaponXp, 'orange', '#888');
     context.fillStyle = 'white';
     context.textBaseline = 'middle';
     context.textAlign = 'left';
     context.font = '16px sans-serif';
-    context.fillText('Armor ' + state.hero.armor, 5, y - 8);
+    context.fillText(weaponTypeLabels[state.hero.equipment.weapon.weaponType] + ' skill ' + weaponProficiency.level, x, y - 8);
+
+    if (state.paused) {
+        let y = 200;
+        for (const weaponType of weaponTypes) {
+            const weaponXpRect: Rect = {x: 5, y, h: 10, w: 160};
+            const weaponProficiency = getWeaponProficiency(state, weaponType);
+            const requiredWeaponXp = getExperienceForNextWeaponLevel(weaponProficiency.level);
+            renderBar(context, weaponXpRect, weaponProficiency.experience / requiredWeaponXp, 'orange', '#888');
+            context.fillStyle = 'white';
+            context.textBaseline = 'middle';
+            context.textAlign = 'left';
+            context.font = '16px sans-serif';
+            context.fillText(weaponTypeLabels[weaponType] + ' skill ' + weaponProficiency.level, 10, y - 8);
+            y += 30
+        }
+    }
+
+    y -= (SLOT_SIZE + SLOT_PADDING);
+    context.fillStyle = 'white';
+    context.textBaseline = 'middle';
+    context.textAlign = 'left';
+    context.font = '16px sans-serif';
+    context.fillText('Armor ' + state.hero.armor, x, y - 8);
 
 
     context.strokeStyle = 'red';
@@ -194,7 +208,7 @@ function renderHUD(context: CanvasRenderingContext2D, state: GameState): void {
 
     const boss = state.hero.disc?.boss;
     if (!state.paused && boss) {
-        const lifeRect: Rect = {x: 210, y: CANVAS_HEIGHT - 30, h: 24, w: CANVAS_WIDTH - 420};
+        const lifeRect: Rect = {x: 210, y: CANVAS_HEIGHT - 60, h: 24, w: CANVAS_WIDTH - 420};
         let color = '#0F0';
         if (boss.life <= boss.maxLife / 4) {
             color = '#F00';
@@ -211,13 +225,13 @@ function renderHUD(context: CanvasRenderingContext2D, state: GameState): void {
 
     let hoverItem: Item|undefined = undefined;
     for (const slot of getInventorySlots(state)) {
-        renderInventorySlot(context, slot);
+        renderInventorySlot(context, state, slot);
         if (slot.item && isPointInRect(slot, state.mouse)) {
             hoverItem = slot.item;
         }
     }
     if (hoverItem) {
-        let equippedItem: Item|undefined;
+        let equippedItem: Equipment|undefined;
         if (hoverItem.type === 'weapon') {
             equippedItem = state.hero.equipment.weapon;
         }

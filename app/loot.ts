@@ -4,6 +4,8 @@ import { gainItemExperience } from 'app/utils/hero';
 import {
     renderArmorShort,
     renderArmorLong,
+    renderEnchantmentLong,
+    renderEnchantmentShort,
     renderWeaponShort,
     renderWeaponLong,
 } from 'app/render/renderInventory';
@@ -25,6 +27,23 @@ export function checkToDropBasicLoot(state: GameState, source: Enemy): void {
     }
 }
 
+function addEnchantmentSlot(item: Armor|Weapon): void {
+    item.enchantmentSlots.push({enchantmentType: 'empty', value: 0})
+}
+function addEnchantmentSlots(item: Armor|Weapon): void {
+    item.enchantmentSlots = [];
+    addEnchantmentSlot(item);
+    if (item.level >= 5 && Math.random() < 0.1) {
+        addEnchantmentSlot(item);
+    }
+    if (item.level >= 20 && Math.random() < 0.1) {
+        addEnchantmentSlot(item);
+    }
+    if (item.level >= 50 && Math.random() < 0.1) {
+        addEnchantmentSlot(item);
+    }
+}
+
 export function dropArmorLoot(state: GameState, source: Enemy, level: number): void {
     const armorType = Random.element(allArmors);
     let armorIndex = 0;
@@ -33,14 +52,14 @@ export function dropArmorLoot(state: GameState, source: Enemy, level: number): v
             break;
         }
     }
-    const armor = {
-        ...armorType[armorIndex]
-    };
+    const armor = {...armorType[armorIndex]};
     for (;armor.level < level; armor.level++) {
         armor.name = armor.name + '+';
         armor.armor = Math.ceil(armor.armor * 1.1);
         armor.life = Math.ceil(armor.life * 1.1);
     }
+    addEnchantmentSlots(armor);
+
     state.loot.push({
         type: 'armor',
         x: source.x,
@@ -63,7 +82,6 @@ export function dropArmorLoot(state: GameState, source: Enemy, level: number): v
     });
 }
 
-
 export function dropWeaponLoot(state: GameState, source: Enemy, level: number): void {
     const weaponType = Random.element(allWeapons);
     let weaponIndex = 0;
@@ -77,6 +95,7 @@ export function dropWeaponLoot(state: GameState, source: Enemy, level: number): 
         weapon.name = weapon.name + '+';
         weapon.damage = Math.ceil(weapon.damage * 1.1);
     }
+    addEnchantmentSlots(weapon);
     state.loot.push({
         type: 'weapon',
         x: source.x,
@@ -95,6 +114,29 @@ export function dropWeaponLoot(state: GameState, source: Enemy, level: number): 
         },
         sell(this: WeaponLoot): void {
             gainItemExperience(state, this.weapon);
+        }
+    });
+}
+
+export function dropEnchantmentLoot(state: GameState, {x, y}: Point, enchantment: Enchantment): void {
+    state.loot.push({
+        type: 'enchantment',
+        x,
+        y,
+        radius: 12,
+        enchantment,
+        activate(this: EnchantmentLoot, state: GameState): void {
+            state.hero.enchantments.push(this.enchantment);
+        },
+        render(this: EnchantmentLoot, context: CanvasRenderingContext2D, state: GameState): void {
+            if (this === state.activeLoot) {
+                renderEnchantmentLong(context, this.x, this.y, this.enchantment);
+            } else {
+                renderEnchantmentShort(context, this.x, this.y, this.enchantment);
+            }
+        },
+        sell(this: EnchantmentLoot): void {
+            gainItemExperience(state, this.enchantment);
         }
     });
 }

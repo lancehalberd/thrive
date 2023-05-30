@@ -22,6 +22,16 @@ interface Shot {
 type WeaponType = 'katana'|'dagger'|'sword'|'bow'|'morningStar'|'staff';
 type ArmorType = 'lightArmor'|'mediumArmor'|'heavyArmor';
 
+type WeaponEnchantmentType = 'attackSpeed'|'critChance'|'critDamage'|'damage';
+type ArmorEnchantmentType  = 'speed'|'armor'|'life'|'potionEffect';
+
+type EnchantmentType =  ArmorEnchantmentType | WeaponEnchantmentType;
+
+interface ItemEnchantment {
+    enchantmentType: 'empty' | EnchantmentType
+    value: number
+}
+
 interface Weapon {
     type: 'weapon'
     weaponType: WeaponType
@@ -36,6 +46,7 @@ interface Weapon {
     duration: number
     name: string
     shots: Shot[]
+    enchantmentSlots: ItemEnchantment[]
 }
 
 interface Armor {
@@ -46,9 +57,20 @@ interface Armor {
     armor: number
     speedFactor: number
     name: string
+    enchantmentSlots: ItemEnchantment[]
 }
 
-type Item = Armor | Weapon;
+interface Enchantment {
+    type: 'enchantment'
+    name: string
+    level: number
+    weaponEnchantmentType: EnchantmentType
+    armorEnchantmentType: EnchantmentType
+    strength: number
+}
+
+type Item = Armor | Weapon | Enchantment;
+type Equipment = Armor | Weapon;
 
 interface BaseLoot extends Geometry {
     activate(state: GameState): void
@@ -60,15 +82,18 @@ interface ArmorLoot extends BaseLoot {
     type: 'armor'
     armor: Armor
 }
-
 interface WeaponLoot extends BaseLoot {
     type: 'weapon'
     weapon: Weapon
 }
+interface EnchantmentLoot extends BaseLoot {
+    type: 'enchantment'
+    enchantment: Enchantment
+}
 
 interface InventorySlot extends Rect {
-    item?: Weapon|Armor
+    item?: Item
 }
 
 
-type Loot = ArmorLoot | WeaponLoot;
+type Loot = ArmorLoot | WeaponLoot | EnchantmentLoot;
