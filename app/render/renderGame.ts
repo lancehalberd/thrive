@@ -1,7 +1,8 @@
 import { BASE_MAX_POTIONS, CANVAS_HEIGHT, CANVAS_WIDTH, SIGHT_RADIUS, SLOT_SIZE, SLOT_PADDING } from 'app/constants';
-import { getInventorySlots } from 'app/inventory';
+import { getInventorySlots, getSelectedInventorySlot, getSelectedItem } from 'app/inventory';
 import { fillCircle } from 'app/render/renderGeometry';
-import { renderInventorySlot, renderItemDetails } from 'app/render/renderInventory';
+import { renderInventorySlot, renderItemDetails, renderSelectedInventorySlot } from 'app/render/renderInventory';
+import { getRightAnalogDeltas } from 'app/utils/userInput'
 import { createCanvasAndContext } from 'app/utils/canvas';
 import { doCirclesIntersect, isPointInRect } from 'app/utils/geometry';
 import { weaponTypeLabels, weaponTypes } from 'app/weapons';
@@ -102,6 +103,29 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
     context.arc(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, SIGHT_RADIUS, 0, 2 * Math.PI, true);
     context.fillStyle = '#000';
     context.fill();
+
+    if (state.isUsingXbox) {
+        const [dx, dy] = getRightAnalogDeltas(state);
+        /*const x = CANVAS_WIDTH / 2 + dx * 100, y = CANVAS_HEIGHT / 2 + dy * 100;
+        context.beginPath();
+        context.arc(x, y, 15, 0, 2 * Math.PI, true);
+        context.strokeStyle = 'blue';
+        context.stroke();*/
+
+        /*context.beginPath();
+        context.arc(x, y, 2, 0, 2 * Math.PI, true);
+        context.fillStyle = 'blue';
+        context.fill();*/
+
+        context.save();
+        context.beginPath();
+        context.setLineDash([10, 15]);
+        context.strokeStyle = 'blue';
+        context.moveTo(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+        context.lineTo(SIGHT_RADIUS * dx + CANVAS_WIDTH / 2, SIGHT_RADIUS * dy + CANVAS_HEIGHT / 2);
+        context.stroke();
+        context.restore();
+    }
 
     renderHUD(context, state);
 }
@@ -226,9 +250,13 @@ function renderHUD(context: CanvasRenderingContext2D, state: GameState): void {
     let hoverItem: Item|undefined = undefined;
     for (const slot of getInventorySlots(state)) {
         renderInventorySlot(context, state, slot);
-        if (slot.item && isPointInRect(slot, state.mouse)) {
+        if (state.isUsingKeyboard && slot.item && isPointInRect(slot, state.mouse)) {
             hoverItem = slot.item;
         }
+    }
+    if (state.paused && state.isUsingXbox) {
+        renderSelectedInventorySlot(context, state);
+        hoverItem = getSelectedItem(state);
     }
     if (hoverItem) {
         let equippedItem: Equipment|undefined;
@@ -238,7 +266,14 @@ function renderHUD(context: CanvasRenderingContext2D, state: GameState): void {
         if (hoverItem.type === 'armor') {
             equippedItem = state.hero.equipment.armor;
         }
-        renderItemDetails(context, hoverItem, state.mouse, equippedItem);
+        if (state.isUsingXbox) {
+            const slot = getSelectedInventorySlot(state);
+            if (slot) {
+                renderItemDetails(context, hoverItem, slot, equippedItem);
+            }
+        } else {
+            renderItemDetails(context, hoverItem, state.mouse, equippedItem);
+        }
     }
 }
 

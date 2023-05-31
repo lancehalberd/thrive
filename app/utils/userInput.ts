@@ -1,3 +1,4 @@
+/* global navigator */
 import { GAME_KEY } from 'app/constants';
 
 export const KEY = {
@@ -53,12 +54,98 @@ const KEYBOARD_MAPPINGS = {
     [GAME_KEY.POTION]: [KEY.SPACE],
 }
 
-const ANALOG_THRESHOLD = 0.3;
+// Under this threshold, the analog buttons are considered "released" for the sake of
+// actions that are only taken once per button push (like moving a menu cursor).
+export const ANALOG_THRESHOLD = 0.3;
+
+// This mapping assumes a canonical gamepad setup as seen in:
+// https://w3c.github.io/gamepad/#remapping
+// Which seems to work well with my xbox 360 controller.
+// I based this code on examples from:
+// https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API/Using_the_Gamepad_API
+// Easy to find mappings at: http://html5gamepad.com/
+const GAME_PAD_MAPPINGS = {
+    [GAME_KEY.MENU]: 9, // START
+    [GAME_KEY.UP]: 12,
+    [GAME_KEY.DOWN]: 13,
+    [GAME_KEY.LEFT]: 14,
+    [GAME_KEY.RIGHT]: 15,
+    [GAME_KEY.ACTIVATE]: [
+        0, // A (bottom button)
+        1, // B (right button)
+        5, // R1 (right shoulder button)
+    ],
+    [GAME_KEY.SELL]: 3, // Y (top button)
+    [GAME_KEY.POTION]: 4, // L1 (left shoulder button)
+    // 2, // X (left button)
+};
+
+const LEFT_ANALOG_Y_AXIS = 1;
+const LEFT_ANALOG_X_AXIS = 0;
+const RIGHT_ANALOG_Y_AXIS = 3;
+const RIGHT_ANALOG_X_AXIS = 2;
+// These two are currently unused, but would be used for aiming instead of the mouse.
+//const RIGHT_ANALOG_Y_AXIS = 3; // eslint-disable-line no-unused-vars
+//const RIGHT_ANALOG_X_AXIS = 2; // eslint-disable-line no-unused-vars
+const GAME_PAD_AXIS_MAPPINGS = {
+    // Map the negative y axis of the left stick to the up key.
+    [GAME_KEY.UP]: [LEFT_ANALOG_Y_AXIS, -1],
+    // Map the positive y axis of the left stick to the down key.
+    [GAME_KEY.DOWN]: [LEFT_ANALOG_Y_AXIS, 1],
+    // Map the negative x axis of the left stick to the up key.
+    [GAME_KEY.LEFT]: [LEFT_ANALOG_X_AXIS, -1],
+    // Map the positive x axis of the left stick to the down key.
+    [GAME_KEY.RIGHT]: [LEFT_ANALOG_X_AXIS, 1],
+    // Map the negative y axis of the right stick to the aim up key.
+    [GAME_KEY.AIM_UP]: [RIGHT_ANALOG_Y_AXIS, -1],
+    // Map the positive y axis of the right stick to the aim down key.
+    [GAME_KEY.AIM_DOWN]: [RIGHT_ANALOG_Y_AXIS, 1],
+    // Map the negative x axis of the right stick to the aim up key.
+    [GAME_KEY.AIM_LEFT]: [RIGHT_ANALOG_X_AXIS, -1],
+    // Map the positive x axis of the right stick to the aim down key.
+    [GAME_KEY.AIM_RIGHT]: [RIGHT_ANALOG_X_AXIS, 1],
+};
+
+// Apparently, depending on the button type, either button.pressed or button == 1.0 indicates the button is pressed.
+function buttonIsPressed(button: {pressed: boolean}|number): boolean {
+  if (typeof(button) == "object") return button.pressed;
+  return button == 1.0;
+}
 
 const keysDown: number[] = [];
+let lastInput: 'keyboard' | 'gamepad' | undefined;
 export function isKeyboardKeyDown(keyCode: number) {
     if (keysDown[keyCode]) {
+        lastInput = 'keyboard';
         return 1;
+    }
+    return 0;
+}
+function isGamepadGamekeyPressed(gameKey: number) {
+    // If a mapping exists for the current key code to a gamepad button,
+    // check if that gamepad button is pressed.
+    const buttonIndexArrayOrNumber = GAME_PAD_MAPPINGS[gameKey], axisIndex = GAME_PAD_AXIS_MAPPINGS[gameKey];
+    const buttonIndexArray = Array.isArray(buttonIndexArrayOrNumber) ? buttonIndexArrayOrNumber : [buttonIndexArrayOrNumber];
+    for (const buttonIndex of buttonIndexArray) {
+        if (typeof(buttonIndex) !== 'undefined' || typeof(axisIndex) !== 'undefined') {
+            // There can be multiple game pads connected. For now, let's just check all of them for the button.
+            const gamepads = navigator.getGamepads();
+            for (const gamepad of gamepads) {
+                if (!gamepad) continue;
+                let value = 0;
+                if (typeof(buttonIndex) !== 'undefined' && buttonIsPressed(gamepad.buttons[buttonIndex])) {
+                    value = 1;
+                } else if (typeof(axisIndex) !== 'undefined' && gamepad.axes[axisIndex[0]] * axisIndex[1] > 0) {
+                    value = gamepad.axes[axisIndex[0]] * axisIndex[1];
+                }
+                if (value) {
+                    if (value >= ANALOG_THRESHOLD) {
+                        lastInput = 'gamepad';
+                    }
+                    return value;
+                }
+            }
+        }
     }
     return 0;
 }
@@ -110,6 +197,9 @@ export function updateKeyboardState(state: GameState) {
                 break;
             }
         }
+        if (!gameKeyValues[gameKey]) {
+            gameKeyValues[gameKey] = isGamepadGamekeyPressed(gameKey);
+        }
         if (gameKeyValues[gameKey] >= ANALOG_THRESHOLD) {
             gameKeysDown.add(gameKey);
         }
@@ -128,6 +218,13 @@ export function updateKeyboardState(state: GameState) {
         mostRecentKeysPressed = gameKeysPressed;
     }
     state.keyboard = { gameKeyValues, gameKeysDown, gameKeysPressed, gameKeysReleased, mostRecentKeysPressed };
+    if (lastInput === 'gamepad') {
+        state.isUsingKeyboard = false;
+        state.isUsingXbox = true;
+    } else if (lastInput === 'keyboard') {
+        state.isUsingKeyboard = true;
+        state.isUsingXbox = false;
+    }
 }
 
 
@@ -161,3 +258,27 @@ export function isGameKeyDown(state: GameState, keyCode: number): boolean {
     return state.keyboard.gameKeysDown.has(keyCode);
 }
 
+export function getMovementDeltas(state: GameState): [number, number] {
+    const { gameKeyValues } = state.keyboard;
+    let dy = gameKeyValues[GAME_KEY.DOWN] - gameKeyValues[GAME_KEY.UP];
+    if (Math.abs(dy) < ANALOG_THRESHOLD) dy = 0;
+    let dx = gameKeyValues[GAME_KEY.RIGHT] - gameKeyValues[GAME_KEY.LEFT];
+    if (Math.abs(dx) < ANALOG_THRESHOLD) dx = 0;
+    if (isNaN(dx) || isNaN(dy)) {
+        debugger;
+    }
+    return [dx, dy];
+}
+
+export function getRightAnalogDeltas(state: GameState): [number, number] {
+    const { gameKeyValues } = state.keyboard;
+    let dy = gameKeyValues[GAME_KEY.AIM_DOWN] - gameKeyValues[GAME_KEY.AIM_UP];
+    let dx = gameKeyValues[GAME_KEY.AIM_RIGHT] - gameKeyValues[GAME_KEY.AIM_LEFT];
+    if (Math.abs(dx) < ANALOG_THRESHOLD && Math.abs(dy) < ANALOG_THRESHOLD) {
+        return [0, 0];
+    }
+    if (isNaN(dx) || isNaN(dy)) {
+        debugger;
+    }
+    return [dx, dy];
+}

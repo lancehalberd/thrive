@@ -1,13 +1,3 @@
-Add controller support
-    Switch to keyboard+mouse on key press or mouse click (but not mouse move)
-    Switch to controller on any controller input
-    Twin stick shooter pattern
-    left trigger potion
-    right trigger pick up/enter
-    A to activate charged attack
-    B to sell item
-    Start to open inventory
-
 Add world map generation
     set level on disc
     world is infinite in the up and left and right directions

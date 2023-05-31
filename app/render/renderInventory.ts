@@ -3,6 +3,7 @@ import { drawRect, fillCircle } from 'app/render/renderGeometry';
 import { embossText } from 'app/render/renderText';
 import { armorTypeLabels } from 'app/armor';
 import { enchantmentStrengthLabels, getEnchantmentBonusText } from 'app/enchantments';
+import { getSelectedInventorySlot } from 'app/inventory';
 import { weaponTypeLabels } from 'app/weapons';
 
 export function renderInventorySlot(context: CanvasRenderingContext2D, state: GameState, {x, y, w, h, item}: InventorySlot): void {
@@ -27,6 +28,19 @@ export function renderInventorySlot(context: CanvasRenderingContext2D, state: Ga
     if (item?.type === 'weapon') {
         renderWeaponShort(context, x + w / 2, y + h / 2, item);
     }
+}
+
+export function renderSelectedInventorySlot(context: CanvasRenderingContext2D, state: GameState): void {
+    const slot = getSelectedInventorySlot(state) ;
+    if (!slot) {
+        return;
+    }
+    const {x, y, w, h} = slot;
+    context.fillStyle = 'blue';
+    context.beginPath();
+    drawRect(context, {x, y, w, h});
+    drawRect(context, {x: x + 2, y: y + 2, w: w - 4, h: h - 4}, true);
+    context.fill();
 }
 
 export function renderArmorLong(context: CanvasRenderingContext2D, x: number, y: number, armor: Armor): void {

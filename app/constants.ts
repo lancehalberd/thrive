@@ -17,6 +17,10 @@ export const GAME_KEY = {
     ACTIVATE: 6,
     SELL: 7,
     POTION: 8,
+    AIM_UP: 9,
+    AIM_DOWN: 10,
+    AIM_LEFT: 11,
+    AIM_RIGHT: 12,
 };
 
 export const BASE_DROP_CHANCE = 0.15;

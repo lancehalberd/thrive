@@ -12,7 +12,7 @@ import { createEnemy } from 'app/utils/enemy';
 import { doCirclesIntersect, findClosestDisc, getClosestElement, getTargetVector } from 'app/utils/geometry';
 import { damageHero, gainExperience, gainWeaponExperience, setDerivedHeroStats } from 'app/utils/hero';
 import { getMousePosition, isMouseDown, isRightMouseDown } from 'app/utils/mouse';
-import { isGameKeyDown, isKeyboardKeyDown, updateKeyboardState, wasGameKeyPressed, KEY } from 'app/utils/userInput';
+import { getRightAnalogDeltas, isGameKeyDown, isKeyboardKeyDown, updateKeyboardState, wasGameKeyPressed, KEY } from 'app/utils/userInput';
 import Random from 'app/utils/Random';
 import {
     BASE_MAX_POTIONS,
@@ -93,6 +93,9 @@ let state: GameState = {
         mostRecentKeysPressed: new Set(),
         gameKeysReleased: new Set(),
     },
+    menuRow: 0,
+    menuColumn: 0,
+    menuEquipmentSelected: false,
 };
 // @ts-ignore
 window['state'] = state;
@@ -108,19 +111,31 @@ function update(): void {
         startDungeon(state, createTreeDungeon(Math.random(), 2000, 1));
     }
     updateKeyboardState(state);
-    const [x, y] = getMousePosition(mainCanvas, CANVAS_SCALE);
-    state.mouse.x = x;
-    state.mouse.y = y;
-    if (isMouseDown()) {
-        state.mouse.wasPressed = !state.mouse.isDown;
-        state.mouse.isDown = true;
+    if (state.isUsingXbox) {
+        const [dx, dy] = getRightAnalogDeltas(state);
+        if (dx*dx + dy*dy >= 0.5) {
+            state.hero.isShooting = true;
+            state.hero.theta = Math.atan2(dy, dx);
+        } else {
+            state.hero.isShooting = false;
+        }
     } else {
-        state.mouse.wasPressed = false;
-        state.mouse.isDown = false;
-        state.hero.isShooting = false;
-    }
-    if (state.mouse.wasPressed) {
-        state.hero.isShooting = true;
+        const [x, y] = getMousePosition(mainCanvas, CANVAS_SCALE);
+        let aimDx = x - CANVAS_WIDTH / 2, aimDy = y - CANVAS_HEIGHT / 2;
+        state.hero.theta = Math.atan2(aimDy, aimDx);
+        state.mouse.x = x;
+        state.mouse.y = y;
+        if (isMouseDown()) {
+            state.mouse.wasPressed = !state.mouse.isDown;
+            state.mouse.isDown = true;
+        } else {
+            state.mouse.wasPressed = false;
+            state.mouse.isDown = false;
+            state.hero.isShooting = false;
+        }
+        if (state.mouse.wasPressed) {
+            state.hero.isShooting = true;
+        }
     }
     if (wasGameKeyPressed(state, GAME_KEY.MENU)) {
         state.paused = !state.paused;
@@ -233,9 +248,6 @@ function updateHero(state: GameState): void {
     hero.y += dy * speed / FRAME_LENGTH;
 
     // Hero attack
-    const {x, y} = state.mouse;
-    let aimDx = x - CANVAS_WIDTH / 2, aimDy = y - CANVAS_HEIGHT / 2;
-    hero.theta = Math.atan2(aimDy, aimDx);
     const weapon = hero.equipment.weapon;
     const attacksPerSecond = weapon.attacksPerSecond * hero.attacksPerSecond;
     if (state.hero.isShooting) {

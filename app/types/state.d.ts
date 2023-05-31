@@ -119,6 +119,14 @@ interface GameState {
         mostRecentKeysPressed: Set<number>
         gameKeysReleased: Set<number>
     }
+    isUsingKeyboard?: boolean
+    isUsingXbox?: boolean
+    // Row of inventory selected when using gamepad controls
+    menuRow: number
+    // Column of inventory selected when using gamepad controls
+    menuColumn: number
+    // Set to true to select player equipment instead of inventory items with gamepad controls
+    menuEquipmentSelected: boolean
 }
 
 interface Disc extends Geometry {
