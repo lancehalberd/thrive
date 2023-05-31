@@ -20,7 +20,7 @@ export function gainWeaponExperience(state: GameState, weaponType: WeaponType, s
     const weaponXpPenalty = Math.min(1, Math.max(0, (weaponProficiency.level - sourceLevel) * 0.1));
     const requiredExperience = getExperienceForNextWeaponLevel(weaponProficiency.level);
     // You cannot gain more than 10% of the experience for the next weapon level at once.
-    weaponProficiency.experience += Math.min(Math.ceil(experience * (1 - weaponXpPenalty)), requiredExperience / 10);
+    weaponProficiency.experience += Math.min(Math.ceil(experience * (1 - weaponXpPenalty)), requiredExperience / 5);
     if (weaponProficiency.experience >= requiredExperience) {
         weaponProficiency.level++;
         weaponProficiency.experience -= requiredExperience;
@@ -29,7 +29,7 @@ export function gainWeaponExperience(state: GameState, weaponType: WeaponType, s
 }
 
 export function getWeaponProficiency(state: GameState, weaponType = state.hero.equipment.weapon.weaponType): WeaponProficiency {
-    return state.hero.weaponProficiency[weaponType] = state.hero.weaponProficiency[weaponType] || {level: 1, experience: 0};
+    return state.hero.weaponProficiency[weaponType] = state.hero.weaponProficiency[weaponType] || {level: 0, experience: 0};
 }
 
 export function gainItemExperience(state: GameState, item: Item): void {
@@ -92,8 +92,8 @@ export function getExperienceForNextLevel(currentLevel: number): number {
 }
 
 export function getExperienceForNextWeaponLevel(currentLevel: number): number {
-    const averageKills = 10 * currentLevel;
-    const xpPerKill = Math.ceil(BASE_XP * Math.pow(1.2, currentLevel - 1));
+    const averageKills = 5 * (currentLevel + 1);
+    const xpPerKill = Math.ceil(BASE_XP * Math.pow(1.2, currentLevel));
     return averageKills * xpPerKill;
 }
 

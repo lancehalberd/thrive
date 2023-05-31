@@ -1,11 +1,42 @@
-Add rare potion drop from enemies
-    Refills life if potions are full
-    Grants bonus XP for any wasted life based on enemy level (potionXp is assigned on creation to 0.2 * enemyXP)
+Add controller support
+    Switch to keyboard+mouse on key press or mouse click (but not mouse move)
+    Switch to controller on any controller input
+    Twin stick shooter pattern
+    left trigger potion
+    right trigger pick up/enter
+    A to activate charged attack
+    B to sell item
+    Start to open inventory
 
 Add world map generation
+    set level on disc
     world is infinite in the up and left and right directions
     store cells of 4000px wide sections that always connect left/right
     cell uses dungeon generation but forces connecting sides and optionally top/bottom if SRandom determines there is a connection in either place
     extra disc placed between cells is always there on connection and does not spawn monsters and may contain a fountain to refill life and potions
+    disc difficulty tiers:
+        level 1   +0-1 dungeon level
+        level 2-3 +1-2
+        level 5-8 +1-2
+        level 10-15 +2-3 (+2 aditional levels within dungeons based on dungeon type)
+            So for example, a level 14 enemy could drop a level 17 dungeon that has 2 additional floors of level 18 + level 19.
+        level 20-25
+        level 30-35
+        and so on.
+    Types of enemies that can appear and dungeons that can drop expand with level of disc
+
+Restart on death.
+
+Save game to local storage.
+
+Display current area name + disc level below minimap.
+
+Show Proficiency bonuses text box when hovering over proficiencies:
+    For daggers: 10% increased attack speed and 80% increased damage
+    For all weapons: 10% increased attack speed
 
 Update visibleDiscs
+
+Add rare potion drop from enemies
+    Refills life if potions are full
+    Grants bonus XP for any wasted life based on enemy level (potionXp is assigned on creation to 0.2 * enemyXP)
