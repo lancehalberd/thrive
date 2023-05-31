@@ -7,7 +7,7 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
     const heroAttacksPerSecond = 2 + 0.02 * level;
     const heroMaxLife = 20 * (level + 1);
     const dps = heroAttacksPerSecond * heroDamage;
-    const targetDuration = 2 + level * 8 / 100;
+    const targetDuration = 1 + level * 10 / 100;
     const maxLife = Math.ceil((dps * targetDuration) * (definition.statFactors.maxLife ?? 1));
     const baseArmor = 2 * level * (definition.statFactors.armor ?? 1);
     return {
