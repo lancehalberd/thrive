@@ -1,4 +1,4 @@
-import { BASE_MAX_POTIONS, CANVAS_HEIGHT, CANVAS_WIDTH, SIGHT_RADIUS, SLOT_SIZE, SLOT_PADDING } from 'app/constants';
+import { BASE_MAX_POTIONS, CANVAS_HEIGHT, CANVAS_WIDTH, CELL_SIZE, SIGHT_RADIUS, SLOT_SIZE, SLOT_PADDING } from 'app/constants';
 import { getInventorySlots, getSelectedInventorySlot, getSelectedItem } from 'app/inventory';
 import { fillCircle } from 'app/render/renderGeometry';
 import { renderInventorySlot, renderItemDetails, renderSelectedInventorySlot } from 'app/render/renderInventory';
@@ -17,19 +17,25 @@ const minimapSize = 500;
 const smallMapRect = {x: CANVAS_WIDTH - 155, y: 5, w: 150, h: 150};
 const largeMapRect = {x: (CANVAS_WIDTH - 400) / 2, y: (CANVAS_HEIGHT - 400) / 2, w: 400, h: 400};
 const [mapCanvas, mapContext] = createCanvasAndContext(minimapSize, minimapSize);
-const mapScale = 20;
+const mapScale = 15;
 
-export function renderMinimap(discs: Disc[]): void {
+export function renderMinimap(state: GameState): void {
     mapContext.fillStyle = '#000';
     mapContext.fillRect(0, 0, minimapSize, minimapSize);
     mapContext.save();
         mapContext.translate(minimapSize / 2, minimapSize / 2);
         mapContext.scale(1 / mapScale, 1 / mapScale);
-        for (const disc of discs) {
+        mapContext.translate(-state.hero.x, -state.hero.y);
+        for (const disc of state.visibleDiscs) {
             mapContext.fillStyle = disc.boss ? '#FBB' : '#DDD';
             mapContext.beginPath();
             mapContext.arc(disc.x, disc.y, disc.radius, 0, 2 * Math.PI);
             mapContext.fill();
+        }
+        mapContext.lineWidth = 4;
+        mapContext.strokeStyle = 'red';
+        for (const cell of state.activeCells) {
+            mapContext.strokeRect(cell.x * CELL_SIZE, (cell.y + 1) * -CELL_SIZE, CELL_SIZE, CELL_SIZE);
         }
     mapContext.restore();
 }
@@ -146,11 +152,12 @@ function renderHUD(context: CanvasRenderingContext2D, state: GameState): void {
     }
 
     const minimapRect = state.paused ? largeMapRect : smallMapRect;
+    renderMinimap(state);
     context.fillStyle = 'black';
     context.fillRect(minimapRect.x, minimapRect.y, minimapRect.w, minimapRect.h);
     context.drawImage(mapCanvas,
-        minimapSize / 2 + state.hero.x / mapScale - minimapRect.w / 2,
-        minimapSize / 2  + state.hero.y / mapScale - minimapRect.h / 2,
+        minimapSize / 2 - minimapRect.w / 2,
+        minimapSize / 2 - minimapRect.h / 2,
         minimapRect.w, minimapRect.h,
         minimapRect.x, minimapRect.y, minimapRect.w, minimapRect.h
     );

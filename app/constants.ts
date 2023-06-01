@@ -23,7 +23,9 @@ export const GAME_KEY = {
     AIM_RIGHT: 12,
 };
 
-export const BASE_DROP_CHANCE = 0.15;
+export const CELL_SIZE = 3000;
+
+export const BASE_DROP_CHANCE = 10.15;
 
 export const HERO_DAMAGE_FRAME_COUNT = 20;
 export const BASE_MAX_POTIONS = 5;

@@ -100,6 +100,10 @@ interface GameState {
     portals: Portal[];
     enemyBullets: Bullet[]
     fieldText: FieldText[]
+    worldSeed: number
+    activeCells: WorldCell[]
+    recentCells: WorldCell[]
+    cellMap: Map<string, WorldCell>
     activeDiscs: Disc[]
     visibleDiscs: Disc[]
     gameHasBeenInitialized: boolean
@@ -131,5 +135,8 @@ interface GameState {
 
 interface Disc extends Geometry {
     links: Disc[]
+    enemies: Enemy[]
+    portals: Portal[]
+    loot: Loot[]
     boss?: Enemy
 }

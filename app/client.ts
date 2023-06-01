@@ -7,7 +7,10 @@ import { updateInventory } from 'app/inventory';
 import { render } from 'app/render/renderGame';
 import { mainCanvas, mainContext } from 'app/utils/canvas';
 import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
-import { createTreeDungeon, getTreeDungeonPortal, startDungeon } from 'app/utils/dungeon';
+import {
+    getTreeDungeonPortal,
+    updateActiveCells,
+} from 'app/utils/dungeon';
 import { createEnemy } from 'app/utils/enemy';
 import { doCirclesIntersect, findClosestDisc, getClosestElement, getTargetVector } from 'app/utils/geometry';
 import { damageHero, gainExperience, gainWeaponExperience, setDerivedHeroStats } from 'app/utils/hero';
@@ -18,6 +21,7 @@ import {
     BASE_MAX_POTIONS,
     BASE_XP,
     CANVAS_HEIGHT, CANVAS_SCALE, CANVAS_WIDTH,
+    CELL_SIZE,
     FRAME_LENGTH,
     GAME_KEY,
     HERO_DAMAGE_FRAME_COUNT,
@@ -25,20 +29,14 @@ import {
 import { initializeGame } from 'app/initialize';
 import { allWeapons } from 'app/weapons';
 
-const testDiscs: Disc[] = [
-    {x: 500, y: 500, radius: 500, links: []},
-    {x: 1200, y: 1200, radius: 800, links: []},
-    {x: 500, y: -200, radius: 500, links: []},
-]
-
 let state: GameState = {
     fieldTime: 0,
     hero: {
         level: 1,
         experience: 0,
         speed: 100,
-        x: 500,
-        y: 500,
+        x: CELL_SIZE / 2,
+        y: - CELL_SIZE / 2,
         radius: 15,
         theta: 0,
         damageHistory: [],
@@ -51,8 +49,8 @@ let state: GameState = {
         armors: [],
         enchantments: [],
         // Derived stats will get set later.
-        life: 0,
-        maxLife: 0,
+        life: 10,
+        maxLife: 10,
         baseArmor: 0,
         armor: 0,
         damage: 0,
@@ -76,8 +74,12 @@ let state: GameState = {
     portals: [],
     enemyBullets: [],
     fieldText: [],
-    activeDiscs: testDiscs,
-    visibleDiscs: testDiscs,
+    worldSeed: Math.random(),
+    activeCells: [],
+    recentCells: [],
+    cellMap: new Map(),
+    activeDiscs: [],
+    visibleDiscs: [],
     gameHasBeenInitialized: false,
     paused: false,
     mouse: {
@@ -103,12 +105,13 @@ function getState(): GameState {
     return state;
 }
 
+
 function update(): void {
     const state = getState();
     if (!state.gameHasBeenInitialized) {
         initializeGame(state);
         setDerivedHeroStats(state);
-        startDungeon(state, createTreeDungeon(Math.random(), 2000, 1));
+        // startDungeon(state, createTreeDungeon(Math.random(), 2000, 1));
     }
     updateKeyboardState(state);
     if (state.isUsingXbox) {
@@ -164,6 +167,7 @@ function update(): void {
     if (state.hero.life <= 0) {
         return;
     }
+    updateActiveCells(state);
     updateHero(state);
     updateEnemies(state);
     updateHeroBullets(state);
@@ -206,11 +210,11 @@ function update(): void {
     }
     if (state.activeLoot && wasGameKeyPressed(state, GAME_KEY.ACTIVATE)) {
         state.activeLoot.activate(state);
-        state.loot.splice(state.loot.indexOf(state.activeLoot), 1);
+        state.activeLoot.disc.loot.splice(state.activeLoot.disc.loot.indexOf(state.activeLoot), 1);
         delete state.activeLoot;
     } else if (state.activeLoot && wasGameKeyPressed(state, GAME_KEY.SELL)) {
         state.activeLoot.sell();
-        state.loot.splice(state.loot.indexOf(state.activeLoot), 1);
+        state.activeLoot.disc.loot.splice(state.activeLoot.disc.loot.indexOf(state.activeLoot), 1);
         delete state.activeLoot;
     }
 }
@@ -374,7 +378,7 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
     checkToDropBasicLoot(state, enemy);
     if (enemy.disc?.boss === enemy) {
         delete enemy.disc.boss;
-        state.portals.push(getTreeDungeonPortal(enemy.disc.x, enemy.disc.y, enemy.level - 1, Math.random()));
+        enemy.disc.portals.push(getTreeDungeonPortal(enemy.disc.x, enemy.disc.y, enemy.level - 1, Math.random()));
         // Destroy all boss minions when it is defeated. They will not grant experience as they are not
         // killed by taking shot damage.
         for (const minion of enemy.minions) {
@@ -382,7 +386,7 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
         }
         const enchantment = enemy.definition.getEnchantment?.(state, enemy);
         if (enchantment) {
-            dropEnchantmentLoot(state, {
+            dropEnchantmentLoot(state, enemy.disc, {
                 x: enemy.disc.x,
                 y: enemy.disc.y + 100,
             }, enchantment)

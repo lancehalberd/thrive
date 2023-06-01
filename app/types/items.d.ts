@@ -73,6 +73,7 @@ type Item = Armor | Weapon | Enchantment;
 type Equipment = Armor | Weapon;
 
 interface BaseLoot extends Geometry {
+    disc: Disc
     activate(state: GameState): void
     render(context: CanvasRenderingContext2D, state: GameState): void
     sell(): void

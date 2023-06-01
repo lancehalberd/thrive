@@ -45,6 +45,9 @@ function addEnchantmentSlots(item: Armor|Weapon): void {
 }
 
 export function dropArmorLoot(state: GameState, source: Enemy, level: number): void {
+    if (!source.disc) {
+        return;
+    }
     const armorType = Random.element(allArmors);
     let armorIndex = 0;
     for (;armorIndex < armorType.length - 1; armorIndex++) {
@@ -60,10 +63,11 @@ export function dropArmorLoot(state: GameState, source: Enemy, level: number): v
     }
     addEnchantmentSlots(armor);
 
-    state.loot.push({
+    source.disc.loot.push({
         type: 'armor',
         x: source.x,
         y: source.y,
+        disc: source.disc,
         radius: 12,
         armor,
         activate(this: ArmorLoot, state: GameState): void {
@@ -83,6 +87,9 @@ export function dropArmorLoot(state: GameState, source: Enemy, level: number): v
 }
 
 export function dropWeaponLoot(state: GameState, source: Enemy, level: number): void {
+    if (!source.disc) {
+        return;
+    }
     const weaponType = Random.element(allWeapons);
     let weaponIndex = 0;
     for (;weaponIndex < weaponType.length - 1; weaponIndex++) {
@@ -96,10 +103,11 @@ export function dropWeaponLoot(state: GameState, source: Enemy, level: number): 
         weapon.damage = Math.ceil(weapon.damage * 1.1);
     }
     addEnchantmentSlots(weapon);
-    state.loot.push({
+    source.disc.loot.push({
         type: 'weapon',
         x: source.x,
         y: source.y,
+        disc: source.disc,
         radius: 12,
         weapon,
         activate(this: WeaponLoot, state: GameState): void {
@@ -118,9 +126,13 @@ export function dropWeaponLoot(state: GameState, source: Enemy, level: number): 
     });
 }
 
-export function dropEnchantmentLoot(state: GameState, {x, y}: Point, enchantment: Enchantment): void {
-    state.loot.push({
+export function dropEnchantmentLoot(state: GameState, disc: Disc, {x, y}: Point, enchantment: Enchantment): void {
+    if (!disc) {
+        return;
+    }
+    disc.loot.push({
         type: 'enchantment',
+        disc,
         x,
         y,
         radius: 12,

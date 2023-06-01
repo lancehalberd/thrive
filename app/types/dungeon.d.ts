@@ -3,6 +3,14 @@ interface Entrance extends Geometry {
 
 }
 
+interface WorldCell {
+    level: number
+    x: number
+    y: number
+    discs: Disc[]
+}
+
+
 interface Dungeon {
     name: string
     level: number
