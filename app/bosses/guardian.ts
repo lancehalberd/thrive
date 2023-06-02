@@ -31,7 +31,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
                 minion.theta = theta;
                 enemy.minions.push(minion);
                 minion.master = enemy;
-                state.enemies.push(minion);
+                enemy.disc.enemies.push(minion);
                 minion.disc = enemy.disc;
             }
         }

@@ -1,4 +1,4 @@
-import { BASE_MAX_POTIONS, CANVAS_HEIGHT, CANVAS_WIDTH, CELL_SIZE, SIGHT_RADIUS, SLOT_SIZE, SLOT_PADDING } from 'app/constants';
+import { FIELD_CENTER, BASE_MAX_POTIONS, CANVAS_HEIGHT, CANVAS_WIDTH, CELL_SIZE, SIGHT_RADIUS, SLOT_SIZE, SLOT_PADDING } from 'app/constants';
 import { getInventorySlots, getSelectedInventorySlot, getSelectedItem } from 'app/inventory';
 import { fillCircle } from 'app/render/renderGeometry';
 import { renderInventorySlot, renderItemDetails, renderSelectedInventorySlot } from 'app/render/renderInventory';
@@ -14,10 +14,12 @@ import {
 
 
 const minimapSize = 500;
-const smallMapRect = {x: CANVAS_WIDTH - 155, y: 5, w: 150, h: 150};
+const smallMapRect = {x: CANVAS_WIDTH - 160, y: 10, w: 150, h: 150};
 const largeMapRect = {x: (CANVAS_WIDTH - 400) / 2, y: (CANVAS_HEIGHT - 400) / 2, w: 400, h: 400};
 const [mapCanvas, mapContext] = createCanvasAndContext(minimapSize, minimapSize);
 const mapScale = 15;
+
+
 
 export function renderMinimap(state: GameState): void {
     mapContext.fillStyle = '#000';
@@ -32,11 +34,13 @@ export function renderMinimap(state: GameState): void {
             mapContext.arc(disc.x, disc.y, disc.radius, 0, 2 * Math.PI);
             mapContext.fill();
         }
-        mapContext.lineWidth = 4;
+        CELL_SIZE;
+        // Debug code to draw world cell boundaries.
+        /*mapContext.lineWidth = 4;
         mapContext.strokeStyle = 'red';
         for (const cell of state.activeCells) {
             mapContext.strokeRect(cell.x * CELL_SIZE, (cell.y + 1) * -CELL_SIZE, CELL_SIZE, CELL_SIZE);
-        }
+        }*/
     mapContext.restore();
 }
 
@@ -44,7 +48,7 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
     context.fillStyle = '#000';
     context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     context.save();
-        context.translate(CANVAS_WIDTH / 2 - state.hero.x, CANVAS_HEIGHT / 2 - state.hero.y);
+        context.translate(FIELD_CENTER.x - state.hero.x, FIELD_CENTER.y - state.hero.y);
         state.visibleDiscs.sort((A: Disc, B: Disc) => A.y - B.y);
         const normalDiscs = state.visibleDiscs.filter(d => !d.boss);
         const bossDiscs = state.visibleDiscs.filter(d => d.boss);
@@ -72,7 +76,7 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
         }
         if (state.hero?.disc?.boss) {
             context.save();
-                context.translate(-(CANVAS_WIDTH / 2 - state.hero.x), -(CANVAS_HEIGHT / 2 - state.hero.y));
+                context.translate(-(FIELD_CENTER.x - state.hero.x), -(FIELD_CENTER.y - state.hero.y));
                 context.globalAlpha *= 0.6;
                 context.fillStyle = '#000';
                 context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -106,13 +110,13 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
     context.restore();
     context.beginPath();
     context.rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    context.arc(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, SIGHT_RADIUS, 0, 2 * Math.PI, true);
+    context.arc(FIELD_CENTER.x, FIELD_CENTER.y, SIGHT_RADIUS, 0, 2 * Math.PI, true);
     context.fillStyle = '#000';
     context.fill();
 
     if (state.isUsingXbox) {
         const [dx, dy] = getRightAnalogDeltas(state);
-        /*const x = CANVAS_WIDTH / 2 + dx * 100, y = CANVAS_HEIGHT / 2 + dy * 100;
+        /*const x = FIELD_CENTER.x + dx * 100, y = FIELD_CENTER.y + dy * 100;
         context.beginPath();
         context.arc(x, y, 15, 0, 2 * Math.PI, true);
         context.strokeStyle = 'blue';
@@ -127,8 +131,8 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
         context.beginPath();
         context.setLineDash([10, 15]);
         context.strokeStyle = 'blue';
-        context.moveTo(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-        context.lineTo(SIGHT_RADIUS * dx + CANVAS_WIDTH / 2, SIGHT_RADIUS * dy + CANVAS_HEIGHT / 2);
+        context.moveTo(FIELD_CENTER.x, FIELD_CENTER.y);
+        context.lineTo(SIGHT_RADIUS * dx + FIELD_CENTER.x, SIGHT_RADIUS * dy + FIELD_CENTER.y);
         context.stroke();
         context.restore();
     }
@@ -143,16 +147,12 @@ function renderHUD(context: CanvasRenderingContext2D, state: GameState): void {
             context.fillStyle = 'black';
             context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         context.restore();
-
-        /*context.fillStyle = 'white';
-        context.textBaseline = 'middle';
-        context.textAlign = 'center';
-        context.font = '32px sans-serif';
-        context.fillText('PAUSED', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);*/
     }
 
     const minimapRect = state.paused ? largeMapRect : smallMapRect;
     renderMinimap(state);
+    context.fillStyle = '#999';
+    context.fillRect(minimapRect.x - 2, minimapRect.y - 2, minimapRect.w + 4, minimapRect.h + 4);
     context.fillStyle = 'black';
     context.fillRect(minimapRect.x, minimapRect.y, minimapRect.w, minimapRect.h);
     context.drawImage(mapCanvas,
@@ -171,6 +171,15 @@ function renderHUD(context: CanvasRenderingContext2D, state: GameState): void {
             y > minimapRect.y + 2 && y < minimapRect.y + minimapRect.h - 2) {
             context.fillRect(x - 2, y - 2, 4, 4);
         }
+    }
+
+    if (state.hero.disc) {
+        context.fillStyle = 'white';
+        context.textBaseline = 'top';
+        context.textAlign = 'right';
+        context.font = '16px sans-serif';
+        context.fillText(state.hero.disc.name, smallMapRect.x + smallMapRect.w, smallMapRect.y + smallMapRect.h + 10);
+        context.fillText(`Level ${state.hero.disc.level}`, smallMapRect.x + smallMapRect.w, smallMapRect.y + smallMapRect.h + 26);
     }
 
     context.fillStyle = 'white';
@@ -305,8 +314,13 @@ function renderPortal(context: CanvasRenderingContext2D, state: GameState, porta
     context.textBaseline = 'middle';
     context.textAlign = 'center';
     context.font = '16px sans-serif';
-    context.fillText(`Level ` + portal.level, portal.x, portal.y - 10);
-    context.fillText(portal.name, portal.x, portal.y + 10);
+    if (portal.dungeon) {
+        context.fillText(`Level ` + portal.dungeon.level, portal.x, portal.y - 10);
+        context.fillText(portal.name, portal.x, portal.y + 10);
+    } else {
+        context.fillText(portal.name, portal.x, portal.y);
+    }
+
 }
 
 function renderEnemyLifebar(context: CanvasRenderingContext2D, enemy: Enemy): void {

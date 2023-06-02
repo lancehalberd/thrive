@@ -8,7 +8,9 @@ import { render } from 'app/render/renderGame';
 import { mainCanvas, mainContext } from 'app/utils/canvas';
 import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
 import {
-    getTreeDungeonPortal,
+    clearNearbyEnemies,
+    getDungeonPortal,
+    getOverworldPortal,
     updateActiveCells,
 } from 'app/utils/dungeon';
 import { createEnemy } from 'app/utils/enemy';
@@ -22,6 +24,7 @@ import {
     BASE_XP,
     CANVAS_HEIGHT, CANVAS_SCALE, CANVAS_WIDTH,
     CELL_SIZE,
+    FIELD_CENTER,
     FRAME_LENGTH,
     GAME_KEY,
     HERO_DAMAGE_FRAME_COUNT,
@@ -37,6 +40,8 @@ let state: GameState = {
         speed: 100,
         x: CELL_SIZE / 2,
         y: - CELL_SIZE / 2,
+        overworldX: CELL_SIZE / 2,
+        overworldY: - CELL_SIZE / 2,
         radius: 15,
         theta: 0,
         damageHistory: [],
@@ -111,6 +116,7 @@ function update(): void {
     if (!state.gameHasBeenInitialized) {
         initializeGame(state);
         setDerivedHeroStats(state);
+        clearNearbyEnemies(state);
         // startDungeon(state, createTreeDungeon(Math.random(), 2000, 1));
     }
     updateKeyboardState(state);
@@ -124,7 +130,7 @@ function update(): void {
         }
     } else {
         const [x, y] = getMousePosition(mainCanvas, CANVAS_SCALE);
-        let aimDx = x - CANVAS_WIDTH / 2, aimDy = y - CANVAS_HEIGHT / 2;
+        let aimDx = x - FIELD_CENTER.x, aimDy = y - FIELD_CENTER.y;
         state.hero.theta = Math.atan2(aimDy, aimDx);
         state.mouse.x = x;
         state.mouse.y = y;
@@ -366,19 +372,22 @@ function updateHeroBullets(state: GameState): void {
             state.heroBullets.push(bullet);
         }
     }
-    state.enemies = state.enemies.filter(e => e.life > 0);
 }
 
 function defeatEnemy(state: GameState, enemy: Enemy): void {
     enemy.life = 0;
+    enemy.definition.onDeath?.(state, enemy);
     const experiencePenalty = Math.min(1, Math.max(0, (state.hero.level - enemy.level) * 0.1));
     const experience = BASE_XP * Math.pow(1.2, enemy.level) * (enemy.definition.experienceFactor ?? 1);
     gainExperience(state, Math.ceil(experience * (1 - experiencePenalty)));
     gainWeaponExperience(state, state.hero.equipment.weapon.weaponType, enemy.level, experience);
     checkToDropBasicLoot(state, enemy);
+    if (enemy.disc && enemy.definition.portalDungeonType && Math.random() <= (enemy.definition.portalChance ?? 0)) {
+         enemy.disc.portals.push(getDungeonPortal(enemy, enemy.definition.portalDungeonType, enemy.level));
+    }
     if (enemy.disc?.boss === enemy) {
         delete enemy.disc.boss;
-        enemy.disc.portals.push(getTreeDungeonPortal(enemy.disc.x, enemy.disc.y, enemy.level - 1, Math.random()));
+        enemy.disc.portals.push(getOverworldPortal(enemy.disc));
         // Destroy all boss minions when it is defeated. They will not grant experience as they are not
         // killed by taking shot damage.
         for (const minion of enemy.minions) {

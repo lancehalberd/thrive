@@ -1,9 +1,13 @@
 export const FRAME_LENGTH = 20;
 
-export const CANVAS_WIDTH = 800;
+export const CANVAS_WIDTH = 1000;
 export const CANVAS_HEIGHT = 800;
 export const CANVAS_SCALE = 1;
+
 export const SIGHT_RADIUS = 400;
+
+export const FIELD_CENTER = {x: SIGHT_RADIUS + 40, y: CANVAS_HEIGHT / 2};
+
 export const SLOT_SIZE = 40;
 export const SLOT_PADDING = 10;
 
@@ -25,7 +29,7 @@ export const GAME_KEY = {
 
 export const CELL_SIZE = 3000;
 
-export const BASE_DROP_CHANCE = 10.15;
+export const BASE_DROP_CHANCE = 0.15;
 
 export const HERO_DAMAGE_FRAME_COUNT = 20;
 export const BASE_MAX_POTIONS = 5;

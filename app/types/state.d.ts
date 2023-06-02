@@ -20,6 +20,8 @@ interface Vitals {
 }
 
 interface Hero extends CoreHeroStats, Vitals, Geometry {
+    overworldX: number
+    overworldY: number
     // The angle the hero is facing.
     theta: number
     damageHistory: number[]
@@ -73,8 +75,12 @@ interface EnemyDefinition<EnemyParams=any> {
     radius: number
     isInvulnerable?: boolean
     update: (state: GameState, enemy: Enemy) => void
+    onDeath?: (state: GameState, enemy: Enemy) => void
     // Set on bosses that drop enchantments
     getEnchantment?: (state: GameState, enemy: Enemy) => Enchantment
+    // Set on enemies that can drop dungeon portals
+    portalChance?: number
+    portalDungeonType?: DungeonType
     render: (context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => void
 }
 
@@ -106,6 +112,7 @@ interface GameState {
     cellMap: Map<string, WorldCell>
     activeDiscs: Disc[]
     visibleDiscs: Disc[]
+    dungeon?: Dungeon
     gameHasBeenInitialized: boolean
     paused: boolean
     mouse: {
@@ -134,6 +141,8 @@ interface GameState {
 }
 
 interface Disc extends Geometry {
+    level: number
+    name: string
     links: Disc[]
     enemies: Enemy[]
     portals: Portal[]

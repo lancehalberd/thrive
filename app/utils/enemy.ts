@@ -69,6 +69,14 @@ export function shootBulletArc(state: GameState, enemy: Enemy, theta: number, an
     }
 }
 
+
+export function shootBulletCircle(state: GameState, enemy: Enemy, theta: number, count: number, speed: number, stats: Partial<Bullet> = {}) {
+    for (let i = 0; i < count; i++) {
+        const bulletTheta = theta + 2 * Math.PI * i / count;
+        shootEnemyBullet(state, enemy, speed * Math.cos(bulletTheta), speed * Math.sin(bulletTheta), stats);
+    }
+}
+
 export function moveEnemyInCurrentDirection(state: GameState, enemy: Enemy): void {
     enemy.x += enemy.speed * Math.cos(enemy.theta) / FRAME_LENGTH;
     enemy.y += enemy.speed * Math.sin(enemy.theta) / FRAME_LENGTH;

@@ -5,6 +5,7 @@ import { chest } from 'app/enemies/chest';
 import { circler } from 'app/enemies/circler';
 import { lord } from 'app/enemies/lord';
 import { turret } from 'app/enemies/turret';
+import { urchin } from 'app/enemies/urchin';
 import { createEnemy } from 'app/utils/enemy';
 import { findClosestDisc, getTargetVector } from 'app/utils/geometry';
 import { refillAllPotions } from 'app/utils/hero';
@@ -12,20 +13,60 @@ import SRandom from 'app/utils/SRandom';
 
 const platformSizes = [200, 350, 500];
 
-export function getTreeDungeonPortal(x: number, y: number, level: number, seed: number) {
+
+export function clearNearbyEnemies(state: GameState): void {
+    updateActiveCells(state);
+    for (const enemy of state.enemies) {
+        if (getTargetVector(state.hero, enemy).distance2 <= 1000 ** 2) {
+            // This will cause the enemy to be cleaned up when `updateActiveCells` is called again.
+            enemy.life = 0;
+        }
+    }
+    updateActiveCells(state);
+}
+
+export function getTreeDungeonPortal({x, y}: Point, level: number, seed: number): Portal {
     level = Math.max(0, Math.min(100, level));
     return {
         x, y, radius: 40,
-        level,
         name: 'Tree',
         activate(state: GameState) {
-            startDungeon(state, createTreeDungeon(Math.random(), 2000 + 40 * level, level));
+            startDungeon(state, createTreeDungeon(seed, 2000 + 40 * level, level));
         },
     };
 }
 
+export function getDungeonPortal({x, y}: Point, type: DungeonType, level: number, seed = Math.random()): Portal {
+    level = Math.max(0, Math.min(100, level));
+    const dungeon = createReefDungeon(seed, 2000 + 40 * level, level)
+    return {
+        x, y, radius: 40,
+        dungeon,
+        name: dungeon.name,
+        activate(state: GameState) {
+            startDungeon(state, dungeon);
+        },
+    };
+}
+
+export function getOverworldPortal({x, y}: Point): Portal {
+    return {
+        x, y, radius: 40,
+        name: 'Overworld',
+        activate(state: GameState) {
+            delete state.dungeon;
+            state.hero.x = state.hero.overworldX;
+            state.hero.y = state.hero.overworldY;
+            clearNearbyEnemies(state);
+        },
+    };
+}
+
+
 export function createDisc(props: Partial<Disc>): Disc {
     return {
+        level: 1,
+        name: 'Shinsekai',
         x: 0,
         y: 0,
         radius: 400,
@@ -59,24 +100,27 @@ function addCellTohistory(state: GameState, cell: WorldCell): void {
 }
 
 export function updateActiveCells(state: GameState) {
-    state.activeCells = [];
-    state.activeDiscs = [];
+    // Cells only apply when on the overworld.
+    if (!state.dungeon) {
+        state.activeDiscs = [];
+        state.activeCells = [];
+        const {x: minX, y: minY} = getCellCoordinates(state, state.hero.x - 3750, state.hero.y + 3750);
+        const {x: maxX, y: maxY} = getCellCoordinates(state, state.hero.x + 3750, state.hero.y - 3750);
+        for (let cellY = Math.max(0, minY); cellY <= maxY; cellY++) {
+            for (let cellX = minX; cellX <= maxX; cellX++) {
+                const cellKey = `${cellX}x${cellY}`;
+                const cell = state.cellMap.get(cellKey) || createWorldCell(state.worldSeed, {x: cellX, y: cellY});
+                addCellTohistory(state, cell);
+                state.cellMap.set(cellKey, cell);
+                state.activeCells.push(cell);
+                state.activeDiscs = [...state.activeDiscs, ...cell.discs];
+            }
+        }
+        state.visibleDiscs = state.activeDiscs;
+    }
     state.enemies = [];
     state.loot = [];
     state.portals = [];
-    const {x: minX, y: minY} = getCellCoordinates(state, state.hero.x - 3750, state.hero.y + 3750);
-    const {x: maxX, y: maxY} = getCellCoordinates(state, state.hero.x + 3750, state.hero.y - 3750);
-    for (let cellY = Math.max(0, minY); cellY <= maxY; cellY++) {
-        for (let cellX = minX; cellX <= maxX; cellX++) {
-            const cellKey = `${cellX}x${cellY}`;
-            const cell = state.cellMap.get(cellKey) || createWorldCell(state.worldSeed, {x: cellX, y: cellY});
-            addCellTohistory(state, cell);
-            state.cellMap.set(cellKey, cell);
-            state.activeCells.push(cell);
-            state.activeDiscs = [...state.activeDiscs, ...cell.discs];
-        }
-    }
-    state.visibleDiscs = state.activeDiscs;
     for (const disc of state.activeDiscs) {
         disc.enemies = disc.enemies.filter(e => e.life > 0);
         state.enemies = [
@@ -94,20 +138,104 @@ export function updateActiveCells(state: GameState) {
     }
 }
 
+function getBiome(cellY: number) {
+    if (cellY === 0) return 'Beach';
+    if (cellY === 1) return 'Desert';
+    if (cellY <= 3) {
+        return 'Field';
+    }
+    if (cellY <= 5) { // Level 10
+        return 'Forest';
+    }
+    if (cellY <= 7) {
+        return 'Swamp';
+    }
+    if (cellY <= 9) { // Level 30
+        return 'Foothills';
+    }
+    if (cellY <= 11) {
+        return 'Mountains';
+    }
+    if (cellY <= 13) { // Level 50
+        return 'Frozen Peaks';
+    }
+    if (cellY <= 15) { // Level 60
+        return 'Descent';
+    }
+    if (cellY <= 17) { // Level 70
+        return 'Badlands';
+    }
+    if (cellY <= 19) { // Level 80
+        return 'Inferno';
+    }
+    // Level 90
+    return 'Abyss'
+}
+function getCellLevel(randomizer: typeof SRandom, cellY: number): number {
+    if (cellY === 0) {
+        return 1;
+    }
+    if (cellY === 1) {
+        return randomizer.range(2, 3);
+    }
+    if (cellY <= 3) {
+        return randomizer.range(5, 8);
+    }
+    const baseLevel = Math.min(90, 10 * (Math.floor(cellY / 2) - 1));
+    return randomizer.range(baseLevel, baseLevel + 5);
+}
+function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void {
+    const enemies = [];
+    if (disc.level === 1) {
+        if (randomizer.generateAndMutate() < 0.5) {
+            enemies.push(createEnemy(disc.x, disc.y, urchin, disc.level));
+        }
+    } else if (disc.level === 2) {
+        if (randomizer.generateAndMutate() < 0.3) {
+            enemies.push(createEnemy(disc.x, disc.y, turret, disc.level));
+        } else if (randomizer.generateAndMutate() < 0.1) {
+            enemies.push(createEnemy(disc.x, disc.y, chest, disc.level + 1));
+        }
+    } else {
+        if (randomizer.generateAndMutate() < 0.2) {
+            enemies.push(createEnemy(disc.x, disc.y, turret, disc.level));
+        } else if (randomizer.generateAndMutate() < 0.2) {
+            enemies.push(createEnemy(disc.x, disc.y, urchin, disc.level));
+        } else if (randomizer.generateAndMutate() < 0.2) {
+            enemies.push(createEnemy(disc.x, disc.y, lord, disc.level));
+        } else if (randomizer.generateAndMutate() < 0.2) {
+            enemies.push(createEnemy(disc.x, disc.y, chest, disc.level + 1));
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            enemies.push(createEnemy(disc.x - 50, disc.y, chaser, disc.level));
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            enemies.push(createEnemy(disc.x, disc.y + 50, circler, disc.level));
+        }
+    }
+    disc.enemies = enemies;
+    for (const enemy of enemies) {
+        enemy.disc = disc;
+    }
+}
+
 export function createWorldCell(worldSeed: number, {x, y}: Point): WorldCell {
     const discs: Disc[] = [];
-    const level = y + 1;
     const worldRandomizer = SRandom.seed(worldSeed);
     const hasNorthExit = worldRandomizer.addSeed((y + 1) * 1357).random() <= 0.5;
     const hasSouthExit = y > 0 && worldRandomizer.addSeed(y * 1357).random() <= 0.5;
     const cellRandomizer = worldRandomizer.addSeed(x * 37).addSeed(y * 29);
+    const level = getCellLevel(cellRandomizer, y);
 
     const cellRadius = CELL_SIZE / 2;
+    const name = getBiome(y);
 
     const c = {x: CELL_SIZE * (x + 0.5), y: -CELL_SIZE * (y + 0.5)};
 
     let discRandomizer = cellRandomizer.addSeed(79);
     discs.push(createDisc({
+        level,
+        name,
         x: c.x + (discRandomizer.generateAndMutate() - 0.5) * CELL_SIZE / 10,
         y: c.y + (discRandomizer.generateAndMutate() - 0.5) * CELL_SIZE / 10,
         radius: discRandomizer.element(platformSizes),
@@ -115,12 +243,16 @@ export function createWorldCell(worldSeed: number, {x, y}: Point): WorldCell {
 
     const goalDiscs: Disc[] = [];
     let westDisc = createDisc({
+        level,
+        name,
         x: c.x - cellRadius,
         y: c.y,
         radius: 400,
     });
     goalDiscs.push(westDisc);
     goalDiscs.push(createDisc({
+        level,
+        name,
         x: CELL_SIZE,
         y: c.y,
         radius: 400,
@@ -128,6 +260,8 @@ export function createWorldCell(worldSeed: number, {x, y}: Point): WorldCell {
     let northDisc: Disc|undefined;
     if (hasNorthExit) {
         goalDiscs.push(northDisc = createDisc({
+            level,
+            name,
             x: c.x,
             y: c.y - cellRadius,
             radius: 400,
@@ -135,6 +269,8 @@ export function createWorldCell(worldSeed: number, {x, y}: Point): WorldCell {
     }
     if (hasSouthExit) {
         goalDiscs.push(createDisc({
+            level,
+            name,
             x: c.x,
             y: CELL_SIZE,
             radius: 400,
@@ -143,6 +279,8 @@ export function createWorldCell(worldSeed: number, {x, y}: Point): WorldCell {
     for (let i = 0; i < 200 && (goalDiscs.length || i < 10); i++) {
         const theta = 2 * Math.PI * discRandomizer.generateAndMutate();
         const newDisc: Disc = createDisc({
+            level,
+            name,
             x: c.x + cellRadius * Math.cos(theta),
             y: c.y + cellRadius * Math.sin(theta),
             radius: discRandomizer.element(platformSizes),
@@ -158,23 +296,7 @@ export function createWorldCell(worldSeed: number, {x, y}: Point): WorldCell {
                 goalDiscs.splice(j--, 1);
             }
         }
-        // TODO: Add different enemy generators and apply them at random.
-        const enemies = [];
-        if (discRandomizer.generateAndMutate() < 0.2) {
-            enemies.push(createEnemy(newDisc.x, newDisc.y, turret, level));
-        } else if (discRandomizer.generateAndMutate() < 0.1) {
-            enemies.push(createEnemy(newDisc.x, newDisc.y, chest, level + 1));
-        }
-        if (discRandomizer.generateAndMutate() < 0.3) {
-            enemies.push(createEnemy(newDisc.x - 50, newDisc.y, chaser, level));
-        }
-        if (discRandomizer.generateAndMutate() < 0.3) {
-            enemies.push(createEnemy(newDisc.x, newDisc.y + 50, circler, level));
-        }
-        newDisc.enemies = enemies;
-        for (const enemy of enemies) {
-            enemy.disc = newDisc;
-        }
+        addOverworldEnemiesToDisc(discRandomizer, newDisc);
         discs.push(newDisc);
     }
     discs.push(westDisc);
@@ -192,21 +314,17 @@ export function createWorldCell(worldSeed: number, {x, y}: Point): WorldCell {
 
 
 export function createTreeDungeon(seed: number, radius: number, level: number): Dungeon {
+    const name = 'Tree';
     const discs: Disc[] = [];
-    const portals: Portal[] = [];
-    const enemies: Enemy[] = [];
     const entrance: Entrance = {x: 0, y: 0, radius: 16};
     const dungeonRandomizer = SRandom.seed(seed);
-    if (level > 1) {
-        portals.push(getTreeDungeonPortal(0, 0, level - 1, dungeonRandomizer.generateAndMutate()));
-    }
-
-
-
     const startingPlatform: Disc = createDisc({
-        x: 0,
-        y: 0,
+        level,
+        name,
+        x: entrance.x,
+        y: entrance.y,
         radius: 400,
+        portals: [getOverworldPortal(entrance)],
     });
     discs.push(startingPlatform);
     let finished = false;
@@ -214,6 +332,8 @@ export function createTreeDungeon(seed: number, radius: number, level: number): 
         dungeonRandomizer.nextSeed();
         const theta = 2 * Math.PI * dungeonRandomizer.generateAndMutate();
         const newDisc: Disc = createDisc({
+            level,
+            name,
             x: radius * Math.cos(theta),
             y: radius * Math.sin(theta),
             radius: dungeonRandomizer.element(platformSizes),
@@ -226,13 +346,15 @@ export function createTreeDungeon(seed: number, radius: number, level: number): 
                 newDisc.radius = 400;
                 projectDiscToClosestDisc(discs, newDisc, dungeonRandomizer.range(16, 128));
                 newDisc.boss = createEnemy(newDisc.x, newDisc.y, guardian, Math.min(100, level + 2));
+                newDisc.boss.disc = newDisc;
                 newDisc.boss.isBoss = true;
-                enemies.push(newDisc.boss);
+                newDisc.enemies = [newDisc.boss];
                 discs.push(newDisc);
             }
             continue;
         }
         discs.push(newDisc);
+        const enemies = [];
         // TODO: Add different enemy generators and apply them at random.
         if (dungeonRandomizer.generateAndMutate() < 0.3) {
             enemies.push(createEnemy(newDisc.x, newDisc.y, turret, level));
@@ -249,26 +371,108 @@ export function createTreeDungeon(seed: number, radius: number, level: number): 
             enemies.push(createEnemy(newDisc.x, newDisc.y + 50, circler, level));
             enemies.push(createEnemy(newDisc.x, newDisc.y - 50, circler, level));
         }
+        newDisc.enemies = enemies;
+        for (const enemy of enemies) {
+            enemy.disc = newDisc;
+        }
     }
     linkDiscs(discs);
     return {
-        name: 'tree',
+        name,
         level,
         discs,
-        enemies,
         entrance,
-        portals,
+    };
+}
+
+
+export function createReefDungeon(seed: number, radius: number, level: number): Dungeon {
+    const name = 'Reef';
+    const discs: Disc[] = [];
+    const entrance: Entrance = {x: 0, y: radius, radius: 16};
+    const dungeonRandomizer = SRandom.seed(seed);
+    const startingPlatform: Disc = createDisc({
+        level,
+        name,
+        x: entrance.x,
+        y: entrance.y,
+        radius: 400,
+        portals: [getOverworldPortal(entrance)],
+    });
+    discs.push(startingPlatform);
+    let finished = false;
+    for (let i = 0; i < 100 && (!finished || i < 10); i++) {
+        dungeonRandomizer.nextSeed();
+        const theta = 5 * Math.PI / 4 + Math.PI * dungeonRandomizer.generateAndMutate() / 2;
+        const newDisc: Disc = createDisc({
+            level,
+            name,
+            x: radius * Math.cos(theta),
+            y: radius * Math.sin(theta),
+            radius: dungeonRandomizer.element(platformSizes),
+        });
+        projectDiscToClosestDisc(discs, newDisc, dungeonRandomizer.range(16, 128));
+        if (newDisc.x * newDisc.x + newDisc.y * newDisc.y >= radius * radius) {
+            // Only one disc is allowed to spawn outside of the radius.
+            if (!finished) {
+                finished = true;
+                newDisc.radius = 400;
+                projectDiscToClosestDisc(discs, newDisc, dungeonRandomizer.range(16, 128));
+                newDisc.boss = createEnemy(newDisc.x, newDisc.y, guardian, Math.min(100, level + 2));
+                newDisc.boss.isBoss = true;
+                newDisc.enemies.push(newDisc.boss);
+                newDisc.boss.disc = newDisc;
+                discs.push(newDisc);
+            }
+            continue;
+        }
+        discs.push(newDisc);
+        const enemies = []
+        // TODO: Add different enemy generators and apply them at random.
+        if (dungeonRandomizer.generateAndMutate() < 0.3) {
+            enemies.push(createEnemy(newDisc.x, newDisc.y, turret, level));
+        } else if (dungeonRandomizer.generateAndMutate() < 0.3) {
+            enemies.push(createEnemy(newDisc.x, newDisc.y, lord, level));
+        } else if (dungeonRandomizer.generateAndMutate() < 0.3) {
+            enemies.push(createEnemy(newDisc.x, newDisc.y, chest, level + 1));
+        }
+        if (dungeonRandomizer.generateAndMutate() < 0.5) {
+            enemies.push(createEnemy(newDisc.x + 50, newDisc.y, chaser, level));
+            enemies.push(createEnemy(newDisc.x - 50, newDisc.y, chaser, level));
+        }
+        if (dungeonRandomizer.generateAndMutate() < 0.5) {
+            enemies.push(createEnemy(newDisc.x, newDisc.y + 50, circler, level));
+            enemies.push(createEnemy(newDisc.x, newDisc.y - 50, circler, level));
+        }
+        newDisc.enemies = enemies;
+        for (const enemy of enemies) {
+            enemy.disc = newDisc;
+        }
+    }
+    linkDiscs(discs);
+    return {
+        name,
+        level,
+        discs,
+        entrance,
     };
 }
 
 export function startDungeon(state: GameState, dungeon: Dungeon): void {
+    if (!state.dungeon){
+        state.hero.overworldX = state.hero.x;
+        state.hero.overworldY = state.hero.y;
+    }
+    // Clear all portals on the current disc when entering a dungeon.
+    if (state.hero.disc) {
+        state.hero.disc.portals = state.hero.disc.portals.filter(p => p.dungeon !== dungeon);
+    }
+    state.dungeon = dungeon;
     state.hero.x = dungeon.entrance.x;
     state.hero.y = dungeon.entrance.y;
     state.activeDiscs = dungeon.discs;
     state.visibleDiscs = dungeon.discs;
-    state.enemies = dungeon.enemies;
-    state.loot = [];
-    state.portals = dungeon.portals;
+    updateActiveCells(state);
     refillAllPotions(state);
 }
 
