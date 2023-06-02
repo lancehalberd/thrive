@@ -49,7 +49,7 @@ export const circler: EnemyDefinition = {
         }
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
-        fillCircle(context, enemy, 'orange');
+        fillCircle(context, enemy, enemy.baseColor);
         fillCircle(context, {
             x: enemy.x + 10 * Math.cos(enemy.theta),
             y: enemy.y + 10 * Math.sin(enemy.theta),

@@ -30,16 +30,16 @@ export const enchantmentStatScale: {[key in EnchantmentType]: number} = {
 };
 
 function getEnchantmentStrength(level: number): number {
-    if (level > 80) {
+    if (level >= 80) {
         return 5;
     }
-    if (level > 50) {
+    if (level >= 50) {
         return 4;
     }
-    if (level > 30) {
+    if (level >= 30) {
         return 3;
     }
-    if (level > 15) {
+    if (level >= 15) {
         return 2;
     }
     return 1;

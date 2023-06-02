@@ -27,12 +27,10 @@ export const guardian: EnemyDefinition<GuardianParams> = {
                 const theta = i * 2 * Math.PI / 3;
                 const minion = createEnemy(
                     enemy.disc.x + (enemy.disc.radius - 30) * Math.cos(theta),
-                    enemy.disc.y + (enemy.disc.radius - 30) * Math.sin(theta), guardianTurret, enemy.level);
+                    enemy.disc.y + (enemy.disc.radius - 30) * Math.sin(theta), guardianTurret, enemy.level, enemy.disc);
                 minion.theta = theta;
                 enemy.minions.push(minion);
                 minion.master = enemy;
-                enemy.disc.enemies.push(minion);
-                minion.disc = enemy.disc;
             }
         }
         if (enemy.mode === 'choose') {
@@ -167,7 +165,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
         }
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
-        fillCircle(context, enemy, 'orange');
+        fillCircle(context, enemy, enemy.baseColor);
         fillCircle(context, {
             x: enemy.x + 30 * Math.cos(enemy.theta + Math.PI / 6),
             y: enemy.y + 30 * Math.sin(enemy.theta + Math.PI / 6),

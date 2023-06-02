@@ -2,6 +2,8 @@ interface Bullet extends Circle {
     vx: number
     vy: number
     damage: number
+    // Amount of charge the player will gain for hitting an enemy.
+    chargeGain?: number
     isEnemyPiercing?: boolean
     // Bullet will be removed after this timestamp
     expirationTime: number

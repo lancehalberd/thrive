@@ -20,6 +20,7 @@ interface Dungeon {
 
 interface Portal extends Geometry {
     name: string
+    disc: Disc
     dungeon?: Dungeon
     activate(state: GameState): void
 }

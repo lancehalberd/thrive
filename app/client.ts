@@ -1,7 +1,3 @@
-import { chaser } from 'app/enemies/chaser';
-import { circler } from 'app/enemies/circler';
-import { lord } from 'app/enemies/lord';
-import { turret } from 'app/enemies/turret';
 import { checkToDropBasicLoot, dropEnchantmentLoot } from 'app/loot';
 import { updateInventory } from 'app/inventory';
 import { render } from 'app/render/renderGame';
@@ -9,16 +5,16 @@ import { mainCanvas, mainContext } from 'app/utils/canvas';
 import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
 import {
     clearNearbyEnemies,
-    getDungeonPortal,
-    getOverworldPortal,
+    addDungeonPortalToDisc,
+    addOverworldPortalToDisc,
     updateActiveCells,
 } from 'app/utils/dungeon';
-import { createEnemy } from 'app/utils/enemy';
 import { doCirclesIntersect, findClosestDisc, getClosestElement, getTargetVector } from 'app/utils/geometry';
 import { damageHero, gainExperience, gainWeaponExperience, setDerivedHeroStats } from 'app/utils/hero';
 import { getMousePosition, isMouseDown, isRightMouseDown } from 'app/utils/mouse';
 import { getRightAnalogDeltas, isGameKeyDown, isKeyboardKeyDown, updateKeyboardState, wasGameKeyPressed, KEY } from 'app/utils/userInput';
 import Random from 'app/utils/Random';
+import { mediumArmors } from 'app/armor';
 import {
     BASE_MAX_POTIONS,
     BASE_XP,
@@ -48,6 +44,7 @@ let state: GameState = {
         recentDamageTaken: 0,
         equipment: {
             weapon: Random.element(allWeapons)[0],
+            armor: mediumArmors[0],
         },
         weapons: [],
         weaponProficiency: {},
@@ -63,6 +60,7 @@ let state: GameState = {
         attackCooldown: 0,
         chargingLevel: 1,
         attackChargeLevel: 1,
+        attackChargeDuration: 0,
         potions: BASE_MAX_POTIONS,
         isShooting: false,
         // Base crit damage/chance is on weapons, this just stores
@@ -122,12 +120,8 @@ function update(): void {
     updateKeyboardState(state);
     if (state.isUsingXbox) {
         const [dx, dy] = getRightAnalogDeltas(state);
-        if (dx*dx + dy*dy >= 0.5) {
-            state.hero.isShooting = true;
-            state.hero.theta = Math.atan2(dy, dx);
-        } else {
-            state.hero.isShooting = false;
-        }
+        state.hero.theta = Math.atan2(dy, dx);
+        state.hero.isShooting = isGameKeyDown(state, GAME_KEY.SHOOT);
     } else {
         const [x, y] = getMousePosition(mainCanvas, CANVAS_SCALE);
         let aimDx = x - FIELD_CENTER.x, aimDy = y - FIELD_CENTER.y;
@@ -184,32 +178,6 @@ function update(): void {
         fieldText.y += fieldText.vy;
         fieldText.time += FRAME_LENGTH;
     }
-
-
-    if (state.enemies.filter(e => !e.master).length < 0) {
-        for (const disc of state.activeDiscs) {
-            if (disc === state.hero.disc) {
-                continue;
-            }
-            if (Math.random() < 0.05) {
-                const definition: EnemyDefinition = Random.element([turret, chaser, chaser, circler, circler, lord]);
-                const radius = definition === turret ? disc.radius / 8 : disc.radius / 4;
-                const theta = Math.random() * 2 * Math.PI;
-                let level = Math.floor(state.hero.level / 2);
-                while (Math.random() < 0.5 && level < state.hero.level) {
-                    level++;
-                }
-                const enemy = createEnemy(
-                    disc.x + radius * Math.cos(theta),
-                    disc.y + radius * Math.sin(theta),
-                    definition,
-                    level
-                );
-                state.enemies.push(enemy);
-            }
-        }
-    }
-
     state.activeLoot = getClosestElement(state.hero, state.loot);
     if (state.activeLoot && getTargetVector(state.hero, state.activeLoot).distance2 >= (state.activeLoot.radius + state.hero.radius + 10) ** 2) {
         delete state.activeLoot;
@@ -253,19 +221,42 @@ function updateHero(state: GameState): void {
         dx /= m;
         dy /= m;
     }
-    const speed = isRightMouseDown() ? hero.speed : 1.5 * hero.speed;
+    // Currently walking is always disabled, but we can add a key for it later if we want.
+    const isWalking = false;
+    const speed = isWalking ? hero.speed : 1.5 * hero.speed;
     hero.x += dx * speed / FRAME_LENGTH;
     hero.y += dy * speed / FRAME_LENGTH;
 
     // Hero attack
     const weapon = hero.equipment.weapon;
     const attacksPerSecond = weapon.attacksPerSecond * hero.attacksPerSecond;
+
+
+    // chargingLevel increases as long as the hero
+    // Default charge speed is 1 charge per 20 seconds.
+    gainAttackCharge(state, FRAME_LENGTH / 20000);
+
+    if (state.hero.attackChargeLevel > 1) {
+        state.hero.attackChargeDuration -= FRAME_LENGTH;
+        if (state.hero.attackChargeDuration <= 0) {
+            state.hero.attackChargeLevel = 1;
+        }
+    } else if (state.hero.chargingLevel >= 2 &&
+        (isGameKeyDown(state, GAME_KEY.SPECIAL_ATTACK)
+            || (state.isUsingKeyboard && isRightMouseDown())
+        )
+    ) {
+        // Charge duration is 2 seconds by default.
+        state.hero.attackChargeDuration = 2000;
+        state.hero.attackChargeLevel = state.hero.chargingLevel;
+        state.hero.chargingLevel = 1;
+        // Restart attack pattern when triggering charged attacks.
+        hero.attackCooldown = state.fieldTime;
+    }
     if (state.hero.isShooting) {
         const attackCooldownDuration = 1000 / attacksPerSecond;
         if (hero.attackCooldown <= state.fieldTime) {
             hero.attackCooldown = state.fieldTime + attackCooldownDuration;
-            hero.attackChargeLevel = Math.max(1, Math.floor(hero.chargingLevel));
-            state.hero.chargingLevel = 0;
         }
         const attackTime = attackCooldownDuration - (hero.attackCooldown - state.fieldTime);
         for (const shot of weapon.shots) {
@@ -274,13 +265,6 @@ function updateHero(state: GameState): void {
                 state.heroBullets.push(shot.generateBullet(state, hero, weapon));
             }
         }
-    } else {
-        hero.chargingLevel = Math.min(
-            weapon.chargeLevel,
-            // Charging gets slower for each charge level.
-            //hero.chargingLevel + FRAME_LENGTH * attacksPerSecond / 1000 / Math.floor(hero.chargingLevel + 1)
-            hero.chargingLevel + FRAME_LENGTH * attacksPerSecond / 1000
-        );
     }
 
     if (!state.hero.disc?.boss) {
@@ -299,6 +283,14 @@ function updateHero(state: GameState): void {
         hero.life = Math.min(hero.maxLife, Math.ceil(hero.life + hero.maxLife * 0.2 * hero.potionEffect));
         hero.potions--;
     }
+}
+
+function gainAttackCharge(state: GameState, amount: number): void {
+    // Cannot gain charge while using a charged attack.
+    if (state.hero.attackChargeLevel > 1) {
+        return;
+    }
+    state.hero.chargingLevel = Math.min(state.hero.equipment.weapon.chargeLevel, state.hero.chargingLevel + amount);
 }
 
 
@@ -336,6 +328,9 @@ function updateHeroBullets(state: GameState): void {
             if (enemy.isInvulnerable) {
                 continue;
             }
+            if (enemy.life <= 0) {
+                continue;
+            }
             // Freeze enemies outside of the boss fight.
             if (boss && enemy.disc?.boss !== boss) {
                 continue;
@@ -350,6 +345,11 @@ function updateHeroBullets(state: GameState): void {
             if (doCirclesIntersect(enemy, bullet)) {
                 bullet.hitTargets.add(enemy);
                 const damage = applyArmorToDamage(state, bullet.damage, enemy.armor);
+                if (bullet.chargeGain) {
+                    gainAttackCharge(state, bullet.chargeGain);
+                    // A bullet grants less charge for each additional enemy it hits.
+                    bullet.chargeGain /= 2;
+                }
                 enemy.life -= damage;
                 let armorShred = bullet.armorShred;
                 if (enemy.armor <= enemy.baseArmor / 2) {
@@ -383,11 +383,11 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
     gainWeaponExperience(state, state.hero.equipment.weapon.weaponType, enemy.level, experience);
     checkToDropBasicLoot(state, enemy);
     if (enemy.disc && enemy.definition.portalDungeonType && Math.random() <= (enemy.definition.portalChance ?? 0)) {
-         enemy.disc.portals.push(getDungeonPortal(enemy, enemy.definition.portalDungeonType, enemy.level));
+         addDungeonPortalToDisc(enemy, enemy.definition.portalDungeonType, enemy.level, Math.random(), enemy.disc);
     }
     if (enemy.disc?.boss === enemy) {
         delete enemy.disc.boss;
-        enemy.disc.portals.push(getOverworldPortal(enemy.disc));
+        addOverworldPortalToDisc(enemy.disc, enemy.disc);
         // Destroy all boss minions when it is defeated. They will not grant experience as they are not
         // killed by taking shot damage.
         for (const minion of enemy.minions) {

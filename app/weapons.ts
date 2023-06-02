@@ -55,6 +55,8 @@ const bowShots: Shot[] = [
                 vx: speed * Math.cos(source.theta),
                 vy: speed * Math.sin(source.theta),
                 damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage),
+                // Bow gains charge very fast relative to its rate of fire.
+                chargeGain: 0.5,
                 isCrit: critDamage > 1,
                 isEnemyPiercing: true,
                 source,
@@ -89,9 +91,18 @@ function createBow(level: number, name: string): Weapon {
 
 export const bows: Weapon[] = [
     createBow(1, 'Primitive Bow'),
-    createBow(1.75, 'Short Bow'),
-    createBow(3, 'Recurve Bow'),
-    createBow(5, 'Long Bow'),
+    createBow(3, 'Short Bow'),
+    createBow(5, 'Recurve Bow'),
+    createBow(8, 'Long Bow'),
+    createBow(11, 'Crossbow'),
+    createBow(15, 'Composite Bow'),
+    createBow(21, 'Repeating Crossbow'),
+    createBow(32, 'Recurve Crossbow'),
+    createBow(44, 'Arbalest'),
+    createBow(57, 'Compound Bow'),
+    createBow(71, 'Compound Crossbow'),
+    createBow(86, 'Adamantine Crossbow'),
+    createBow(95, 'Dragonbone Greabow'),
 ];
 
 
@@ -106,6 +117,7 @@ const swordShots: Shot[] = [
                 vx: weapon.speed * Math.cos(source.theta),
                 vy: weapon.speed * Math.sin(source.theta),
                 damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage),
+                chargeGain: 0.1,
                 isCrit: critDamage > 1,
                 isEnemyPiercing: (source.attackChargeLevel >= 2),
                 source,
@@ -140,8 +152,17 @@ function createSword(level: number, name: string): Weapon {
 export const swords: Weapon[] = [
     createSword(1, 'Gladius'),
     createSword(2, 'Short Sword'),
-    createSword(4, 'Falchion'),
-    createSword(6, 'Scimitar'),
+    createSword(5, 'Falchion'),
+    createSword(8, 'Scimitar'),
+    createSword(12, 'Wakizashi'),
+    createSword(17, 'Longsword'),
+    createSword(27, 'Estoic'),
+    createSword(38, 'Broadsword'),
+    createSword(50, 'Bastardsword'),
+    createSword(63, 'Meteoric Saber'),
+    createSword(77, 'Runed Saber'),
+    createSword(92, 'Etched Dragon Horn'),
+    createSword(95, 'Precursor Blade'),
 ];
 
 function generateDaggerShot(timingOffset: number, thetaOffset: number): Shot {
@@ -155,6 +176,8 @@ function generateDaggerShot(timingOffset: number, thetaOffset: number): Shot {
                 vx: weapon.speed * Math.cos(source.theta + thetaOffset / source.attackChargeLevel / source.attackChargeLevel),
                 vy: weapon.speed * Math.sin(source.theta + thetaOffset / source.attackChargeLevel / source.attackChargeLevel),
                 damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage),
+                // Dagger gains charge 40% faster than average if every bullet hits.
+                chargeGain: 0.02,
                 isCrit: critDamage > 1,
                 radius: weapon.radius + (source.attackChargeLevel - 1),
                 source,
@@ -198,8 +221,16 @@ function createDagger(level: number, name: string): Weapon {
 export const daggers: Weapon[] = [
     createDagger(1.5, 'Pugio'),
     createDagger(3, 'Hewing Knife'),
-    createDagger(5, 'Cross-hilt Dagger'),
-    createDagger(7, 'Tanto'),
+    createDagger(6, 'Cross-hilt Dagger'),
+    createDagger(11, 'Tanto'),
+    createDagger(17, 'Stiletto'),
+    createDagger(23, 'Steel Dirk'),
+    createDagger(34, 'Stainless Dirk'),
+    createDagger(46, 'Serrated Dirk'),
+    createDagger(59, 'Masterful Dirk'),
+    createDagger(73, 'Meteoric Dirk'),
+    createDagger(88, 'Runed Dirk'),
+    createDagger(95, 'Etched Dragon Fang'),
 ];
 
 
@@ -215,6 +246,8 @@ function generateKatanaShot(timingOffset: number, offset: number): Shot {
                 vx: speed * Math.cos(source.theta),
                 vy: speed * Math.sin(source.theta),
                 damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage),
+                // Katana can gain charge almost 2x faster when piercing several enemies.
+                chargeGain: 0.05,
                 isCrit: critDamage > 1,
                 isEnemyPiercing: true,
                 radius: weapon.radius + (source.attackChargeLevel - 1),
@@ -253,10 +286,18 @@ function createKatana(level: number, name: string): Weapon {
 
 export const katanas: Weapon[] = [
     createKatana(1.5, 'Kitetsu I'),
-    createKatana(3, 'Yubashiri'),
-    createKatana(5, 'Kitetsu II'),
-    createKatana(7, 'Shusui'),
-    createKatana(11, 'Ichimonji'),
+    createKatana(4, 'Yubashiri'),
+    createKatana(7, 'Kitetsu II'),
+    createKatana(11, 'Shusui'),
+    createKatana(16, 'Ichimonji'),
+    createKatana(22, 'Soto Muso'),
+    createKatana(30, 'Sukesan'),
+    createKatana(40, 'Shigure'),
+    createKatana(51, 'Kitetsu III'),
+    createKatana(64, 'Ame no Habakiri'),
+    createKatana(76, 'Wado Ichimonji'),
+    createKatana(90, 'Enma'),
+    createKatana(95, 'Masamune'),
 ];
 
 export const weaponTypes: WeaponType[] = [

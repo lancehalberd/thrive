@@ -341,11 +341,11 @@ function renderHeroBullet(context: CanvasRenderingContext2D, bullet: Bullet): vo
     fillCircle(context, bullet, 'green');
 }
 function renderHero(context: CanvasRenderingContext2D, state: GameState, hero: Hero): void {
-    if (hero.attackCooldown > state.fieldTime && hero.attackChargeLevel >= 2) {
+    if (hero.attackChargeDuration > 0 && hero.attackChargeLevel >= 2) {
         // While charged attack still applies, draw an orange halo.
         context.save();
-            context.globalAlpha *= (0.45 + 0.15 * Math.sin(state.fieldTime / 100));
-            const chargeRadius = hero.radius * 1.2;
+            context.globalAlpha *= (0.6 + 0.15 * Math.sin(state.fieldTime / 100));
+            const chargeRadius = hero.radius * 1.3;
             fillCircle(context, {x: hero.x, y: hero.y, radius: chargeRadius}, 'orange');
         context.restore()
     } else if (hero.chargingLevel >= 2) {

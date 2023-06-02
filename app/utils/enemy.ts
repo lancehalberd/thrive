@@ -2,7 +2,7 @@ import { BASE_ENEMY_BULLET_DURATION, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_SPEED,
 import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 import { updateSimpleBullet } from 'app/weapons';
 
-export function createEnemy<EnemyParams>(x: number, y: number, definition: EnemyDefinition<EnemyParams>, level: number): Enemy<EnemyParams> {
+export function createEnemy<EnemyParams>(x: number, y: number, definition: EnemyDefinition<EnemyParams>, level: number, disc: Disc): Enemy<EnemyParams> {
     const heroDamage = Math.ceil(level * 20 * Math.pow(1.05, level));
     const heroAttacksPerSecond = 2 + 0.02 * level;
     const heroMaxLife = 20 * (level + 1);
@@ -10,14 +10,17 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
     const targetDuration = 1 + level * 10 / 100;
     const maxLife = Math.ceil((dps * targetDuration) * (definition.statFactors.maxLife ?? 1));
     const baseArmor = 2 * level * (definition.statFactors.armor ?? 1);
-    return {
+
+    const enemy = {
         definition,
+        disc,
         params: {...definition.initialParams},
         x,
         y,
         maxLife,
         life: maxLife,
         level,
+        baseColor: getEnemyColor(level),
         speed: BASE_ENEMY_SPEED * (definition.statFactors.speed ?? 1) * (0.9 + 0.2 * Math.random()),
         baseArmor,
         armor: baseArmor,
@@ -39,6 +42,45 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
             this.modeTime = 0;
         }
     };
+    disc.enemies.push(enemy);
+    return enemy;
+}
+
+export function getEnemyColor(level: number): string {
+    if (level === 1) {
+        return 'lightBlue';
+    }
+    if (level <= 3) {
+        return 'lightGreen';
+    }
+    if (level <= 10) {
+        return 'orange';
+    }
+    if (level <= 20) {
+        return 'red';
+    }
+    if (level <= 30) {
+        return 'purple';
+    }
+    if (level <= 40) {
+        return 'grey';
+    }
+    if (level <= 50) {
+        return 'green';
+    }
+    if (level <= 60) {
+        return '#FF0';
+    }
+    if (level <= 70) {
+        return '#F0F';
+    }
+    if (level <= 80) {
+        return '#0FF';
+    }
+    if (level <= 90) {
+        return 'silver';
+    }
+    return 'gold';
 }
 
 export function shootEnemyBullet(state: GameState, enemy: Enemy, vx: number, vy: number, stats: Partial<Bullet> = {}) {
@@ -69,7 +111,6 @@ export function shootBulletArc(state: GameState, enemy: Enemy, theta: number, an
     }
 }
 
-
 export function shootBulletCircle(state: GameState, enemy: Enemy, theta: number, count: number, speed: number, stats: Partial<Bullet> = {}) {
     for (let i = 0; i < count; i++) {
         const bulletTheta = theta + 2 * Math.PI * i / count;
@@ -77,29 +118,39 @@ export function shootBulletCircle(state: GameState, enemy: Enemy, theta: number,
     }
 }
 
-export function moveEnemyInCurrentDirection(state: GameState, enemy: Enemy): void {
-    enemy.x += enemy.speed * Math.cos(enemy.theta) / FRAME_LENGTH;
-    enemy.y += enemy.speed * Math.sin(enemy.theta) / FRAME_LENGTH;
+export function isEnemyOffDisc(state: GameState, enemy: Enemy): boolean {
+    return enemy.disc && getTargetVector(enemy, enemy.disc).distance2 >= enemy.disc.radius ** 2;
 }
 
-export function moveEnemyInDirection(state: GameState, enemy: Enemy, theta: number = enemy.theta): void {
-    enemy.x += enemy.speed * Math.cos(theta) / FRAME_LENGTH;
-    enemy.y += enemy.speed * Math.sin(theta) / FRAME_LENGTH;
+export function shootBulletAtHero(state: GameState, enemy: Enemy, speed: number, stats: Partial<Bullet> = {}) {
+    const {x, y} = getTargetVector(enemy, state.hero);
+    const theta = Math.atan2(y, x);
+    shootEnemyBullet(state, enemy, speed * Math.cos(theta), speed * Math.sin(theta), stats);
 }
 
-export function chaseTarget(state: GameState, enemy: Enemy, target: Circle): void {
+export function moveEnemyInCurrentDirection(state: GameState, enemy: Enemy, speed = enemy.speed): void {
+    enemy.x += speed * Math.cos(enemy.theta) / FRAME_LENGTH;
+    enemy.y += speed * Math.sin(enemy.theta) / FRAME_LENGTH;
+}
+
+export function moveEnemyInDirection(state: GameState, enemy: Enemy, theta: number = enemy.theta, speed = enemy.speed): void {
+    enemy.x += speed * Math.cos(theta) / FRAME_LENGTH;
+    enemy.y += speed * Math.sin(theta) / FRAME_LENGTH;
+}
+
+export function chaseTarget(state: GameState, enemy: Enemy, target: Circle, speed = enemy.speed): void {
     const {x, y} = getTargetVector(enemy, target);
     enemy.theta = turnTowardsAngle(enemy.theta, 0.2, Math.atan2(y, x));
-    moveEnemyInDirection(state, enemy);
+    moveEnemyInDirection(state, enemy, enemy.theta, speed);
 }
 
 
-export function moveEnemyToTarget(state: GameState, enemy: Enemy, {x, y}: Point): boolean {
+export function moveEnemyToTarget(state: GameState, enemy: Enemy, {x, y}: Point, speed = enemy.speed): boolean {
     const dx = x - enemy.x, dy = y - enemy.y;
     enemy.theta = turnTowardsAngle(enemy.theta, 0.2, Math.atan2(dy, dx));
     const distance = Math.sqrt(dx * dx + dy* dy);
-    enemy.x += Math.min(enemy.speed / FRAME_LENGTH, distance) * Math.cos(enemy.theta);
-    enemy.y += Math.min(enemy.speed / FRAME_LENGTH, distance) * Math.sin(enemy.theta);
-    return distance <= enemy.speed / FRAME_LENGTH;
+    enemy.x += Math.min(speed / FRAME_LENGTH, distance) * Math.cos(enemy.theta);
+    enemy.y += Math.min(speed / FRAME_LENGTH, distance) * Math.sin(enemy.theta);
+    return distance <= speed / FRAME_LENGTH;
 }
 

@@ -36,16 +36,15 @@ export const lord: EnemyDefinition = {
             for (const theta of [enemy.theta + Math.PI / 2, enemy.theta - Math.PI / 2]) {
                 const minion = createEnemy(
                     enemy.x + enemy.radius * Math.cos(theta),
-                    enemy.y + enemy.radius * Math.sin(theta), lordsMinion, enemy.level);
+                    enemy.y + enemy.radius * Math.sin(theta), lordsMinion, enemy.level, enemy.disc);
                 minion.theta = theta;
                 enemy.minions.push(minion);
                 minion.master = enemy;
-                enemy.disc.enemies.push(minion);
             }
         }
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
-        fillCircle(context, enemy, 'orange');
+        fillCircle(context, enemy, enemy.baseColor);
         fillCircle(context, {
             x: enemy.x,
             y: enemy.y,
@@ -111,7 +110,7 @@ export const lordsMinion: EnemyDefinition = {
         }
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
-        fillCircle(context, enemy, 'orange');
+        fillCircle(context, enemy, enemy.baseColor);
         fillCircle(context, {
             x: enemy.x + 12 * Math.cos(enemy.theta),
             y: enemy.y + 12 * Math.sin(enemy.theta),

@@ -29,7 +29,7 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     weaponProficiency: {[key in WeaponType]?: WeaponProficiency}
     equipment: {
         weapon: Weapon
-        armor?: Armor
+        armor: Armor
     }
     weapons: Weapon[],
     armors: Armor[],
@@ -37,8 +37,10 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     activeEnchantment?: Enchantment,
     // How much the player has charged since he last attacked, which will be applied to the next weapon cycle.
     chargingLevel: number
-    // How charged the player's current attacks are, which lasts for 1 full weapon cycle.
+    // How charged the player's current attacks are.
     attackChargeLevel: number
+    // How long the player's current charged attack status lasts. 1 full weapon cycle by default.
+    attackChargeDuration: number
     potions: number
     isShooting: boolean
     critChance: number
@@ -49,6 +51,7 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
 }
 interface Enemy<EnemyParams=any> extends Vitals, Geometry {
     level: number
+    disc: Disc
     definition: EnemyDefinition<EnemyParams>
     params: EnemyParams,
     // The angle the enemy is facing.
@@ -64,6 +67,7 @@ interface Enemy<EnemyParams=any> extends Vitals, Geometry {
     setMode(this: Enemy, mode: string)
     isBoss?: boolean
     isInvulnerable?: boolean
+    baseColor: string
 }
 interface EnemyDefinition<EnemyParams=any> {
     name: string

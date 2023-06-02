@@ -73,11 +73,16 @@ const GAME_PAD_MAPPINGS = {
     [GAME_KEY.ACTIVATE]: [
         0, // A (bottom button)
         1, // B (right button)
-        5, // R1 (right shoulder button)
     ],
     [GAME_KEY.SELL]: 3, // Y (top button)
     [GAME_KEY.POTION]: 4, // L1 (left shoulder button)
+    [GAME_KEY.SHOOT]: 5, // R1 (right shoulder button)
+    [GAME_KEY.SPECIAL_ATTACK]: 6, // L Back Bumper
     // 2, // X (left button)
+    // 7, // R Back bumper
+    // 8, // BACK
+    // 10 ??
+    // 11 ??
 };
 
 const LEFT_ANALOG_Y_AXIS = 1;

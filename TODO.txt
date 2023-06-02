@@ -1,9 +1,22 @@
-Add Crab Enemy
 Add Clam Enemy
 Add Squid Enemy
 Add Reef Boss
 
-Restart on death.
+Add cave dungeon
+Add bat enemy
+Add 4 tiers splitting slime enemy 3x 2x 1x 0.5x
+Add cave boss Vampire Bat
+
+
+Add stats for improving charge attacks
+    Increase charge levels
+    Increase charge duration
+    Charge faster
+    Improved damage/attack speed/bullet size/crit stats during charge
+
+
+Add game over screen
+    Show some stats and action for restarting the game.
 
 Save game to local storage.
 

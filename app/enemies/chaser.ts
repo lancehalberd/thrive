@@ -31,7 +31,7 @@ export const chaser: EnemyDefinition = {
         }
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
-        fillCircle(context, enemy, 'orange');
+        fillCircle(context, enemy, enemy.baseColor);
         fillCircle(context, {
             x: enemy.x + 15 * Math.cos(enemy.theta),
             y: enemy.y + 15 * Math.sin(enemy.theta),

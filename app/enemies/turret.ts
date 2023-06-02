@@ -33,7 +33,7 @@ export const turret: EnemyDefinition = {
         }
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
-        fillCircle(context, enemy, 'orange');
+        fillCircle(context, enemy, enemy.baseColor);
         fillCircle(context, {
             x: enemy.x,
             y: enemy.y,
@@ -43,7 +43,7 @@ export const turret: EnemyDefinition = {
             x: enemy.x,
             y: enemy.y,
             radius: 15,
-        }, 'orange');
+        }, enemy.baseColor);
         fillCircle(context, {
             x: enemy.x + 20 * Math.cos(enemy.theta),
             y: enemy.y + 20 * Math.sin(enemy.theta),

@@ -25,6 +25,8 @@ export const GAME_KEY = {
     AIM_DOWN: 10,
     AIM_LEFT: 11,
     AIM_RIGHT: 12,
+    SHOOT: 13,
+    SPECIAL_ATTACK: 14,
 };
 
 export const CELL_SIZE = 3000;

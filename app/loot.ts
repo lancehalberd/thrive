@@ -56,7 +56,8 @@ export function dropArmorLoot(state: GameState, source: Enemy, level: number): v
         }
     }
     const armor = {...armorType[armorIndex]};
-    for (;armor.level < level; armor.level++) {
+    for (let i = 0; i < 5 && armor.level < level; i++) {
+        armor.level++;
         armor.name = armor.name + '+';
         armor.armor = Math.ceil(armor.armor * 1.1);
         armor.life = Math.ceil(armor.life * 1.1);
@@ -98,7 +99,8 @@ export function dropWeaponLoot(state: GameState, source: Enemy, level: number): 
         }
     }
     const weapon = {...weaponType[weaponIndex]};
-    for (;weapon.level < level; weapon.level++) {
+    for (let i = 0; i < 5 && weapon.level < level; i++) {
+        weapon.level++;
         weapon.name = weapon.name + '+';
         weapon.damage = Math.ceil(weapon.damage * 1.1);
     }
