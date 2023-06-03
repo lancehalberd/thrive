@@ -3,6 +3,7 @@ import { CELL_SIZE } from 'app/constants';
 import { chaser } from 'app/enemies/chaser';
 import { chest } from 'app/enemies/chest';
 import { circler } from 'app/enemies/circler';
+import { clam } from 'app/enemies/clam';
 import { crab } from 'app/enemies/crab';
 import { lord } from 'app/enemies/lord';
 import { turret } from 'app/enemies/turret';
@@ -29,7 +30,7 @@ export function clearNearbyEnemies(state: GameState): void {
 export function addTreeDungeonPortalToDisc({x, y}: Point, level: number, seed: number, disc: Disc): Portal {
     level = Math.max(0, Math.min(100, level));
     const dungeon = createTreeDungeon(seed, 2000 + 40 * level, level);
-    return {
+    const portal = {
         x, y, radius: 40,
         disc,
         dungeon,
@@ -38,12 +39,14 @@ export function addTreeDungeonPortalToDisc({x, y}: Point, level: number, seed: n
             startDungeon(state, this);
         },
     };
+    disc.portals.push(portal);
+    return portal;
 }
 
 export function addDungeonPortalToDisc({x, y}: Point, type: DungeonType, level: number, seed = Math.random(), disc: Disc): Portal {
     level = Math.max(0, Math.min(100, level));
     const dungeon = createReefDungeon(seed, 2000 + 40 * level, level)
-    return {
+    const portal = {
         x, y, radius: 40,
         disc,
         dungeon,
@@ -52,10 +55,12 @@ export function addDungeonPortalToDisc({x, y}: Point, type: DungeonType, level: 
             startDungeon(state, this);
         },
     };
+    disc.portals.push(portal);
+    return portal;
 }
 
 export function addOverworldPortalToDisc({x, y}: Point, disc: Disc): Portal {
-    return {
+    const portal = {
         x, y, radius: 40,
         disc,
         name: 'Overworld',
@@ -66,6 +71,8 @@ export function addOverworldPortalToDisc({x, y}: Point, disc: Disc): Portal {
             clearNearbyEnemies(state);
         },
     };
+    disc.portals.push(portal);
+    return portal;
 }
 
 
@@ -193,6 +200,8 @@ function getCellLevel(randomizer: typeof SRandom, cellY: number): number {
 function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void {
     if (disc.level === 1) {
         if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(disc.x, disc.y, clam, disc.level, disc);
+        } else if (randomizer.generateAndMutate() < 0.3) {
             createEnemy(disc.x, disc.y, urchin, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.4) {

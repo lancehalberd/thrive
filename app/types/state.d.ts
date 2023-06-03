@@ -79,6 +79,7 @@ interface EnemyDefinition<EnemyParams=any> {
     radius: number
     isInvulnerable?: boolean
     update: (state: GameState, enemy: Enemy) => void
+    onHit?: (state: GameState, enemy: Enemy, bullet: Bullet) => void
     onDeath?: (state: GameState, enemy: Enemy) => void
     // Set on bosses that drop enchantments
     getEnchantment?: (state: GameState, enemy: Enemy) => Enchantment

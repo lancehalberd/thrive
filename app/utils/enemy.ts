@@ -138,9 +138,13 @@ export function moveEnemyInDirection(state: GameState, enemy: Enemy, theta: numb
     enemy.y += speed * Math.sin(theta) / FRAME_LENGTH;
 }
 
-export function chaseTarget(state: GameState, enemy: Enemy, target: Circle, speed = enemy.speed): void {
+export function turnTowardsTarget(state: GameState, enemy: Enemy, target: Circle, turnSpeed = 0.2): void {
     const {x, y} = getTargetVector(enemy, target);
-    enemy.theta = turnTowardsAngle(enemy.theta, 0.2, Math.atan2(y, x));
+    enemy.theta = turnTowardsAngle(enemy.theta, turnSpeed, Math.atan2(y, x));
+}
+
+export function chaseTarget(state: GameState, enemy: Enemy, target: Circle, speed = enemy.speed): void {
+    turnTowardsTarget(state, enemy, target);
     moveEnemyInDirection(state, enemy, enemy.theta, speed);
 }
 

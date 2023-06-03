@@ -365,6 +365,7 @@ function updateHeroBullets(state: GameState): void {
                 } else {
                     // Shots are not absorbed by defeated enemies.
                     bulletAbsorbed = !bullet.isEnemyPiercing;
+                    enemy.definition.onHit?.(state, enemy, bullet);
                 }
             }
         }
