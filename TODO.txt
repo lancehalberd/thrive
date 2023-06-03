@@ -1,19 +1,15 @@
-Add Clam Enemy
 Add Squid Enemy
-Add Reef Boss
 
 Add cave dungeon
 Add bat enemy
 Add 4 tiers splitting slime enemy 3x 2x 1x 0.5x
 Add cave boss Vampire Bat
 
-
 Add stats for improving charge attacks
     Increase charge levels
     Increase charge duration
     Charge faster
     Improved damage/attack speed/bullet size/crit stats during charge
-
 
 Add game over screen
     Show some stats and action for restarting the game.
@@ -23,6 +19,11 @@ Save game to local storage.
 Show Proficiency bonuses text box when hovering over proficiencies:
     For daggers: 10% increased attack speed and 80% increased damage
     For all weapons: 10% increased attack speed
+
+Add 15 bonus proficiency to starting weapon
+    Counts towards bonuses, but not towards level cap or XP requirements for leveling.
+Add 10 bonus proficiency to random non-starting weapon
+Add 5 bonus proficiency to random non-starting weapon
 
 Add rare potion drop from enemies
     Refills life if potions are full

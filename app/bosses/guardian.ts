@@ -1,5 +1,5 @@
 import { BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_SPEED } from 'app/constants';
-import { getPowerEnchantment } from 'app/enchantments';
+import { getVigorEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
 import { chaseTarget, createEnemy, moveEnemyInDirection, moveEnemyToTarget, shootBulletArc, shootEnemyBullet } from 'app/utils/enemy';
 import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
@@ -183,7 +183,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
         }, 'black');
     },
     getEnchantment(state: GameState, enemy: Enemy): Enchantment {
-        return getPowerEnchantment(enemy.level);
+        return getVigorEnchantment(enemy.level);
     },
 };
 

@@ -146,3 +146,24 @@ export function getPowerEnchantment(level: number): Enchantment {
     };
 }
 
+export function getVigorEnchantment(level: number): Enchantment {
+    return {
+        type: 'enchantment',
+        name: 'Vigor',
+        level,
+        weaponEnchantmentType: 'critDamage',
+        armorEnchantmentType: 'life',
+        strength: getEnchantmentStrength(level),
+    };
+}
+
+export function getInsightEnchantment(level: number): Enchantment {
+    return {
+        type: 'enchantment',
+        name: 'Insight',
+        level,
+        weaponEnchantmentType: 'critChance',
+        armorEnchantmentType: 'potionEffect',
+        strength: getEnchantmentStrength(level),
+    };
+}

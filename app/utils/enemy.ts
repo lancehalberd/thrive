@@ -53,31 +53,31 @@ export function getEnemyColor(level: number): string {
     if (level <= 3) {
         return 'lightGreen';
     }
-    if (level <= 10) {
+    if (level < 10) {
         return 'orange';
     }
-    if (level <= 20) {
+    if (level < 20) {
         return 'red';
     }
-    if (level <= 30) {
+    if (level < 30) {
         return 'purple';
     }
-    if (level <= 40) {
+    if (level < 40) {
         return 'grey';
     }
-    if (level <= 50) {
+    if (level < 50) {
         return 'green';
     }
-    if (level <= 60) {
+    if (level < 60) {
         return '#FF0';
     }
-    if (level <= 70) {
+    if (level < 70) {
         return '#F0F';
     }
-    if (level <= 80) {
+    if (level < 80) {
         return '#0FF';
     }
-    if (level <= 90) {
+    if (level < 90) {
         return 'silver';
     }
     return 'gold';
@@ -102,6 +102,44 @@ export function shootEnemyBullet(state: GameState, enemy: Enemy, vx: number, vy:
         armorShred: 0,
         ...stats,
     });
+}
+
+export function shootCirclingBullet(state: GameState, enemy: Enemy, theta: number, radius: number, stats: Partial<Bullet> = {}) {
+    //const mag = Math.sqrt(vx * vx + vy * vy);
+    state.enemyBullets.push({
+        //x: enemy.x + vx / mag * enemy.radius,
+        //y: enemy.y + vy / mag * enemy.radius,
+        x: enemy.x,
+        y: enemy.y,
+        source: enemy,
+        damage: enemy.damage,
+        radius: BASE_ENEMY_BULLET_RADIUS,
+        vx: 0,
+        vy: 0,
+        orbitRadius: radius,
+        theta,
+        vTheta: 2 * Math.PI,
+        expirationTime: state.fieldTime + BASE_ENEMY_BULLET_DURATION,
+        update: updateCirclingBullet,
+        hitTargets: new Set(),
+        // Armor shred is not functional against the player, although maybe it could be added
+        // with player recovering armor over time.
+        armorShred: 0,
+        ...stats,
+    });
+}
+
+function updateCirclingBullet(state: GameState, bullet: Bullet): void {
+    if (!bullet.source
+        || typeof(bullet.theta) !== 'number'
+        || typeof(bullet.vTheta) !== 'number'
+        || typeof(bullet.orbitRadius) !== 'number'
+    ) {
+        return;
+    }
+    bullet.theta += FRAME_LENGTH * bullet.vTheta / 1000;
+    bullet.x = bullet.source.x + bullet.orbitRadius * Math.cos(bullet.theta);
+    bullet.y = bullet.source.y + bullet.orbitRadius * Math.sin(bullet.theta);
 }
 
 export function shootBulletArc(state: GameState, enemy: Enemy, theta: number, angle: number, count: number, speed: number, stats: Partial<Bullet> = {}) {

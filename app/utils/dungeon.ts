@@ -3,7 +3,7 @@ import { CELL_SIZE } from 'app/constants';
 import { chaser } from 'app/enemies/chaser';
 import { chest } from 'app/enemies/chest';
 import { circler } from 'app/enemies/circler';
-import { clam } from 'app/enemies/clam';
+import { clam, giantClam } from 'app/enemies/clam';
 import { crab } from 'app/enemies/crab';
 import { lord } from 'app/enemies/lord';
 import { turret } from 'app/enemies/turret';
@@ -27,25 +27,14 @@ export function clearNearbyEnemies(state: GameState): void {
     updateActiveCells(state);
 }
 
-export function addTreeDungeonPortalToDisc({x, y}: Point, level: number, seed: number, disc: Disc): Portal {
-    level = Math.max(0, Math.min(100, level));
-    const dungeon = createTreeDungeon(seed, 2000 + 40 * level, level);
-    const portal = {
-        x, y, radius: 40,
-        disc,
-        dungeon,
-        name: 'Tree',
-        activate(this: Portal, state: GameState) {
-            startDungeon(state, this);
-        },
-    };
-    disc.portals.push(portal);
-    return portal;
-}
-
 export function addDungeonPortalToDisc({x, y}: Point, type: DungeonType, level: number, seed = Math.random(), disc: Disc): Portal {
     level = Math.max(0, Math.min(100, level));
-    const dungeon = createReefDungeon(seed, 2000 + 40 * level, level)
+    let dungeon: Dungeon;
+    if (type === 'reef') {
+        dungeon = createReefDungeon(seed, 2000 + 40 * level, level)
+    } else {
+        dungeon = createTreeDungeon(seed, 2000 + 40 * level, level + 1);
+    }
     const portal = {
         x, y, radius: 40,
         disc,
@@ -427,7 +416,7 @@ export function createReefDungeon(seed: number, radius: number, level: number): 
                 finished = true;
                 newDisc.radius = 400;
                 projectDiscToClosestDisc(discs, newDisc, dungeonRandomizer.range(16, 128));
-                newDisc.boss = createEnemy(newDisc.x, newDisc.y, guardian, Math.min(100, level + 2), newDisc);
+                newDisc.boss = createEnemy(newDisc.x, newDisc.y, giantClam, Math.min(100, level + 2), newDisc);
                 newDisc.boss.isBoss = true;
                 discs.push(newDisc);
             }
@@ -436,19 +425,19 @@ export function createReefDungeon(seed: number, radius: number, level: number): 
         discs.push(newDisc);
         // TODO: Add different enemy generators and apply them at random.
         if (dungeonRandomizer.generateAndMutate() < 0.3) {
-            createEnemy(newDisc.x, newDisc.y, turret, level, newDisc);
+            createEnemy(newDisc.x, newDisc.y, urchin, level, newDisc);
         } else if (dungeonRandomizer.generateAndMutate() < 0.3) {
-            createEnemy(newDisc.x, newDisc.y, lord, level, newDisc);
+            createEnemy(newDisc.x, newDisc.y, clam, level, newDisc);
         } else if (dungeonRandomizer.generateAndMutate() < 0.3) {
             createEnemy(newDisc.x, newDisc.y, chest, level + 1, newDisc);
         }
         if (dungeonRandomizer.generateAndMutate() < 0.5) {
-            createEnemy(newDisc.x + 50, newDisc.y, chaser, level, newDisc);
-            createEnemy(newDisc.x - 50, newDisc.y, chaser, level, newDisc);
+            createEnemy(newDisc.x + 50, newDisc.y, crab, level, newDisc);
+            createEnemy(newDisc.x - 50, newDisc.y, crab, level, newDisc);
         }
         if (dungeonRandomizer.generateAndMutate() < 0.5) {
-            createEnemy(newDisc.x, newDisc.y + 50, circler, level, newDisc);
-            createEnemy(newDisc.x, newDisc.y - 50, circler, level, newDisc);
+            createEnemy(newDisc.x, newDisc.y + 50, crab, level, newDisc);
+            createEnemy(newDisc.x, newDisc.y - 50, crab, level, newDisc);
         }
     }
     linkDiscs(discs);

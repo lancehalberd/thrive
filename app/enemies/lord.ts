@@ -7,7 +7,7 @@ import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 export const lord: EnemyDefinition = {
     name: 'Lord',
     statFactors: {
-        maxLife: 3,
+        maxLife: 2.5,
         damage: 1,
         attacksPerSecond: 0.4,
         speed: 0.4,
@@ -16,6 +16,8 @@ export const lord: EnemyDefinition = {
     dropChance: 2 * BASE_DROP_CHANCE,
     experienceFactor: 5,
     radius: 20,
+    portalChance: 0.2,
+    portalDungeonType: 'tree',
     update(state: GameState, enemy: Enemy): void {
         if (!enemy.disc) {
             return;

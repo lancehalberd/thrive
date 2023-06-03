@@ -1,6 +1,9 @@
 interface Bullet extends Circle {
     vx: number
     vy: number
+    orbitRadius?: number
+    theta?: number
+    vTheta?: number
     damage: number
     // Amount of charge the player will gain for hitting an enemy.
     chargeGain?: number
