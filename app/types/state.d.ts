@@ -68,6 +68,8 @@ interface Enemy<EnemyParams=any> extends Vitals, Geometry {
     isBoss?: boolean
     isInvulnerable?: boolean
     baseColor: string
+    vx: number
+    vy: number
 }
 interface EnemyDefinition<EnemyParams=any> {
     name: string

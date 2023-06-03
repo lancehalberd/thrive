@@ -13,13 +13,14 @@ export const crab: EnemyDefinition = {
     initialParams: {},
     dropChance: 1.5 * BASE_DROP_CHANCE,
     experienceFactor: 2,
-    radius: 20,
+    radius: 25,
     update(state: GameState, enemy: Enemy): void {
         const aggroRadius = 400;
-        const {y, distance2} = getTargetVector(enemy, state.hero);
+        const {distance2} = getTargetVector(enemy, state.hero);
         const isAggro = distance2 <= aggroRadius * aggroRadius;
         if (enemy.mode === 'choose') {
-            if (isAggro) {
+            enemy.setMode(Random.element(['moveLeft', 'moveRight', 'pause', 'pause']));
+            /*if (isAggro) {
                 if (y < 30) {
                     enemy.setMode('moveUp');
                 } else {
@@ -27,7 +28,7 @@ export const crab: EnemyDefinition = {
                 }
             } else {
                 enemy.setMode(Random.element(['moveUp', 'moveDown', 'moveLeft', 'moveRight', 'pause', 'pause']));
-            }
+            }*/
             return;
         }
         if (enemy.mode === 'moveUp') {
@@ -65,9 +66,15 @@ export const crab: EnemyDefinition = {
                 enemy.setMode('choose');
             }
         }
+        if (enemy.modeTime % 400 === 0) {
+            shootBulletArc(state, enemy, 0, Math.PI / 8, 3, enemy.mode === 'moveRight' ? 150 : 100);
+            shootBulletArc(state, enemy, Math.PI, Math.PI / 8, 3, enemy.mode === 'moveLeft' ? 150 : 100);
+        }
         if (isAggro && enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletArc(state, enemy, Math.PI / 2, 2 * Math.PI / 3, 3, 120);
+            //shootEnemyBullet(state, enemy, 100, 0);
+            //shootEnemyBullet(state, enemy, -100, 0);
+            shootBulletAtHero(state, enemy, 100, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage});
         }
         if (enemy.modeTime >= 1000) {
             enemy.setMode('choose');

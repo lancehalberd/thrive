@@ -108,7 +108,7 @@ export function damageHero(state: GameState, damage: number): void {
     // Incoming damage is limited by both the amount of the damage and the players total health.
     // Shots that deal X damage only deal damage if the player has taken less than 2X damage recently.
     // A player cannot take more than 50% of their health over their recorded damage history.
-    const damageCap = Math.min(state.hero.maxLife / 2, 2 * damage);
+    const damageCap = Math.min(Math.floor(state.hero.maxLife / 2), 2 * damage);
     const damageTaken = Math.max(0, Math.min(damage, damageCap - state.hero.recentDamageTaken));
     state.hero.life -= damageTaken;
     if (state.hero.life < 0) {

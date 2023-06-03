@@ -1,10 +1,16 @@
-import { BASE_ENEMY_BULLET_DURATION, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_SPEED, FRAME_LENGTH } from 'app/constants';
+import { BASE_ENEMY_BULLET_DURATION, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_SPEED, BASE_WEAPON_DPS_PER_LEVEL, FRAME_LENGTH } from 'app/constants';
 import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 import { updateSimpleBullet } from 'app/weapons';
 
 export function createEnemy<EnemyParams>(x: number, y: number, definition: EnemyDefinition<EnemyParams>, level: number, disc: Disc): Enemy<EnemyParams> {
-    const heroDamage = Math.ceil(level * 20 * Math.pow(1.05, level));
-    const heroAttacksPerSecond = 2 + 0.02 * level;
+    const heroBaseWeaponDamage = level * BASE_WEAPON_DPS_PER_LEVEL;
+    const heroLevelDamageFactor = Math.pow(1.05, level);
+    const heroWeaponProficiencyDamageFactor = Math.pow(1.05, level);
+    const heroDamage = Math.ceil(
+        heroBaseWeaponDamage * heroLevelDamageFactor * heroWeaponProficiencyDamageFactor
+    );
+    // This includes attack speed gain from both level and weapon proficiency
+    const heroAttacksPerSecond = 1 + 0.02 * level;
     const heroMaxLife = 20 * (level + 1);
     const dps = heroAttacksPerSecond * heroDamage;
     const targetDuration = 1 + level * 10 / 100;
@@ -17,6 +23,8 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
         params: {...definition.initialParams},
         x,
         y,
+        vx: 0,
+        vy: 0,
         maxLife,
         life: maxLife,
         level,
@@ -25,7 +33,7 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
         baseArmor,
         armor: baseArmor,
         damage: Math.floor(
-            (heroMaxLife / 10 + heroMaxLife / 10 * level / 100 + level) * (definition.statFactors.damage ?? 1)
+            (heroMaxLife / 10 + heroMaxLife / 10 * level / 100 + 1.5 * level) * (definition.statFactors.damage ?? 1)
         ),
         attacksPerSecond: (1 + 0.05 * level) * (definition.statFactors.attacksPerSecond ?? 1),
         attackCooldown: 0,

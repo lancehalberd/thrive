@@ -1,9 +1,10 @@
-Add Squid Enemy
+Prevent selling items on the field when your mouse is over an inventory slot.
 
-Add cave dungeon
 Add bat enemy
-Add 4 tiers splitting slime enemy 3x 2x 1x 0.5x
-Add cave boss Vampire Bat
+Add bat cave dungeon
+Add bat cave boss Vampire Bat
+
+Add abbreviation to damage numbers.
 
 Add stats for improving charge attacks
     Increase charge levels

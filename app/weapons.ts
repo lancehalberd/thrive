@@ -80,7 +80,7 @@ function createBow(level: number, name: string): Weapon {
         attacksPerSecond,
         critChance: 0.2,
         critDamage: 0.5,
-        damage: Math.ceil(0.8 * level * BASE_WEAPON_DPS_PER_LEVEL / attacksPerSecond),
+        damage: Math.ceil(0.6 * level * BASE_WEAPON_DPS_PER_LEVEL / attacksPerSecond),
         chargeLevel: 3,
         speed: 1.5 * BASE_BULLET_SPEED,
         radius: BASE_BULLET_RADIUS,
