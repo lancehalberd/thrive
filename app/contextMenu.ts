@@ -1,5 +1,5 @@
 import { armorTypes } from 'app/armor';
-import { CANVAS_SCALE } from 'app/constants';
+import { CANVAS_SCALE, CELL_SIZE } from 'app/constants';
 import { createDungeon, dungeonTypes, startDungeon } from 'app/utils/dungeon';
 import { generateArmor, generateWeapon } from 'app/loot';
 import { KEY, isKeyboardKeyDown } from 'app/utils/userInput';
@@ -121,6 +121,15 @@ export function getContextMenu(state: GameState): MenuOption[] {
                         for (const weaponType of weaponTypes) {
                             const proficiency = getWeaponProficiency(state, weaponType);
                             proficiency.level = level;
+                        }
+                        // Move hero to corresponding overworld area.
+                        if (level === 5) {
+                            state.hero.overworldY = -CELL_SIZE * 3;
+                        } else {
+                            state.hero.overworldY = -CELL_SIZE * (3 + 2 * Math.floor(level / 10));
+                        }
+                        if (!state.dungeon) {
+                            state.hero.y = state.hero.overworldY;
                         }
                         setDerivedHeroStats(state);
                     }

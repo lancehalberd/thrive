@@ -35,7 +35,7 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
         damage: Math.floor(
             (heroMaxLife / 10 + heroMaxLife / 10 * level / 100 + 1.5 * level) * (definition.statFactors.damage ?? 1)
         ),
-        attacksPerSecond: (1 + 0.05 * level) * (definition.statFactors.attacksPerSecond ?? 1),
+        attacksPerSecond: (1 + 0.03 * level) * (definition.statFactors.attacksPerSecond ?? 1),
         attackCooldown: 0,
         radius: definition.radius,
         theta: 0,

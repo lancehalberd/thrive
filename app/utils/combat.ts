@@ -6,7 +6,7 @@ export function addDamageNumber(state: GameState, target: Geometry, damage: numb
         y: target.y - 10,
         vx: 2 * Math.random() - 1,
         vy: -1,
-        text: `${damage}`,
+        text: abbreviate(damage),
         color: isCrit ? 'yellow' : 'red',
         borderColor: 'black',
         expirationTime: state.fieldTime + 1000,
@@ -16,4 +16,27 @@ export function addDamageNumber(state: GameState, target: Geometry, damage: numb
 
 export function applyArmorToDamage(state: GameState, damage: number, armor: number): number {
     return Math.max(Math.ceil(damage / 10), Math.round(damage - armor));
+}
+
+export function fixedDigits(number: number, digits: number = 1): number {
+    return parseFloat(number.toFixed(digits));
+}
+
+export function abbreviate(number: number, digits?: number): string {
+    if (typeof(digits) === 'number') {
+        number = fixedDigits(number, digits);
+    }
+    if (number >= 1000000000000) {
+        return (number / 1000000000000 + '').slice(0, 4) + 'T';
+    }
+    if (number >= 1000000000) {
+        return (number / 1000000000 + '').slice(0, 4) + 'B';
+    }
+    if (number >= 1000000) {
+        return (number / 1000000 + '').slice(0, 4) + 'M';
+    }
+    if (number >= 10000) {
+        return (number / 1000 + '').slice(0, 4) + 'K';
+    }
+    return `${number}`;
 }
