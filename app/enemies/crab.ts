@@ -50,13 +50,13 @@ export const crab: EnemyDefinition = {
             return;
         }
         if (enemy.mode === 'moveLeft') {
-            moveEnemyInDirection(state, enemy, Math.PI, 1.2 * enemy.speed);
+            moveEnemyInDirection(state, enemy, Math.PI, 1.1 * enemy.speed);
             if (enemy.x < enemy.disc.x && isEnemyOffDisc(state, enemy)) {
                 enemy.mode = 'moveRight';
             }
         }
         if (enemy.mode === 'moveRight') {
-            moveEnemyInDirection(state, enemy, 0, 1.2 * enemy.speed);
+            moveEnemyInDirection(state, enemy, 0, 1.1 * enemy.speed);
             if (enemy.x > enemy.disc.x && isEnemyOffDisc(state, enemy)) {
                 enemy.mode = 'moveLeft';
             }
