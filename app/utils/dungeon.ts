@@ -70,6 +70,7 @@ export function addOverworldPortalToDisc({x, y}: Point, disc: Disc): Portal {
             state.hero.x = state.hero.overworldX;
             state.hero.y = state.hero.overworldY;
             clearNearbyEnemies(state);
+            refillAllPotions(state);
         },
     };
     disc.portals.push(portal);
