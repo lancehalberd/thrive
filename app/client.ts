@@ -283,6 +283,7 @@ function updateHero(state: GameState): void {
         const isActive = !state.activeLoot && doCirclesIntersect(state.hero, portal);
         if (isActive && wasGameKeyPressed(state, GAME_KEY.ACTIVATE)) {
             portal.activate(state);
+            break;
         }
     }
 
