@@ -70,7 +70,6 @@ export const lordsMinion: EnemyDefinition = {
     name: 'Peasant',
     statFactors: {
         maxLife: 0.5,
-        damage: 0.5,
         armor: 0,
         attacksPerSecond: 0.5,
     },

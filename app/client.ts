@@ -8,11 +8,12 @@ import {
     clearNearbyEnemies,
     addDungeonPortalToDisc,
     addOverworldPortalToDisc,
+    returnToOverworld,
     updateActiveCells,
 } from 'app/utils/dungeon';
 import { doCirclesIntersect, findClosestDisc, getClosestElement, getTargetVector } from 'app/utils/geometry';
 import { damageHero, gainExperience, gainWeaponExperience, getWeaponProficiency, setDerivedHeroStats } from 'app/utils/hero';
-import { getMousePosition, isMouseDown, isRightMouseDown } from 'app/utils/mouse';
+import { getMousePosition, isMouseDown, isMiddleMouseDown, isRightMouseDown } from 'app/utils/mouse';
 import { getRightAnalogDeltas, isGameKeyDown, isKeyboardKeyDown, updateKeyboardState, wasGameKeyPressed, KEY } from 'app/utils/userInput';
 import Random from 'app/utils/Random';
 import { mediumArmors } from 'app/armor';
@@ -272,6 +273,10 @@ function updateHero(state: GameState): void {
                 state.heroBullets.push(shot.generateBullet(state, hero, weapon));
             }
         }
+    }
+
+    if (isMiddleMouseDown() && state.dungeon) {
+        returnToOverworld(state);
     }
 
     if (!state.hero.disc?.boss) {

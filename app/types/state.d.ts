@@ -147,16 +147,6 @@ interface GameState {
     menuEquipmentSelected: boolean
 }
 
-interface Disc extends Geometry {
-    level: number
-    name: string
-    links: Disc[]
-    enemies: Enemy[]
-    portals: Portal[]
-    loot: Loot[]
-    boss?: Enemy
-}
-
 interface MenuOption {
     // getLabel will be used instead of label if defined.
     getLabel?: () => string,

@@ -1,6 +1,25 @@
 Add bat enemy
+    Moves in random directions pausing when idle
+    Tries to move to R distance from player when aggrod
+    Shoots short range "sonar" shots that have increased oscillation over time.
+        These are shot inpairs with opposite amplitude to look even more like waves.
+
 Add bat cave dungeon
 Add bat cave boss Vampire Bat
+
+Add forest enemies
+    Forest Hunter - 800px aggro, moves slowly, tries to stay 600px away. Has fast long range attacks but only 25% attack speed.
+    Looks like an arrow pointed at the player
+
+    Ent- stationary, has circling bullet shield at 80px radius.
+    Shoots a large aimed shot that blows up into a nova on expiration.
+        Add onDeath handler to bullets
+    Looks like a tree, 3 circles on top of a flared trunk
+
+    Snake - Shoots long ranged shots with slight oscillation.
+        Shoots "venom" shot at short range that decays to speed 0 and expands to ~30px radius
+        Moves forward until it hits a wall, then changes direction to random direction within 30 degrees of the disc center
+        Pauses briefly before/after shooting
 
 Add stats for improving charge attacks
     Increase charge levels

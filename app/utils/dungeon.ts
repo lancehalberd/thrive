@@ -60,17 +60,26 @@ export function createDungeon(type: DungeonType, level: number, seed = Math.rand
     return createTreeDungeon(seed, 2000 + 40 * level, level);
 }
 
+export function returnToOverworld(state: GameState): void {
+    delete state.dungeon;
+    // If the player happens to leave during a boss fight, we have to clear the
+    // boss in order to automatically assign them to a different disc.
+    if (state.hero.disc?.boss) {
+        delete state.hero.disc.boss;
+    }
+    state.hero.x = state.hero.overworldX;
+    state.hero.y = state.hero.overworldY;
+    clearNearbyEnemies(state);
+    refillAllPotions(state);
+}
+
 export function addOverworldPortalToDisc({x, y}: Point, disc: Disc): Portal {
     const portal = {
         x, y, radius: 40,
         disc,
         name: 'Overworld',
         activate(state: GameState) {
-            delete state.dungeon;
-            state.hero.x = state.hero.overworldX;
-            state.hero.y = state.hero.overworldY;
-            clearNearbyEnemies(state);
-            refillAllPotions(state);
+            returnToOverworld(state);
         },
     };
     disc.portals.push(portal);

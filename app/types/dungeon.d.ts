@@ -1,4 +1,15 @@
 
+interface Disc extends Geometry {
+    level: number
+    name: string
+    links: Disc[]
+    enemies: Enemy[]
+    portals: Portal[]
+    loot: Loot[]
+    boss?: Enemy
+    update?: (state: GameState, disc: Disc) => void
+}
+
 interface Entrance extends Geometry {
 
 }

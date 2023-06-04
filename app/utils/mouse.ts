@@ -4,6 +4,8 @@ import { KEY, isKeyboardKeyDown } from 'app/utils/userInput';
 
 let mousePosition: Coords = [-1000, -1000];
 let mouseIsDown: boolean = false;
+let rightMouseIsDown: boolean = false;
+let middleMouseIsDown: boolean = false;
 
 export function isMouseDown(): boolean {
     return mouseIsDown;
@@ -26,9 +28,13 @@ function onMouseMove(event: MouseEvent) {
 }
 function onMouseDown(event: MouseEvent) {
     if (event.which === 1) mouseIsDown = true;
+    if (event.which === 2) middleMouseIsDown = true;
+    if (event.which === 3) rightMouseIsDown = true;
 }
 function onMouseUp(event: MouseEvent) {
     if (event.which === 1) mouseIsDown = false;
+    if (event.which === 2) middleMouseIsDown = false;
+    if (event.which === 3) rightMouseIsDown = false;
 }
 
 export function bindMouseListeners() {
@@ -53,27 +59,15 @@ export function isMouseOverElement(element: HTMLElement): boolean {
 }
 
 
-//let lastContextClick: number[];
-let rightMouseIsDown: boolean = false;
+export function isMiddleMouseDown(): boolean {
+    return middleMouseIsDown;
+}
 
 export function isRightMouseDown(): boolean {
     return rightMouseIsDown;
 }
 
 export function addContextMenuListeners(): void {
-    document.addEventListener('mouseup', function (event) {
-        if (event.which === 3) {
-            rightMouseIsDown = false;
-            return;
-        }
-    });
-    document.addEventListener('mousedown', function (event) {
-        if (event.which === 3) {
-            rightMouseIsDown = true;
-            return;
-        }
-    });
-
     // Prevent the context menu from displaying when clicking over the canvas unless shift is held.
     mainCanvas.addEventListener('contextmenu', function (event) {
         if (isKeyboardKeyDown(KEY.SHIFT)) {

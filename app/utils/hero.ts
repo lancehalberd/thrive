@@ -55,6 +55,7 @@ export function setDerivedHeroStats(state: GameState): void {
     state.hero.maxLife = 20 * state.hero.level;
     state.hero.armor = 0;
     state.hero.speed = 100;
+    state.hero.potionEffect = 1;
 
     const armor = state.hero.equipment.armor;
     if (armor) {
