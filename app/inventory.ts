@@ -179,14 +179,17 @@ function getFixedMenuColumn(state: GameState): number {
     return Math.max(0, Math.min(itemArray.length - 1, state.menuColumn));
 }
 
+export function getHoverItem(state: GameState): Item|undefined {
+    for (const slot of getInventorySlots(state)) {
+        if (slot.item && isPointInRect(slot, state.mouse)) {
+            return slot.item;
+        }
+    }
+}
+
 export function updateInventory(state: GameState): void {
     if (state.isUsingKeyboard) {
-        let hoverItem: Item|undefined;
-        for (const slot of getInventorySlots(state)) {
-            if (slot.item && isPointInRect(slot, state.mouse)) {
-                hoverItem = slot.item;
-            }
-        }
+        const hoverItem = getHoverItem(state);
         if (hoverItem) {
             if (state.mouse.wasPressed) {
                 state.hero.isShooting = false;

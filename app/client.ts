@@ -1,5 +1,5 @@
 import { checkToDropBasicLoot, dropEnchantmentLoot } from 'app/loot';
-import { updateInventory } from 'app/inventory';
+import { getHoverItem, updateInventory } from 'app/inventory';
 import { render } from 'app/render/renderGame';
 import { mainCanvas, mainContext } from 'app/utils/canvas';
 import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
@@ -178,7 +178,12 @@ function update(): void {
         fieldText.y += fieldText.vy;
         fieldText.time += FRAME_LENGTH;
     }
-    state.activeLoot = getClosestElement(state.hero, state.loot);
+    const hoverItem = getHoverItem(state);
+    if (!hoverItem) {
+        state.activeLoot = getClosestElement(state.hero, state.loot);
+    } else {
+        delete state.activeLoot;
+    }
     if (state.activeLoot && getTargetVector(state.hero, state.activeLoot).distance2 >= (state.activeLoot.radius + state.hero.radius + 10) ** 2) {
         delete state.activeLoot;
     }
