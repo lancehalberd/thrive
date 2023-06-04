@@ -35,6 +35,19 @@ export function getDomRectCenter(r: DOMRect): number[] {
     return [r.x + r.width / 2, r.y + r.height / 2];
 }
 
+export function getElementRect(element: HTMLElement, container?: HTMLElement): Rect {
+    let b = element.getBoundingClientRect();
+    const rect = { x: b.left, y: b.top, w: b.width, h: b.height };
+    // If container is specified, return the rectangle relative to the container's coordinates.
+    if (container) {
+        const containerRect = container.getBoundingClientRect();
+        rect.x -= containerRect.left;
+        rect.y -= containerRect.top;
+    }
+    return rect;
+}
+
+
 export function getClosestElement(element: HTMLElement, elements: Array<HTMLElement>, threshold: number): HTMLElement|null {
     let closestElement = null;
     let closestDistanceSquared = threshold * threshold;

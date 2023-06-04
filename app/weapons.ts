@@ -300,6 +300,10 @@ export const katanas: Weapon[] = [
     createKatana(95, 'Masamune'),
 ];
 
+
+export const morningStars: Weapon[] = [];
+export const staffs: Weapon[] = [];
+
 export const weaponTypes: WeaponType[] = [
     'bow',
     'dagger',
@@ -316,12 +320,16 @@ export const weaponTypeLabels: {[key in WeaponType]: string} = {
     sword: 'Sword',
 }
 
-export const allWeapons: Weapon[][] = [
-    swords,
-    bows,
-    daggers,
-    katanas,
-];
+export const weaponsByType: {[key in WeaponType]: Weapon[]} = {
+    bow: bows,
+    dagger: daggers,
+    katana: katanas,
+    sword: swords,
+    morningStar: morningStars,
+    staff: staffs,
+}
+
+export const allWeapons: Weapon[][] = Object.values(weaponsByType);
 
 
 

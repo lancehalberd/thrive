@@ -1,4 +1,4 @@
-import { allArmors } from 'app/armor';
+import { armorTypes, armorsByType } from 'app/armor';
 import { BASE_DROP_CHANCE } from 'app/constants';
 import { gainItemExperience } from 'app/utils/hero';
 import {
@@ -9,7 +9,7 @@ import {
     renderWeaponShort,
     renderWeaponLong,
 } from 'app/render/renderInventory';
-import { allWeapons } from 'app/weapons';
+import { weaponTypes, weaponsByType } from 'app/weapons';
 import Random  from 'app/utils/Random';
 
 
@@ -44,18 +44,17 @@ function addEnchantmentSlots(item: Armor|Weapon): void {
     }
 }
 
-export function dropArmorLoot(state: GameState, source: Enemy, level: number): void {
-    if (!source.disc) {
-        return;
-    }
-    const armorType = Random.element(allArmors);
+
+export function generateArmor(armorType: ArmorType, level: number): Armor|undefined {
+    const armorArray = armorsByType[armorType];
     let armorIndex = 0;
-    for (;armorIndex < armorType.length - 1; armorIndex++) {
-        if (armorType[armorIndex + 1].level > level) {
+    for (;armorIndex < armorArray.length - 1; armorIndex++) {
+        if (armorArray[armorIndex + 1].level > level) {
             break;
         }
     }
-    const armor = {...armorType[armorIndex]};
+
+    const armor = {...armorArray[armorIndex]};
     for (let i = 0; i < 5 && armor.level < level; i++) {
         armor.level++;
         armor.name = armor.name + '+';
@@ -63,6 +62,18 @@ export function dropArmorLoot(state: GameState, source: Enemy, level: number): v
         armor.life = Math.ceil(armor.life * 1.1);
     }
     addEnchantmentSlots(armor);
+    return armor;
+}
+
+export function dropArmorLoot(state: GameState, source: Enemy, level: number): void {
+    if (!source.disc) {
+        return;
+    }
+    const armorType = Random.element(armorTypes);
+    const armor = generateArmor(armorType, level);
+    if (!armor) {
+        return;
+    }
 
     source.disc.loot.push({
         type: 'armor',
@@ -87,24 +98,37 @@ export function dropArmorLoot(state: GameState, source: Enemy, level: number): v
     });
 }
 
-export function dropWeaponLoot(state: GameState, source: Enemy, level: number): void {
-    if (!source.disc) {
+export function generateWeapon(weaponType: WeaponType, level: number): Weapon|undefined {
+    const weaponArray = weaponsByType[weaponType];
+    if (!weaponArray.length) {
         return;
     }
-    const weaponType = Random.element(allWeapons);
     let weaponIndex = 0;
-    for (;weaponIndex < weaponType.length - 1; weaponIndex++) {
-        if (weaponType[weaponIndex + 1].level > level) {
+    for (;weaponIndex < weaponArray.length - 1; weaponIndex++) {
+        if (weaponArray[weaponIndex + 1].level > level) {
             break;
         }
     }
-    const weapon = {...weaponType[weaponIndex]};
+
+    const weapon = {...weaponArray[weaponIndex]};
     for (let i = 0; i < 5 && weapon.level < level; i++) {
         weapon.level++;
         weapon.name = weapon.name + '+';
         weapon.damage = Math.ceil(weapon.damage * 1.1);
     }
     addEnchantmentSlots(weapon);
+    return weapon;
+}
+
+export function dropWeaponLoot(state: GameState, source: Enemy, level: number): void {
+    if (!source.disc) {
+        return;
+    }
+    const weaponType = Random.element(weaponTypes);
+    const weapon = generateWeapon(weaponType, level);
+    if (!weapon) {
+        return;
+    }
     source.disc.loot.push({
         type: 'weapon',
         x: source.x,

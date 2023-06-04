@@ -156,3 +156,11 @@ interface Disc extends Geometry {
     loot: Loot[]
     boss?: Enemy
 }
+
+interface MenuOption {
+    // getLabel will be used instead of label if defined.
+    getLabel?: () => string,
+    label?: string,
+    onSelect?: () => void,
+    getChildren?: () => MenuOption[],
+}

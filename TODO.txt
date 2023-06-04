@@ -1,14 +1,8 @@
-Add test code:
-    Set initial level to N, all weapon proficiencies to N, random level N armor+weapon.
-    Sets world position to level N y cell
-    Set initial dungeon to level N dungeon of specific type
-
 Add bat enemy
 Add bat cave dungeon
 Add bat cave boss Vampire Bat
 
 Add abbreviation to damage numbers.
-
 
 Add stats for improving charge attacks
     Increase charge levels

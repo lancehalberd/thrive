@@ -85,11 +85,15 @@ export const heavyArmors: Armor[] = [
     createHeavyArmor(95, 'Orichalcum Plate'),
 ];
 
-export const allArmors: Armor[][] = [
-    lightArmors,
-    mediumArmors,
-    heavyArmors,
-];
+export const armorTypes: ArmorType[] = ['lightArmor', 'mediumArmor', 'heavyArmor'];
+
+export const armorsByType: {[key in ArmorType]: Armor[]} = {
+    lightArmor: lightArmors,
+    mediumArmor: mediumArmors,
+    heavyArmor: heavyArmors,
+}
+
+export const allArmors: Armor[][] = Object.values(armorsByType);
 
 export const armorTypeLabels: {[key in ArmorType]: string} = {
     lightArmor: 'Light Armor',

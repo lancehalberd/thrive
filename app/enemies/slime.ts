@@ -7,6 +7,7 @@ import { createEnemy, shootBulletAtHero, shootBulletCircle } from 'app/utils/ene
 export const slime: EnemyDefinition = {
     name: 'Slime',
     statFactors: {
+        attacksPerSecond: 0.5,
         maxLife: 1.6,
         armor: 0,
     },
@@ -20,12 +21,12 @@ export const slime: EnemyDefinition = {
         updateSlimeMovement(state, enemy);
     },
     onDeath(state: GameState, enemy: Enemy): void {
-        const count = Math.ceil((enemy.radius - 8) / 8);
+        const count = Math.round(2 + Math.random());
         for (let i = 0; i < count; i++) {
             const theta = state.fieldTime / 500 + i * 2 * Math.PI / count;
             createEnemy(
-                enemy.x + enemy.radius / 2 * Math.cos(theta),
-                enemy.y + enemy.radius / 2 * Math.sin(theta), miniSlime, enemy.level, enemy.disc);
+                enemy.x + enemy.radius * Math.cos(theta),
+                enemy.y + enemy.radius * Math.sin(theta), miniSlime, enemy.level, enemy.disc);
         }
     },
     onHit(state: GameState, enemy: Enemy): void {
@@ -54,18 +55,18 @@ export const slime: EnemyDefinition = {
 
 function updateSlimeMovement(state: GameState, enemy: Enemy) {
     if (enemy.mode === 'choose') {
-        enemy.theta = Math.random() * 2 * Math.PI;
-        enemy.vx = 200 * Math.cos(enemy.theta);
-        enemy.vy = 200 * Math.sin(enemy.theta);
-        enemy.setMode('dash');
+        if (enemy.modeTime > 400) {
+            enemy.theta = Math.random() * 2 * Math.PI;
+            enemy.vx = 200 * Math.cos(enemy.theta);
+            enemy.vy = 200 * Math.sin(enemy.theta);
+            enemy.setMode('dash');
+        }
     }
     if (enemy.mode === 'dash') {
-        if (enemy.modeTime > 400) {
-            enemy.x += enemy.vx * FRAME_LENGTH / 1000;
-            enemy.y += enemy.vy * FRAME_LENGTH / 1000;
-            enemy.vx *= 0.97;
-            enemy.vy *= 0.97;
-        }
+        enemy.x += enemy.vx * FRAME_LENGTH / 1000;
+        enemy.y += enemy.vy * FRAME_LENGTH / 1000;
+        enemy.vx *= 0.97;
+        enemy.vy *= 0.97;
         if (enemy.modeTime >= enemy.radius * 40) {
             enemy.setMode('choose');
         }
@@ -76,8 +77,9 @@ export const greatSlime: EnemyDefinition = {
     ...slime,
     name: 'Great Slime',
     statFactors: {
-        maxLife: 3.2,
-        damage: 2,
+        attacksPerSecond: 0.5,
+        maxLife: 2.4,
+        damage: 1.5,
         armor: 0,
     },
     initialParams: {},
@@ -86,12 +88,12 @@ export const greatSlime: EnemyDefinition = {
     experienceFactor: 2,
     radius: 32,
     onDeath(state: GameState, enemy: Enemy): void {
-        const count = Math.ceil((enemy.radius - 8) / 8);
+        const count = 2;
         for (let i = 0; i < count; i++) {
             const theta = state.fieldTime / 500 + i * 2 * Math.PI / count;
             createEnemy(
-                enemy.x + enemy.radius / 2 * Math.cos(theta),
-                enemy.y + enemy.radius / 2 * Math.sin(theta), slime, enemy.level, enemy.disc);
+                enemy.x + enemy.radius * Math.cos(theta),
+                enemy.y + enemy.radius * Math.sin(theta), slime, enemy.level, enemy.disc);
         }
     },
     onHit(state: GameState, enemy: Enemy): void {
@@ -107,8 +109,9 @@ export const megaSlime: EnemyDefinition = {
     ...slime,
     name: 'Mega Slime',
     statFactors: {
+        attacksPerSecond: 0.5,
         maxLife: 4.8,
-        damage: 2,
+        damage: 1.5,
         armor: 1,
     },
     initialParams: {},
@@ -122,27 +125,27 @@ export const megaSlime: EnemyDefinition = {
     update(state: GameState, enemy: Enemy): void {
         updateSlimeMovement(state, enemy);
         if (enemy.mode === 'dash' && enemy.modeTime === 0) {
-            shootBulletAtHero(state, enemy, 150, {damage: 2 * enemy.damage, radius: 2 * BASE_ENEMY_BULLET_RADIUS});
+            shootBulletAtHero(state, enemy, 150, {damage: 1.5 * enemy.damage, radius: 2 * BASE_ENEMY_BULLET_RADIUS});
         }
         if (enemy.mode === 'choose' && enemy.modeTime === 0) {
             shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 12, 120, {expirationTime: state.fieldTime + 2000});
         }
     },
     onDeath(state: GameState, enemy: Enemy): void {
-        const count = Math.ceil((enemy.radius - 8) / 8);
+        const count = 2;
         for (let i = 0; i < count; i++) {
             const theta = state.fieldTime / 500 + i * 2 * Math.PI / count;
             createEnemy(
-                enemy.x + enemy.radius / 2 * Math.cos(theta),
-                enemy.y + enemy.radius / 2 * Math.sin(theta), greatSlime, enemy.level, enemy.disc);
+                enemy.x + enemy.radius * Math.cos(theta),
+                enemy.y + enemy.radius * Math.sin(theta), greatSlime, enemy.level, enemy.disc);
         }
     },
     onHit(state: GameState, enemy: Enemy): void {
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             for (let i = 0; i < 4; i++) {
-                const speed = 50 + i * 25;
-                shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 12, speed);
+                const speed = 30 + i * 30;
+                shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 10, speed, {expirationTime: state.fieldTime + 2000});
             }
         }
     },

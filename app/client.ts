@@ -1,3 +1,4 @@
+import { addContextMenuListeners } from 'app/contextMenu';
 import { checkToDropBasicLoot, dropEnchantmentLoot } from 'app/loot';
 import { getHoverInventorySlot, updateInventory } from 'app/inventory';
 import { render } from 'app/render/renderGame';
@@ -43,7 +44,7 @@ let state: GameState = {
         damageHistory: [],
         recentDamageTaken: 0,
         equipment: {
-            weapon: Random.element(allWeapons)[0],
+            weapon: Random.element(allWeapons.filter(arr => arr.length))[0],
             armor: mediumArmors[0],
         },
         weapons: [],
@@ -113,6 +114,7 @@ function update(): void {
     const state = getState();
     if (!state.gameHasBeenInitialized) {
         initializeGame(state);
+        addContextMenuListeners(state);
         setDerivedHeroStats(state);
         clearNearbyEnemies(state);
         // startDungeon(state, createTreeDungeon(Math.random(), 2000, 1));

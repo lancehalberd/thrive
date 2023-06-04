@@ -17,6 +17,8 @@ import SRandom from 'app/utils/SRandom';
 
 const platformSizes = [200, 350, 500];
 
+export const dungeonTypes: DungeonType[] = ['reef', 'cave', 'tree'];
+
 
 export function clearNearbyEnemies(state: GameState): void {
     updateActiveCells(state);
@@ -37,7 +39,7 @@ export function addDungeonPortalToDisc({x, y}: Point, type: DungeonType, level: 
         dungeon,
         name: dungeon.name,
         activate(this: Portal, state: GameState) {
-            startDungeon(state, this);
+            activateDungeonPortal(state, this);
         },
     };
     disc.portals.push(portal);
@@ -547,8 +549,17 @@ export function createCaveDungeon(seed: number, radius: number, level: number): 
     };
 }
 
-export function startDungeon(state: GameState, portal: Portal): void {
+export function activateDungeonPortal(state: GameState, portal: Portal): void {
     const dungeon = portal.dungeon;
+    if (!dungeon) {
+        return;
+    }
+    // Remove this portal when it is used.
+    portal.disc.portals = portal.disc.portals.filter(p => p !== portal);
+    startDungeon(state, dungeon);
+}
+
+export function startDungeon(state: GameState, dungeon: Dungeon): void {
     if (!dungeon) {
         return;
     }
@@ -557,7 +568,6 @@ export function startDungeon(state: GameState, portal: Portal): void {
         state.hero.overworldY = state.hero.y;
     }
     // Remove this portal when it is used.
-    portal.disc.portals = portal.disc.portals.filter(p => p !== portal);
     state.dungeon = dungeon;
     state.hero.x = dungeon.entrance.x;
     state.hero.y = dungeon.entrance.y;
