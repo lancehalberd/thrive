@@ -67,11 +67,59 @@ export const bat: EnemyDefinition = {
         }
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
-        fillCircle(context, enemy, enemy.baseColor);
+        fillCircle(context, enemy, 'black');
         fillCircle(context, {
-            x: enemy.x + 0.75 * enemy.radius * Math.cos(enemy.theta),
-            y: enemy.y + 0.75 * enemy.radius * Math.sin(enemy.theta),
+            x: enemy.x + 0.25 * enemy.radius * Math.cos(enemy.theta),
+            y: enemy.y + 0.25 * enemy.radius * Math.sin(enemy.theta),
             radius: enemy.radius / 5,
-        }, 'black');
-    }
+        }, enemy.baseColor);
+        context.save();
+            context.fillStyle = enemy.baseColor;
+            context.beginPath();
+            context.translate(enemy.x, enemy.y);
+            context.rotate(enemy.theta);
+            // left wing
+            context.moveTo(enemy.radius / 4, 0);
+            context.arcTo(
+                enemy.radius / 4, enemy.radius,
+                enemy.radius * Math.cos(Math.PI / 6), enemy.radius * Math.sin(Math.PI / 6),
+                enemy.radius / 2
+            );
+            context.arc(0, 0, enemy.radius, Math.PI / 6, 2 * Math.PI / 3);
+            //context.lineTo(enemy.radius * Math.cos(4 * Math.PI / 3), enemy.radius * Math.sin(4 * Math.PI / 3))
+            // Bottom arcs
+            context.lineTo(-enemy.radius / 4, enemy.radius / 2);
+            context.lineTo(enemy.radius / 2 * Math.cos(5 * Math.PI / 6), enemy.radius / 2 * Math.sin(5 * Math.PI / 6));
+            context.lineTo(-enemy.radius / 4, 0);
+            context.lineTo(enemy.radius / 2 * Math.cos(7 * Math.PI / 6), enemy.radius / 2 * Math.sin(7 * Math.PI / 6));
+            context.lineTo(-enemy.radius / 4, -enemy.radius / 2);
+            context.lineTo(enemy.radius / 2 * Math.cos(4 * Math.PI / 3), enemy.radius / 2 * Math.sin(4 * Math.PI / 3));
+
+
+            // This seems like it should work, but it looks terrible for some reason
+            /*context.arcTo(
+                -enemy.radius / 4, enemy.radius / 2,
+                enemy.radius / 2 * Math.cos(5 * Math.PI / 6), enemy.radius / 2 * Math.sin(5 * Math.PI / 6),
+                enemy.radius / 6
+            );
+            context.arcTo(
+                -enemy.radius / 4, 0,
+                enemy.radius / 2 * Math.cos(7 * Math.PI / 6), enemy.radius / 2 * Math.sin(7 * Math.PI / 6),
+                enemy.radius / 6
+            );
+            context.arcTo(
+                -enemy.radius / 4, -enemy.radius / 2,
+                enemy.radius / 2 * Math.cos(4 * Math.PI / 3), enemy.radius / 2 * Math.sin(4 * Math.PI / 3),
+                enemy.radius / 6
+            );*/
+            // right wing
+            context.arc(0, 0, enemy.radius, 4 * Math.PI / 3, 11 * Math.PI / 6);
+            context.arcTo(
+                enemy.radius / 4, -enemy.radius,
+                enemy.radius / 4, 0,
+                enemy.radius / 2
+            );
+            context.fill();
+        context.restore();
+}
 };
