@@ -9,8 +9,17 @@ import {
 import { rollForCritDamage } from 'app/utils/hero';
 
 export function updateSimpleBullet(state: GameState, bullet: Bullet): void {
-    bullet.x += bullet.vx / FRAME_LENGTH;
-    bullet.y += bullet.vy / FRAME_LENGTH;
+    bullet.baseX += bullet.vx / FRAME_LENGTH;
+    bullet.baseY += bullet.vy / FRAME_LENGTH;
+    if (bullet.frequency && bullet.amplitude) {
+        const theta = Math.atan2(bullet.vy, bullet.vx) + Math.PI / 2;
+        const amplitude = bullet.amplitude * Math.sin(bullet.frequency * 2 * Math.PI * bullet.time / 1000);
+        bullet.x = bullet.baseX + amplitude * Math.cos(theta);
+        bullet.y = bullet.baseY + amplitude * Math.sin(theta);
+    } else {
+        bullet.x = bullet.baseX;
+        bullet.y = bullet.baseY;
+    }
 }
 
 function getArmorShred(state: GameState, chargeLevel: number): number {
@@ -23,6 +32,29 @@ function getChargeDamage(state: GameState, chargeLevel: number): number {
         return 1;
     }
     return chargeLevel + state.hero.chargeDamage;
+}
+
+function basicBullet(state: GameState, source: Hero, weapon: Weapon): Bullet {
+    const critDamage = rollForCritDamage(state);
+    return {
+        time: 0,
+        baseX: source.x,
+        baseY: source.y,
+        x: source.x,
+        y: source.y,
+        radius: weapon.radius * source.attackChargeLevel,
+        vx: weapon.speed * Math.cos(source.theta),
+        vy: weapon.speed * Math.sin(source.theta),
+        damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage),
+        chargeGain: 0.1,
+        isCrit: critDamage > 1,
+        isEnemyPiercing: (source.attackChargeLevel >= 2),
+        source,
+        expirationTime: state.fieldTime + weapon.duration,
+        update: updateSimpleBullet,
+        hitTargets: new Set(),
+        armorShred: getArmorShred(state, source.attackChargeLevel),
+    };
 }
 
 /*
@@ -49,8 +81,7 @@ const bowShots: Shot[] = [
             const speed = weapon.speed * (0.6 + 0.4 * source.attackChargeLevel);
             const critDamage = rollForCritDamage(state, 0.1 * source.attackChargeLevel);
             return {
-                x: source.x,
-                y: source.y,
+                ...basicBullet(state, source, weapon),
                 radius: weapon.radius + (source.attackChargeLevel - 1),
                 vx: speed * Math.cos(source.theta),
                 vy: speed * Math.sin(source.theta),
@@ -59,11 +90,6 @@ const bowShots: Shot[] = [
                 chargeGain: 0.5,
                 isCrit: critDamage > 1,
                 isEnemyPiercing: true,
-                source,
-                expirationTime: state.fieldTime + weapon.duration,
-                update: updateSimpleBullet,
-                hitTargets: new Set(),
-                armorShred: getArmorShred(state, source.attackChargeLevel),
             };
         },
     }
@@ -109,22 +135,8 @@ export const bows: Weapon[] = [
 const swordShots: Shot[] = [
     {
         generateBullet(state: GameState, source: Hero, weapon: Weapon): Bullet {
-            const critDamage = rollForCritDamage(state);
             return {
-                x: source.x,
-                y: source.y,
-                radius: weapon.radius * source.attackChargeLevel,
-                vx: weapon.speed * Math.cos(source.theta),
-                vy: weapon.speed * Math.sin(source.theta),
-                damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage),
-                chargeGain: 0.1,
-                isCrit: critDamage > 1,
-                isEnemyPiercing: (source.attackChargeLevel >= 2),
-                source,
-                expirationTime: state.fieldTime + weapon.duration,
-                update: updateSimpleBullet,
-                hitTargets: new Set(),
-                armorShred: getArmorShred(state, source.attackChargeLevel),
+                ...basicBullet(state, source, weapon),
             };
         },
     }
@@ -171,8 +183,7 @@ function generateDaggerShot(timingOffset: number, thetaOffset: number): Shot {
         generateBullet(state: GameState, source: Hero, weapon: Weapon): Bullet {
             const critDamage = rollForCritDamage(state);
             return {
-                x: source.x,
-                y: source.y,
+                ...basicBullet(state, source, weapon),
                 vx: weapon.speed * Math.cos(source.theta + thetaOffset / source.attackChargeLevel / source.attackChargeLevel),
                 vy: weapon.speed * Math.sin(source.theta + thetaOffset / source.attackChargeLevel / source.attackChargeLevel),
                 damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage),
@@ -180,11 +191,6 @@ function generateDaggerShot(timingOffset: number, thetaOffset: number): Shot {
                 chargeGain: 0.02,
                 isCrit: critDamage > 1,
                 radius: weapon.radius + (source.attackChargeLevel - 1),
-                source,
-                expirationTime: state.fieldTime + weapon.duration,
-                update: updateSimpleBullet,
-                hitTargets: new Set(),
-                armorShred: getArmorShred(state, source.attackChargeLevel),
             };
         },
     }
@@ -240,9 +246,14 @@ function generateKatanaShot(timingOffset: number, offset: number): Shot {
         generateBullet(state: GameState, source: Hero, weapon: Weapon): Bullet {
             const speed = weapon.speed * (0.8 + 0.2 * source.attackChargeLevel);
             const critDamage = rollForCritDamage(state);
+            const x = source.x + offset * Math.cos(source.theta + Math.PI / 2);
+            const y = source.y + offset * Math.sin(source.theta + Math.PI / 2);
             return {
-                x: source.x + offset * Math.cos(source.theta + Math.PI / 2),
-                y: source.y + offset * Math.sin(source.theta + Math.PI / 2),
+                ...basicBullet(state, source, weapon),
+                baseX: x,
+                baseY: y,
+                x,
+                y,
                 vx: speed * Math.cos(source.theta),
                 vy: speed * Math.sin(source.theta),
                 damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage),
@@ -251,11 +262,6 @@ function generateKatanaShot(timingOffset: number, offset: number): Shot {
                 isCrit: critDamage > 1,
                 isEnemyPiercing: true,
                 radius: weapon.radius + (source.attackChargeLevel - 1),
-                source,
-                expirationTime: state.fieldTime + weapon.duration,
-                update: updateSimpleBullet,
-                hitTargets: new Set(),
-                armorShred: getArmorShred(state, source.attackChargeLevel),
             };
         },
     }

@@ -1,12 +1,13 @@
 import { guardian } from 'app/bosses/guardian';
 import { CELL_SIZE } from 'app/constants';
+import { bat } from 'app/enemies/bat';
 import { chaser } from 'app/enemies/chaser';
 import { chest } from 'app/enemies/chest';
 import { circler } from 'app/enemies/circler';
 import { clam, giantClam } from 'app/enemies/clam';
 import { crab } from 'app/enemies/crab';
 import { lord } from 'app/enemies/lord';
-import { miniSlime, slime, greatSlime, megaSlime } from 'app/enemies/slime';
+import { slime, greatSlime, megaSlime } from 'app/enemies/slime';
 import { squid} from 'app/enemies/squid';
 import { turret } from 'app/enemies/turret';
 import { urchin } from 'app/enemies/urchin';
@@ -245,6 +246,24 @@ function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void
         if (randomizer.generateAndMutate() < 0.3) {
             createEnemy(disc.x - 100, disc.y, chaser, disc.level, disc);
         }
+    } else if (disc.level === 3) {
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(disc.x, disc.y, urchin, disc.level, disc);
+        } else if (randomizer.generateAndMutate() < 0.1) {
+            createEnemy(disc.x, disc.y, chest, disc.level + 1, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(disc.x, disc.y - 100, bat, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(disc.x, disc.y + 100, crab, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(disc.x + 100, disc.y, slime, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(disc.x - 100, disc.y, chaser, disc.level, disc);
+        }
     } else {
         if (randomizer.generateAndMutate() < 0.2) {
             createEnemy(disc.x, disc.y, lord, disc.level, disc);
@@ -262,7 +281,7 @@ function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void
             createEnemy(disc.x + 50, disc.y, slime, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(disc.x, disc.y + 50, circler, disc.level, disc);
+            createEnemy(disc.x, disc.y + 50, bat, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
             createEnemy(disc.x, disc.y - 50, crab, disc.level, disc);
@@ -542,12 +561,12 @@ export function createCaveDungeon(seed: number, radius: number, level: number): 
             createEnemy(newDisc.x, newDisc.y, chest, level + 1, newDisc);
         }
         if (dungeonRandomizer.generateAndMutate() < 0.5) {
-            createEnemy(newDisc.x + 50, newDisc.y, slime, level, newDisc);
-            createEnemy(newDisc.x - 50, newDisc.y, slime, level, newDisc);
+            createEnemy(newDisc.x + 50, newDisc.y, bat, level, newDisc);
+            createEnemy(newDisc.x - 50, newDisc.y, bat, level, newDisc);
         }
         if (dungeonRandomizer.generateAndMutate() < 0.5) {
-            createEnemy(newDisc.x, newDisc.y + 50, miniSlime, level, newDisc);
-            createEnemy(newDisc.x, newDisc.y - 50, miniSlime, level, newDisc);
+            createEnemy(newDisc.x, newDisc.y + 50, bat, level, newDisc);
+            createEnemy(newDisc.x, newDisc.y - 50, bat, level, newDisc);
         }
     }
     linkDiscs(discs);

@@ -1,4 +1,7 @@
 interface Bullet extends Circle {
+    // These are the base location points for oscillating bullets.
+    baseX: number
+    baseY: number
     vx: number
     vy: number
     orbitRadius?: number
@@ -13,8 +16,11 @@ interface Bullet extends Circle {
     source?: Hero|Enemy
     update(state: GameState, bullet: Bullet): void
     hitTargets: Set<any>
+    time: number
     isCrit?: boolean
     armorShred: number
+    amplitude?: number
+    frequency?: number
 }
 
 interface Shot {

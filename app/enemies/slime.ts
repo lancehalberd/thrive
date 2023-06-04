@@ -15,7 +15,7 @@ export const slime: EnemyDefinition = {
     dropChance: BASE_DROP_CHANCE,
     experienceFactor: 2,
     radius: 24,
-    portalChance: 0.2,
+    portalChance: 0.1,
     portalDungeonType: 'cave',
     update(state: GameState, enemy: Enemy): void {
         updateSlimeMovement(state, enemy);

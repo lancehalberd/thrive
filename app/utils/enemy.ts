@@ -94,8 +94,11 @@ export function getEnemyColor(level: number): string {
 export function shootEnemyBullet(state: GameState, enemy: Enemy, vx: number, vy: number, stats: Partial<Bullet> = {}) {
     //const mag = Math.sqrt(vx * vx + vy * vy);
     state.enemyBullets.push({
+        time: 0,
         //x: enemy.x + vx / mag * enemy.radius,
         //y: enemy.y + vy / mag * enemy.radius,
+        baseX: enemy.x,
+        baseY: enemy.y,
         x: enemy.x,
         y: enemy.y,
         damage: enemy.damage,
@@ -115,8 +118,11 @@ export function shootEnemyBullet(state: GameState, enemy: Enemy, vx: number, vy:
 export function shootCirclingBullet(state: GameState, enemy: Enemy, theta: number, radius: number, stats: Partial<Bullet> = {}) {
     //const mag = Math.sqrt(vx * vx + vy * vy);
     state.enemyBullets.push({
+        time: 0,
         //x: enemy.x + vx / mag * enemy.radius,
         //y: enemy.y + vy / mag * enemy.radius,
+        baseX: enemy.x,
+        baseY: enemy.y,
         x: enemy.x,
         y: enemy.y,
         source: enemy,

@@ -334,6 +334,7 @@ function updateHeroBullets(state: GameState): void {
     state.heroBullets = [];
     const boss = state.hero.disc?.boss;
     for (const bullet of activeBullets) {
+        bullet.time += FRAME_LENGTH;
         bullet.x += bullet.vx / FRAME_LENGTH;
         bullet.y += bullet.vy / FRAME_LENGTH;
         let bulletAbsorbed = false;
@@ -427,6 +428,7 @@ function updateEnemyBullets(state: GameState): void {
     const activeBullets = state.enemyBullets.filter(b => b.expirationTime >= state.fieldTime);
     state.enemyBullets = [];
     for (const bullet of activeBullets) {
+        bullet.time += FRAME_LENGTH;
         bullet.update(state, bullet);
         let hitTarget = false;
         if (doCirclesIntersect(state.hero, bullet)) {
