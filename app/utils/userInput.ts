@@ -156,6 +156,11 @@ function isGamepadGamekeyPressed(gameKey: number) {
 }
 
 export function addKeyboardListeners() {
+    window.addEventListener('blur', (event: FocusEvent) => {
+        for (let i = 0; i < keysDown.length; i++) {
+            keysDown[i] = 0;
+        }
+    });
     document.addEventListener('keyup', function(event) {
         const keyCode: number = event.which;
         keysDown[keyCode] = 0;
