@@ -37,7 +37,7 @@ export function gainItemExperience(state: GameState, item: Item): void {
     const experience = BASE_XP * Math.pow(1.2, item.level) * 1.5;
     gainExperience(state, Math.ceil(experience * (1 - experiencePenalty)));
     if (item.type === 'weapon') {
-        gainWeaponExperience(state, item.weaponType, item.level, experience);
+        gainWeaponExperience(state, item.weaponType, item.level, 2 * experience);
     }
 }
 

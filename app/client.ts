@@ -11,7 +11,7 @@ import {
     updateActiveCells,
 } from 'app/utils/dungeon';
 import { doCirclesIntersect, findClosestDisc, getClosestElement, getTargetVector } from 'app/utils/geometry';
-import { damageHero, gainExperience, gainWeaponExperience, setDerivedHeroStats } from 'app/utils/hero';
+import { damageHero, gainExperience, gainWeaponExperience, getWeaponProficiency, setDerivedHeroStats } from 'app/utils/hero';
 import { getMousePosition, isMouseDown, isRightMouseDown } from 'app/utils/mouse';
 import { getRightAnalogDeltas, isGameKeyDown, isKeyboardKeyDown, updateKeyboardState, wasGameKeyPressed, KEY } from 'app/utils/userInput';
 import Random from 'app/utils/Random';
@@ -388,7 +388,13 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
     const experiencePenalty = Math.min(1, Math.max(0, (state.hero.level - enemy.level) * 0.1));
     const experience = BASE_XP * Math.pow(1.2, enemy.level) * (enemy.definition.experienceFactor ?? 1);
     gainExperience(state, Math.ceil(experience * (1 - experiencePenalty)));
-    gainWeaponExperience(state, state.hero.equipment.weapon.weaponType, enemy.level, experience);
+    const weapon = state.hero.equipment.weapon;
+    // Gain more weapon experience when using higher level weapons.
+    let weaponXpFactor = 1;
+    if (weapon.level > getWeaponProficiency(state, weapon.weaponType).level) {
+        weaponXpFactor = 2;
+    }
+    gainWeaponExperience(state, state.hero.equipment.weapon.weaponType, enemy.level, weaponXpFactor * experience);
     checkToDropBasicLoot(state, enemy);
     if (enemy.disc && enemy.definition.portalDungeonType && Math.random() <= (enemy.definition.portalChance ?? 0)) {
          addDungeonPortalToDisc(enemy, enemy.definition.portalDungeonType, enemy.level, Math.random(), enemy.disc);
