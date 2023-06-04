@@ -19,7 +19,7 @@ export function checkToDropBasicLoot(state: GameState, source: Enemy): void {
         while (Math.random() < 0.1) {
             targetLevel = Math.min(100, targetLevel + 1);
         }
-        if (Math.random() < 0.5) {
+        if (Math.random() < 0.25) {
             dropArmorLoot(state, source, targetLevel);
         } else {
             dropWeaponLoot(state, source, targetLevel);
