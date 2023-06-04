@@ -209,7 +209,7 @@ function createDagger(level: number, name: string): Weapon {
         attacksPerSecond: BASE_ATTACKS_PER_SECOND,
         critChance: 0.05,
         critDamage: 0.5,
-        damage: Math.ceil(0.2 * level * BASE_WEAPON_DPS_PER_LEVEL / BASE_ATTACKS_PER_SECOND),
+        damage: Math.ceil(0.3 * level * BASE_WEAPON_DPS_PER_LEVEL / BASE_ATTACKS_PER_SECOND),
         chargeLevel: 2,
         speed: Math.ceil(BASE_BULLET_SPEED * 0.7),
         radius: BASE_BULLET_RADIUS,

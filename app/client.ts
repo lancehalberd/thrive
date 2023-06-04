@@ -1,5 +1,5 @@
 import { checkToDropBasicLoot, dropEnchantmentLoot } from 'app/loot';
-import { getHoverItem, updateInventory } from 'app/inventory';
+import { getHoverInventorySlot, updateInventory } from 'app/inventory';
 import { render } from 'app/render/renderGame';
 import { mainCanvas, mainContext } from 'app/utils/canvas';
 import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
@@ -178,8 +178,8 @@ function update(): void {
         fieldText.y += fieldText.vy;
         fieldText.time += FRAME_LENGTH;
     }
-    const hoverItem = getHoverItem(state);
-    if (!hoverItem) {
+    const hoverSlot = getHoverInventorySlot(state);
+    if (!hoverSlot) {
         state.activeLoot = getClosestElement(state.hero, state.loot);
     } else {
         delete state.activeLoot;

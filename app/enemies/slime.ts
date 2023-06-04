@@ -141,7 +141,7 @@ export const megaSlime: EnemyDefinition = {
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             for (let i = 0; i < 4; i++) {
-                const speed = 80 + i * 20;
+                const speed = 50 + i * 25;
                 shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 12, speed);
             }
         }
