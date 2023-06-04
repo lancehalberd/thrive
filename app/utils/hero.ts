@@ -86,13 +86,13 @@ export function setDerivedHeroStats(state: GameState): void {
 }
 
 export function getExperienceForNextLevel(currentLevel: number): number {
-    const averageKills = 10 * currentLevel;
+    const averageKills = 8 * currentLevel;
     const xpPerKill = Math.ceil(BASE_XP * Math.pow(1.2, currentLevel - 1));
     return averageKills * xpPerKill;
 }
 
 export function getExperienceForNextWeaponLevel(currentLevel: number): number {
-    const averageKills = 5 * (currentLevel + 1);
+    const averageKills = 4 * (currentLevel + 1);
     const xpPerKill = Math.ceil(BASE_XP * Math.pow(1.2, currentLevel));
     return averageKills * xpPerKill;
 }
