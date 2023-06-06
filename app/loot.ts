@@ -45,7 +45,7 @@ function addEnchantmentSlots(item: Armor|Weapon): void {
 }
 
 
-export function generateArmor(armorType: ArmorType, level: number): Armor|undefined {
+export function generateArmor(armorType: ArmorType, level: number): Armor {
     const armorArray = armorsByType[armorType];
     let armorIndex = 0;
     for (;armorIndex < armorArray.length - 1; armorIndex++) {
@@ -98,10 +98,10 @@ export function dropArmorLoot(state: GameState, source: Enemy, level: number): v
     });
 }
 
-export function generateWeapon(weaponType: WeaponType, level: number): Weapon|undefined {
-    const weaponArray = weaponsByType[weaponType];
+export function generateWeapon(weaponType: WeaponType, level: number): Weapon {
+    let weaponArray = weaponsByType[weaponType];
     if (!weaponArray.length) {
-        return;
+        weaponArray = weaponsByType.sword;
     }
     let weaponIndex = 0;
     for (;weaponIndex < weaponArray.length - 1; weaponIndex++) {

@@ -11,6 +11,7 @@ import { slime, greatSlime, megaSlime } from 'app/enemies/slime';
 import { squid} from 'app/enemies/squid';
 import { turret } from 'app/enemies/turret';
 import { urchin } from 'app/enemies/urchin';
+import { saveGame } from 'app/saveGame';
 import { createEnemy } from 'app/utils/enemy';
 import { findClosestDisc, getTargetVector } from 'app/utils/geometry';
 import { refillAllPotions } from 'app/utils/hero';
@@ -72,6 +73,7 @@ export function returnToOverworld(state: GameState): void {
     state.hero.y = state.hero.overworldY;
     clearNearbyEnemies(state);
     refillAllPotions(state);
+    saveGame(state);
 }
 
 export function addOverworldPortalToDisc({x, y}: Point, disc: Disc): Portal {
@@ -259,7 +261,7 @@ function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void
             createEnemy(disc.x, disc.y + 100, crab, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(disc.x + 100, disc.y, slime, disc.level, disc);
+            createEnemy(disc.x + 100, disc.y, squid, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
             createEnemy(disc.x - 100, disc.y, chaser, disc.level, disc);
@@ -501,8 +503,8 @@ export function createReefDungeon(seed: number, radius: number, level: number): 
             createEnemy(newDisc.x - 50, newDisc.y, crab, level, newDisc);
         }
         if (dungeonRandomizer.generateAndMutate() < 0.5) {
-            createEnemy(newDisc.x, newDisc.y + 50, crab, level, newDisc);
-            createEnemy(newDisc.x, newDisc.y - 50, crab, level, newDisc);
+            createEnemy(newDisc.x, newDisc.y + 50, squid, level, newDisc);
+            createEnemy(newDisc.x, newDisc.y - 50, squid, level, newDisc);
         }
     }
     linkDiscs(discs);
@@ -604,6 +606,7 @@ export function startDungeon(state: GameState, dungeon: Dungeon): void {
     state.visibleDiscs = dungeon.discs;
     updateActiveCells(state);
     refillAllPotions(state);
+    saveGame(state);
 }
 
 export function projectDiscToClosestDisc(discs: Disc[], newDisc: Disc, overlap: number): void {

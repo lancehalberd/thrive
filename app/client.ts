@@ -28,93 +28,103 @@ import {
     HERO_DAMAGE_FRAME_COUNT,
 } from 'app/constants';
 import { initializeGame } from 'app/initialize';
+import { loadGame, saveGame } from 'app/saveGame';
 import { allWeapons } from 'app/weapons';
 
-let state: GameState = {
-    fieldTime: 0,
-    hero: {
-        level: 1,
-        experience: 0,
-        speed: 100,
-        x: CELL_SIZE / 2,
-        y: - CELL_SIZE / 2,
-        overworldX: CELL_SIZE / 2,
-        overworldY: - CELL_SIZE / 2,
-        radius: 15,
-        theta: 0,
-        damageHistory: [],
-        recentDamageTaken: 0,
-        equipment: {
-            weapon: Random.element(allWeapons.filter(arr => arr.length))[0],
-            armor: mediumArmors[0],
-        },
-        weapons: [],
-        weaponProficiency: {},
-        armors: [],
-        enchantments: [],
-        // Derived stats will get set later.
-        life: 10,
-        maxLife: 10,
-        baseArmor: 0,
-        armor: 0,
-        damage: 0,
-        attacksPerSecond: 0,
-        attackCooldown: 0,
-        chargingLevel: 1,
-        attackChargeLevel: 1,
-        attackChargeDuration: 0,
-        potions: BASE_MAX_POTIONS,
-        isShooting: false,
-        // Base crit damage/chance is on weapons, this just stores
-        // bonuses from enchantments+weapon proficiencies.
-        critChance: 0,
-        critDamage: 0,
-        chargeDamage: 0,
-        armorShredEffect: 0,
-        potionEffect: 1,
-    },
-    heroBullets: [],
-    enemies: [],
-    loot: [],
-    portals: [],
-    enemyBullets: [],
-    fieldText: [],
-    worldSeed: Math.random(),
-    activeCells: [],
-    recentCells: [],
-    cellMap: new Map(),
-    activeDiscs: [],
-    visibleDiscs: [],
-    gameHasBeenInitialized: false,
-    paused: false,
-    mouse: {
-        x: CANVAS_WIDTH / 2,
-        y: CANVAS_HEIGHT / 2,
-        isDown: false,
-        wasPressed: false,
-    },
-    keyboard: {
-        gameKeyValues: [],
-        gameKeysDown: new Set(),
-        gameKeysPressed: new Set(),
-        mostRecentKeysPressed: new Set(),
-        gameKeysReleased: new Set(),
-    },
-    menuRow: 0,
-    menuColumn: 0,
-    menuEquipmentSelected: false,
-};
+let state: GameState = getInitialState();
 // @ts-ignore
 window['state'] = state;
 function getState(): GameState {
     return state;
 }
 
+function getInitialState(): GameState {
+    return {
+        worldSeed: Math.random(),
+        fieldTime: 0,
+        hero: {
+            level: 1,
+            experience: 0,
+            speed: 100,
+            x: CELL_SIZE / 2,
+            y: - CELL_SIZE / 2,
+            overworldX: CELL_SIZE / 2,
+            overworldY: - CELL_SIZE / 2,
+            radius: 15,
+            theta: 0,
+            damageHistory: [],
+            recentDamageTaken: 0,
+            equipment: {
+                weapon: Random.element(allWeapons.filter(arr => arr.length))[0],
+                armor: mediumArmors[0],
+            },
+            weapons: [],
+            weaponProficiency: {},
+            armors: [],
+            enchantments: [],
+            // Derived stats will get set later.
+            life: 10,
+            maxLife: 10,
+            baseArmor: 0,
+            armor: 0,
+            damage: 0,
+            attacksPerSecond: 0,
+            attackCooldown: 0,
+            chargingLevel: 1,
+            attackChargeLevel: 1,
+            attackChargeDuration: 0,
+            potions: BASE_MAX_POTIONS,
+            isShooting: false,
+            // Base crit damage/chance is on weapons, this just stores
+            // bonuses from enchantments+weapon proficiencies.
+            critChance: 0,
+            critDamage: 0,
+            chargeDamage: 0,
+            armorShredEffect: 0,
+            potionEffect: 1,
+        },
+        heroBullets: [],
+        enemies: [],
+        loot: [],
+        portals: [],
+        enemyBullets: [],
+        fieldText: [],
+        activeCells: [],
+        recentCells: [],
+        cellMap: new Map(),
+        activeDiscs: [],
+        visibleDiscs: [],
+        gameHasBeenInitialized: false,
+        paused: false,
+        mouse: {
+            x: CANVAS_WIDTH / 2,
+            y: CANVAS_HEIGHT / 2,
+            isDown: false,
+            wasPressed: false,
+        },
+        keyboard: {
+            gameKeyValues: [],
+            gameKeysDown: new Set(),
+            gameKeysPressed: new Set(),
+            mostRecentKeysPressed: new Set(),
+            gameKeysReleased: new Set(),
+        },
+        menuRow: 0,
+        menuColumn: 0,
+        menuEquipmentSelected: false,
+    };
+}
+
+function restartGame(state: GameState): void {
+    state = getInitialState();
+    saveGame(state);
+}
 
 function update(): void {
     const state = getState();
     if (!state.gameHasBeenInitialized) {
         initializeGame(state);
+        loadGame(state);
         addContextMenuListeners(state);
         setDerivedHeroStats(state);
         clearNearbyEnemies(state);
@@ -168,6 +178,7 @@ function update(): void {
     }
     state.fieldTime += FRAME_LENGTH;
     if (state.hero.life <= 0) {
+        restartGame(state);
         return;
     }
     updateActiveCells(state);

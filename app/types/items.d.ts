@@ -75,8 +75,8 @@ interface Enchantment {
     type: 'enchantment'
     name: string
     level: number
-    weaponEnchantmentType: EnchantmentType
-    armorEnchantmentType: EnchantmentType
+    weaponEnchantmentType: WeaponEnchantmentType
+    armorEnchantmentType: ArmorEnchantmentType
     strength: number
 }
 
