@@ -14,7 +14,7 @@ export const circler: EnemyDefinition = {
         speed: 0.6,
     },
     initialParams: {},
-    radius: 20,
+    radius: 24,
     update(state: GameState, enemy: Enemy): void {
         if (!enemy.disc) {
             return;

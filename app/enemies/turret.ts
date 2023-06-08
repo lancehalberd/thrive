@@ -15,7 +15,7 @@ export const turret: EnemyDefinition = {
     initialParams: {},
     dropChance: 2 * BASE_DROP_CHANCE,
     experienceFactor: 2,
-    radius: 25,
+    radius: 24,
     update(state: GameState, enemy: Enemy): void {
         const aggroRadius = 400;
         const {x, y, distance2} = getTargetVector(enemy, state.hero);

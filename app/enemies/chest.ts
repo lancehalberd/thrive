@@ -7,7 +7,7 @@ export const chest: EnemyDefinition = {
     initialParams: {},
     dropChance: 1,
     experienceFactor: 0,
-    radius: 25,
+    radius: 24,
     update(state: GameState, enemy: Enemy): void {
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {

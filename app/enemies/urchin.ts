@@ -13,7 +13,7 @@ export const urchin: EnemyDefinition = {
     initialParams: {},
     dropChance: 1.5 * BASE_DROP_CHANCE,
     experienceFactor: 2,
-    radius: 25,
+    radius: 24,
     portalChance: 0.2,
     portalDungeonType: 'reef',
     update(state: GameState, enemy: Enemy): void {

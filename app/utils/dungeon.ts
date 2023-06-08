@@ -56,10 +56,11 @@ export function getDungeonLevelBonus(type: DungeonType): number {
 }
 
 export function createDungeon(type: DungeonType, level: number, seed = Math.random()) {
+    const radius = 1600 + 8 * level;
     level = Math.max(0, Math.min(100, level + getDungeonLevelBonus(type)));
-    if (type === 'reef') return createReefDungeon(seed, 2000 + 40 * level, level);
-    if (type === 'cave') return createCaveDungeon(seed, 2000 + 40 * level, level);
-    return createTreeDungeon(seed, 2000 + 40 * level, level);
+    if (type === 'reef') return createReefDungeon(seed, radius, level);
+    if (type === 'cave') return createCaveDungeon(seed, radius, level);
+    return createTreeDungeon(seed, radius, level);
 }
 
 export function returnToOverworld(state: GameState): void {
@@ -209,7 +210,12 @@ function getCellLevel(randomizer: typeof SRandom, cellY: number): number {
         return randomizer.range(5, 8);
     }
     const baseLevel = Math.min(90, 10 * (Math.floor(cellY / 2) - 1));
-    return randomizer.range(baseLevel, baseLevel + 5);
+    if (cellY % 2 === 0) {
+        // 10/11/12
+        return randomizer.range(baseLevel, baseLevel + 2);
+    }
+    // 13/14/15
+    return randomizer.range(baseLevel + 3, baseLevel + 5);
 }
 function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void {
     if (disc.level === 1) {

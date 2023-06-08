@@ -64,7 +64,7 @@ interface Enemy<EnemyParams=any> extends Vitals, Geometry {
     attackChargeLevel: number
     mode: string
     modeTime: number
-    setMode(this: Enemy, mode: string)
+    setMode(this: Enemy, mode: string): void
     isBoss?: boolean
     isInvulnerable?: boolean
     baseColor: string
@@ -139,12 +139,16 @@ interface GameState {
     }
     isUsingKeyboard?: boolean
     isUsingXbox?: boolean
+    areSoundEffectsMuted?: boolean
     // Row of inventory selected when using gamepad controls
     menuRow: number
     // Column of inventory selected when using gamepad controls
     menuColumn: number
     // Set to true to select player equipment instead of inventory items with gamepad controls
     menuEquipmentSelected: boolean
+    audio: {
+        playingTracks: any[]
+    }
 }
 
 interface MenuOption {

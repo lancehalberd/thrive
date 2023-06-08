@@ -31,28 +31,8 @@ export function getInventorySlots(state: GameState): InventorySlot[] {
             item: state.hero.equipment.armor,
         },
     ];
-    let slotCount = state.paused ? 10 : 3;
-    let y = CANVAS_HEIGHT - 2 * slotSpacing;
-    for (let i = 0; i < slotCount; i++) {
-        const x = CANVAS_WIDTH - (i + 1) * slotSpacing;
-        slots.push({
-            x,
-            y,
-            w: SLOT_SIZE,
-            h: SLOT_SIZE,
-            item: state.hero.weapons[i],
-        });
-        slots.push({
-            x,
-            y: y + slotSpacing,
-            w: SLOT_SIZE,
-            h: SLOT_SIZE,
-            item: state.hero.armors[i],
-        });
-    }
-    // Enchantment slots.
-    slotCount = state.paused ? 10 : 2;
-    y = CANVAS_HEIGHT - 3 * slotSpacing;
+    let slotCount = state.paused ? 10 : 4;
+    let y = CANVAS_HEIGHT - 3 * slotSpacing;
     for (let i = 0; i < slotCount; i++) {
         const x = CANVAS_WIDTH - (i + 1) * slotSpacing;
         slots.push({
@@ -61,6 +41,20 @@ export function getInventorySlots(state: GameState): InventorySlot[] {
             w: SLOT_SIZE,
             h: SLOT_SIZE,
             item: state.hero.enchantments[i],
+        });
+        slots.push({
+            x,
+            y: y + slotSpacing,
+            w: SLOT_SIZE,
+            h: SLOT_SIZE,
+            item: state.hero.weapons[i],
+        });
+        slots.push({
+            x,
+            y: y + 2 * slotSpacing,
+            w: SLOT_SIZE,
+            h: SLOT_SIZE,
+            item: state.hero.armors[i],
         });
     }
     return slots;

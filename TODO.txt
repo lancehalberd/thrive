@@ -1,8 +1,34 @@
+Generate SFX using AudioDriver.
+    Hit by enemy SFX
+    Drop item SFX
+    Use Potion SFX
+    Pick up item SFX
+    Sell item SFX
+    Various defeat enemy SFX
+    Use enchantment SFX
+    Activate charge attack SFX
 
-Save game to local storage.
+Generate BGM using AudioDriver
+    Create some simple instruments
+    Arrange midi tracks
+        Field Music
+        Dungeon Music
+        Boss Music
+        Victory Fanfare
+
+Move item text down to look centered
+Add hollow white circles on corners for each open enchantment
+Add filled white circles on corners for each used enchantment
 
 Add game over screen
-    Show some stats and action for restarting the game.
+    Store isGameOver on state and do a render of transparent black without clearing the screen and then
+        Game Over text after 1000ms
+        Press Enter to restart after 2000ms
+
+Add instructions somewhere, possibly just a link on the page.
+
+Show some game over stats
+    - Store these somewhere particular so that they aren't erased by restarting the game.
 
 Add forest enemies
     Forest Hunter - 800px aggro, moves slowly, tries to stay 600px away. Has fast long range attacks but only 25% attack speed.

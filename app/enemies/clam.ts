@@ -14,7 +14,7 @@ export const clam: EnemyDefinition = {
     initialParams: {},
     dropChance: 2 * BASE_DROP_CHANCE,
     experienceFactor: 2,
-    radius: 30,
+    radius: 32,
     portalChance: 0.2,
     portalDungeonType: 'reef',
     update(state: GameState, enemy: Enemy): void {

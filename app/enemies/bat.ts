@@ -21,7 +21,7 @@ export const bat: EnemyDefinition = {
         speed: 0.3,
     },
     initialParams: {},
-    radius: 20,
+    radius: 24,
     portalChance: 0.05,
     portalDungeonType: 'cave',
     update(state: GameState, enemy: Enemy): void {

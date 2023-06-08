@@ -11,7 +11,7 @@ export const chaser: EnemyDefinition = {
         attacksPerSecond: 1,
     },
     initialParams: {},
-    radius: 20,
+    radius: 24,
     update(state: GameState, enemy: Enemy): void {
         if (!enemy.disc) {
             return;

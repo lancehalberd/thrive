@@ -15,7 +15,7 @@ export const lord: EnemyDefinition = {
     initialParams: {},
     dropChance: 2 * BASE_DROP_CHANCE,
     experienceFactor: 5,
-    radius: 20,
+    radius: 28,
     portalChance: 0.2,
     portalDungeonType: 'tree',
     update(state: GameState, enemy: Enemy): void {
@@ -76,7 +76,7 @@ export const lordsMinion: EnemyDefinition = {
     initialParams: {},
     dropChance: 0,
     experienceFactor: 0.1,
-    radius: 15,
+    radius: 20,
     update(state: GameState, enemy: Enemy): void {
         if (!enemy.disc) {
             return;

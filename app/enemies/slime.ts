@@ -162,7 +162,7 @@ export const miniSlime: EnemyDefinition = {
     portalChance: 0,
     dropChance: 0,
     experienceFactor: 0.1,
-    radius: 12,
+    radius: 16,
     onDeath(state: GameState, enemy: Enemy): void {
         shootBulletCircle(state, enemy, 0, 6, 120);
     },

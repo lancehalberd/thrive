@@ -1,5 +1,6 @@
 import { BASE_MAX_POTIONS, BASE_XP } from 'app/constants';
 import { applyEnchantmentsToStats } from 'app/enchantments';
+import { playSound } from 'app/utils/audio';
 import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
 
 
@@ -111,6 +112,14 @@ export function damageHero(state: GameState, damage: number): void {
     // A player cannot take more than 50% of their health over their recorded damage history.
     const damageCap = Math.min(Math.floor(state.hero.maxLife / 2), 2 * damage);
     const damageTaken = Math.max(0, Math.min(damage, damageCap - state.hero.recentDamageTaken));
+    if (damageTaken <= 0) {
+        return;
+    }
+    if (damageTaken < 0.25 * state.hero.life) {
+        playSound(state, 'takeDamage');
+    } else {
+         playSound(state, 'takeBigDamage');
+    }
     state.hero.life -= damageTaken;
     if (state.hero.life < 0) {
         state.hero.life = 0;

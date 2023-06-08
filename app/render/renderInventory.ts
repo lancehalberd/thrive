@@ -45,35 +45,54 @@ export function renderSelectedInventorySlot(context: CanvasRenderingContext2D, s
 
 export function renderArmorLong(context: CanvasRenderingContext2D, x: number, y: number, armor: Armor): void {
     fillCircle(context, {x, y, radius: 12}, '#88F');
+    renderItemSlots(context, x, y, armor);
     const label = armor.name;
-    embossText(context, label, x, y, {size: 16, color: 'white', borderColor: 'black'});
+    embossText(context, label, x, y + 2, {size: 16, color: 'white', borderColor: 'black'});
 }
 export function renderArmorShort(context: CanvasRenderingContext2D, x: number, y: number, armor: Armor): void {
     fillCircle(context, {x, y, radius: 12}, '#88F');
+    renderItemSlots(context, x, y, armor);
     const label = armor.armorType.charAt(0).toUpperCase() + armor.level;
-    embossText(context, label, x, y, {size: 16, color: 'white', borderColor: 'black'});
+    embossText(context, label, x, y + 2, {size: 16, color: 'white', borderColor: 'black'});
 }
 
 export function renderEnchantmentLong(context: CanvasRenderingContext2D, x: number, y: number, enchantment: Enchantment): void {
     fillCircle(context, {x, y, radius: 12}, '#8F8');
     const label = enchantmentStrengthLabels[enchantment.strength] + ' ' + enchantment.name + ' enchantment';
-    embossText(context, label, x, y, {size: 16, color: 'white', borderColor: 'black'});
+    embossText(context, label, x, y + 2, {size: 16, color: 'white', borderColor: 'black'});
 }
 export function renderEnchantmentShort(context: CanvasRenderingContext2D, x: number, y: number, enchantment: Enchantment): void {
     fillCircle(context, {x, y, radius: 12}, '#8F8');
-    const label = 'E' + enchantment.strength;
-    embossText(context, label, x, y, {size: 16, color: 'white', borderColor: 'black'});
+    const label = enchantment.name.charAt(0).toUpperCase() + enchantment.strength;
+    embossText(context, label, x, y + 2, {size: 16, color: 'white', borderColor: 'black'});
 }
 
 export function renderWeaponLong(context: CanvasRenderingContext2D, x: number, y: number, weapon: Weapon): void {
     fillCircle(context, {x, y, radius: 12}, '#F88');
+    renderItemSlots(context, x, y, weapon);
     const label = weapon.name;
-    embossText(context, label, x, y, {size: 16, color: 'white', borderColor: 'black'});
+    embossText(context, label, x, y + 2, {size: 16, color: 'white', borderColor: 'black'});
 }
 export function renderWeaponShort(context: CanvasRenderingContext2D, x: number, y: number, weapon: Weapon): void {
     fillCircle(context, {x, y, radius: 12}, '#F88');
+    renderItemSlots(context, x, y, weapon);
     const label = weapon.weaponType.charAt(0).toUpperCase() + weapon.level;
-    embossText(context, label, x, y, {size: 16, color: 'white', borderColor: 'black'});
+    embossText(context, label, x, y + 2, {size: 16, color: 'white', borderColor: 'black'});
+}
+
+function renderItemSlots(context: CanvasRenderingContext2D, x: number, y: number, item: Equipment): void {
+    for (let i = 0; i < item.enchantmentSlots.length; i++) {
+        let sx = x - 10 + 20 * (i % 2), sy = y - 10 + 20 * Math.floor(i / 2);
+        if (item.enchantmentSlots[i].enchantmentType !== 'empty') {
+            fillCircle(context, {x: sx, y: sy, radius: 4}, '#8F8');
+        } else {
+            fillCircle(context, {x: sx, y: sy, radius: 4}, 'white');
+        }
+        context.beginPath();
+        context.strokeStyle = 'black';
+        context.arc(sx, sy, 4, 0, 2 * Math.PI);
+        context.stroke();
+    }
 }
 
 

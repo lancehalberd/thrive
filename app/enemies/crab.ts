@@ -13,7 +13,7 @@ export const crab: EnemyDefinition = {
     initialParams: {},
     dropChance: 1.5 * BASE_DROP_CHANCE,
     experienceFactor: 2,
-    radius: 25,
+    radius: 24,
     update(state: GameState, enemy: Enemy): void {
         const aggroRadius = 400;
         const {distance2} = getTargetVector(enemy, state.hero);
@@ -75,7 +75,7 @@ export const crab: EnemyDefinition = {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             //shootEnemyBullet(state, enemy, 100, 0);
             //shootEnemyBullet(state, enemy, -100, 0);
-            shootBulletAtHero(state, enemy, 100, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage});
+            shootBulletAtHero(state, enemy, 100, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage, expirationTime: state.fieldTime + 2000});
         }
         if (enemy.modeTime >= 1000) {
             enemy.setMode('choose');

@@ -8,7 +8,7 @@ export const squid: EnemyDefinition = {
     name: 'Squid',
     statFactors: {},
     initialParams: {},
-    radius: 25,
+    radius: 24,
     update(state: GameState, enemy: Enemy): void {
         enemy.vx = (enemy.vx || 0);
         enemy.vy = (enemy.vy || 0);

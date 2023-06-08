@@ -2,6 +2,7 @@ import { addContextMenuListeners } from 'app/contextMenu';
 import { checkToDropBasicLoot, dropEnchantmentLoot } from 'app/loot';
 import { getHoverInventorySlot, updateInventory } from 'app/inventory';
 import { render } from 'app/render/renderGame';
+import { playSound, playTrack, setVolume } from 'app/utils/audio';
 import { mainCanvas, mainContext } from 'app/utils/canvas';
 import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
 import {
@@ -31,7 +32,7 @@ import { initializeGame } from 'app/initialize';
 import { loadGame, saveGame } from 'app/saveGame';
 import { allWeapons } from 'app/weapons';
 
-let state: GameState = getInitialState();
+const state: GameState = getInitialState();
 // @ts-ignore
 window['state'] = state;
 function getState(): GameState {
@@ -50,7 +51,7 @@ function getInitialState(): GameState {
             y: - CELL_SIZE / 2,
             overworldX: CELL_SIZE / 2,
             overworldY: - CELL_SIZE / 2,
-            radius: 15,
+            radius: 20,
             theta: 0,
             damageHistory: [],
             recentDamageTaken: 0,
@@ -102,6 +103,7 @@ function getInitialState(): GameState {
             isDown: false,
             wasPressed: false,
         },
+        isUsingKeyboard: true,
         keyboard: {
             gameKeyValues: [],
             gameKeysDown: new Set(),
@@ -112,11 +114,17 @@ function getInitialState(): GameState {
         menuRow: 0,
         menuColumn: 0,
         menuEquipmentSelected: false,
+        audio: {
+            playingTracks: [],
+        },
     };
 }
 
 function restartGame(state: GameState): void {
-    state = getInitialState();
+    Object.assign(state,  getInitialState());
+    state.gameHasBeenInitialized = true;
+    setDerivedHeroStats(state);
+    clearNearbyEnemies(state);
     saveGame(state);
 }
 
@@ -130,7 +138,17 @@ function update(): void {
         clearNearbyEnemies(state);
         // startDungeon(state, createTreeDungeon(Math.random(), 2000, 1));
     }
+    if (!state.audio.playingTracks.length) {
+        playTrack(state, 'beach');
+    }
+    for (const track of state.audio.playingTracks) {
+        track.update(state);
+    }
     updateKeyboardState(state);
+    if (wasGameKeyPressed(state, GAME_KEY.MUTE)) {
+        state.areSoundEffectsMuted = !state.areSoundEffectsMuted;
+        setVolume(state.areSoundEffectsMuted ? 0 : 1);
+    }
     if (state.isUsingXbox) {
         const [dx, dy] = getRightAnalogDeltas(state);
         state.hero.theta = Math.atan2(dy, dx);
@@ -344,6 +362,7 @@ function updateHeroBullets(state: GameState): void {
     const activeBullets = state.heroBullets.filter(b => b.expirationTime >= state.fieldTime);
     state.heroBullets = [];
     const boss = state.hero.disc?.boss;
+    let playedSound = false;
     for (const bullet of activeBullets) {
         bullet.time += FRAME_LENGTH;
         bullet.x += bullet.vx / FRAME_LENGTH;
@@ -369,6 +388,10 @@ function updateHeroBullets(state: GameState): void {
             }
             if (doCirclesIntersect(enemy, bullet)) {
                 bullet.hitTargets.add(enemy);
+                if (!playedSound) {
+                    playSound(state, 'dealDamage');
+                    playedSound = true;
+                }
                 const damage = applyArmorToDamage(state, bullet.damage, enemy.armor);
                 if (bullet.chargeGain) {
                     gainAttackCharge(state, bullet.chargeGain);

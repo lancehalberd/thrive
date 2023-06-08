@@ -27,6 +27,7 @@ export const GAME_KEY = {
     AIM_RIGHT: 12,
     SHOOT: 13,
     SPECIAL_ATTACK: 14,
+    MUTE: 15,
 };
 
 export const CELL_SIZE = 3000;
@@ -39,9 +40,9 @@ export const BASE_XP = 10;
 export const BASE_ATTACKS_PER_SECOND = 2;
 export const BASE_WEAPON_DPS_PER_LEVEL = 40;
 export const BASE_BULLET_SPEED = 200;
-export const BASE_BULLET_RADIUS = 5;
+export const BASE_BULLET_RADIUS = 10;
 export const BASE_BULLET_DURATION = 1000;
 
 export const BASE_ENEMY_SPEED = 80;
-export const BASE_ENEMY_BULLET_RADIUS = 5;
+export const BASE_ENEMY_BULLET_RADIUS = 10;
 export const BASE_ENEMY_BULLET_DURATION = 1000;
