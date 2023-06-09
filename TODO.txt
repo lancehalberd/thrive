@@ -1,12 +1,11 @@
 Generate SFX using AudioDriver.
-    Hit by enemy SFX
+    Gain Level SFX
+    Gain Weapon Level SFX
     Drop item SFX
     Use Potion SFX
     Pick up item SFX
     Sell item SFX
-    Various defeat enemy SFX
     Use enchantment SFX
-    Activate charge attack SFX
 
 Generate BGM using AudioDriver
     Create some simple instruments

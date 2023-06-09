@@ -109,7 +109,50 @@ interface SimpleSoundOptions {
     fadeTime?: number
     frequencyVolumeFactor?: number
     frequencyDurationFactor?: number
+    pitchNode?: AudioNode
 }
+
+function vibratoNode(duration: number, frequency: number, gain: number): AudioNode {
+    const waveNode = audioContext.createOscillator();
+    waveNode.frequency.value = frequency;
+    const gainNode = audioContext.createGain();
+    gainNode.gain.value = gain;
+    waveNode.connect(gainNode);
+    waveNode.start(audioContext.currentTime);
+    waveNode.stop(audioContext.currentTime + duration);
+    waveNode.onended = function () {
+        waveNode.disconnect(gainNode);
+    }
+    return gainNode;
+}
+// @ts-ignore
+window['vibratoNode'] = vibratoNode;
+
+function glideNode(duration: number, glideStart: number, glideEnd: number, gain: number): AudioNode {
+    const constantNode = audioContext.createConstantSource();
+    const gainNode = audioContext.createGain();
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime + glideStart);
+    gainNode.gain.linearRampToValueAtTime(gain, audioContext.currentTime + glideEnd);
+    constantNode.connect(gainNode);
+    constantNode.start(audioContext.currentTime);
+    constantNode.stop(audioContext.currentTime + duration);
+    constantNode.onended = function () {
+        constantNode.disconnect(gainNode);
+    }
+    return gainNode
+}
+// @ts-ignore
+window['glideNode'] = glideNode;
+
+function mergeNodes(nodes: AudioNode[]): AudioNode {
+    const gainNode = audioContext.createGain();
+    for (const node of nodes) {
+        node.connect(gainNode);
+    }
+    return gainNode;
+}
+// @ts-ignore
+window['mergeNodes'] = mergeNodes;
 
 function playSimpleSoundAt(frequencies: number[], volume: number, duration: number, {
    oscillatorType = 'sine',
@@ -119,10 +162,11 @@ function playSimpleSoundAt(frequencies: number[], volume: number, duration: numb
    frequencyDurationFactor = 1,
    bandpassFrequency,
    highpassFrequency,
+   pitchNode,
 }: SimpleSoundOptions = {}, time: number = audioContext.currentTime, destination = masterVolumeNode) {
-    const combinedGainedNode = audioContext.createGain();
-    combinedGainedNode.gain.value = volume;
-    let lastNode = combinedGainedNode;
+    const combinedGainNode = audioContext.createGain();
+    combinedGainNode.gain.value = volume;
+    let lastNode = combinedGainNode;
 
     if (bandpassFrequency) {
         const filterNode = audioContext.createBiquadFilter();
@@ -149,17 +193,37 @@ function playSimpleSoundAt(frequencies: number[], volume: number, duration: numb
         const gainNode = audioContext.createGain();
         gainNode.gain.setValueAtTime(0, time);
         gainNode.gain.linearRampToValueAtTime(frequencyVolume, time + attackTime);
-        gainNode.gain.setValueAtTime(frequencyVolume, time + attackTime);
-        gainNode.gain.linearRampToValueAtTime(0, time + duration - fadeDuration);
+        gainNode.gain.setValueAtTime(frequencyVolume, time + duration - fadeDuration);
+        gainNode.gain.linearRampToValueAtTime(0, time + duration);
         const oscillator = audioContext.createOscillator();
         oscillator.frequency.value = frequency;
+        /*if (pitchVibratoGain && pitchVibratoFrequency) {
+            const vibratoOscillator = audioContext.createOscillator();
+            vibratoOscillator.frequency.value = pitchVibratoFrequency;
+            const vibratoGain = audioContext.createGain();
+            vibratoGain.gain.value = pitchVibratoGain;
+            vibratoOscillator.connect(vibratoGain).connect(oscillator.frequency);
+            console.log('adding pitch vibrato');
+            vibratoOscillator.start(time);
+            vibratoOscillator.stop(time + duration);
+        }*/
+        if (pitchNode) {
+            pitchNode.connect(oscillator.frequency);
+        }
         oscillator.type = oscillatorType;
         oscillator.connect(gainNode);
         oscillator.start(time);
         oscillator.stop(time + duration);
+        oscillator.onended = () => {
+            if (pitchNode) {
+                pitchNode.disconnect(oscillator.frequency);
+            }
+            oscillator.disconnect(gainNode);
+            gainNode.disconnect(combinedGainNode);
+        }
         frequencyVolume *= frequencyVolumeFactor;
         frequencyDuration *= frequencyDurationFactor;
-        gainNode.connect(combinedGainedNode);
+        gainNode.connect(combinedGainNode);
     }
     setTimeout(() => {
         lastNode.disconnect(destination);
@@ -175,9 +239,9 @@ export function setVolume(volume: number): void {
 }
 
 function playBellSoundAt(frequencies: number[], volume: number, duration: number, time: number = audioContext.currentTime, destination = masterVolumeNode) {
-    const combinedGainedNode = audioContext.createGain();
-    combinedGainedNode.connect(destination);
-    combinedGainedNode.gain.value = volume;
+    const combinedGainNode = audioContext.createGain();
+    combinedGainNode.connect(destination);
+    combinedGainNode.gain.value = volume;
 
     const frequenciesArray = Float32Array.from(frequencies);
     const attackTime = 0.003;
@@ -197,10 +261,10 @@ function playBellSoundAt(frequencies: number[], volume: number, duration: number
         oscillator.stop(time + duration);
         frequencyVolume *= 0.5;
         fadeDuration *= 0.75;
-        gainNode.connect(combinedGainedNode);
+        gainNode.connect(combinedGainNode);
     }
     setTimeout(() => {
-        combinedGainedNode.disconnect(destination);
+        combinedGainNode.disconnect(destination);
     }, 1000 * (time - audioContext.currentTime + duration));
 }
 // @ts-ignore
@@ -246,6 +310,20 @@ sounds.set('dealDamage', {
         playBeeps([200, 230, 200, 230], 0.1, 0.1, {smooth: true, distortion: true});
     }
 });
+
+
+sounds.set('chargeReady', {
+    play() {
+        playSimpleSoundAt([100], 0.05, 0.5, {oscillatorType: 'square', pitchNode: glideNode(0.5, 0, 0.5, 100), attackTime: 0.1, fadeTime: 0.4});
+    }
+});
+sounds.set('activateCharge', {
+    play() {
+        playSimpleSoundAt([120], 0.05, 2, {oscillatorType: 'square', pitchNode: mergeNodes([glideNode(2, 0, 0.5, 80), vibratoNode(2, 10, 5)]), attackTime: 0.1, fadeTime: 0.1});
+    }
+});
+
+
 
 async function registerAndUseAudioWorklets(): Promise<void> {
     await audioContext.audioWorklet.addModule('audio/gain-processor.js');
@@ -297,6 +375,21 @@ async function registerAndUseAudioWorklets(): Promise<void> {
             };
         }
     });
+    sounds.set('defeatEnemy', {
+        play() {
+            const gainNode = audioContext.createGain();
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.1);
+            gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.3);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.4);
+            brownNoiseNode.connect(gainNode);
+            gainNode.connect(masterVolumeNode);
+            setTimeout(() => {
+                brownNoiseNode.disconnect(gainNode);
+                gainNode.disconnect(masterVolumeNode);
+            }, 400);
+        }
+    });
     tracks.beach = {
         isPlaying: false,
         masterNode: new AudioWorkletNode(audioContext, 'gain'),
@@ -341,8 +434,12 @@ async function registerAndUseAudioWorklets(): Promise<void> {
                 waterGainParam.linearRampToValueAtTime(0.1, this.lastScheduledTime + 2);
                 waterGainParam.linearRampToValueAtTime(0.3, this.lastScheduledTime + 3);
                 waterGainParam.linearRampToValueAtTime(0.05, this.lastScheduledTime + 4);
-                if (this.lastScheduledTime % 32 >= 16) {
+                if (this.lastScheduledTime % 32 >= 0) {
                     if (this.lastScheduledTime % 8 === 0) {
+                        /*playZeldaSquareAt(noteFrequencies.C4, 1, this.lastScheduledTime, this.masterNode);
+                        playZeldaSquareAt(noteFrequencies.B3, 1, this.lastScheduledTime + 1, this.masterNode);
+                        playZeldaSquareAt(noteFrequencies.A3, 1, this.lastScheduledTime + 2, this.masterNode);
+                        playZeldaSquareAt(noteFrequencies.G3, 1, this.lastScheduledTime + 3, this.masterNode);*/
                         playBellSoundAt(getBellFrequencies(noteFrequencies.C6), 0.4, 2, this.lastScheduledTime, this.masterNode);
                         playBellSoundAt(getBellFrequencies(noteFrequencies.B5), 0.4, 2, this.lastScheduledTime + 1, this.masterNode);
                         playBellSoundAt(getBellFrequencies(noteFrequencies.A5), 0.4, 2, this.lastScheduledTime + 2, this.masterNode);
@@ -354,12 +451,17 @@ async function registerAndUseAudioWorklets(): Promise<void> {
                         playBellSoundAt(getBellFrequencies(noteFrequencies.C6), 0.4, 2, this.lastScheduledTime + 3, this.masterNode);
                     }
                 }
-                if (this.lastScheduledTime % 32 >= 4 && (this.lastScheduledTime % 32 < 16 || this.lastScheduledTime % 32 >= 24)) {
-                    for (let i = 0; i < 4; i++) {
-                        playHihatSoundAt(40, 0.2, this.lastScheduledTime + i + 0.5, this.masterNode);
-                        playHihatSoundAt(40, 0.2, this.lastScheduledTime + i + 0.75, this.masterNode);
-                        playHihatSoundAt(40, 0.4, this.lastScheduledTime + i + 1, this.masterNode);
-                    }
+                if (this.lastScheduledTime % 32 >= 0 && (this.lastScheduledTime % 32 < 16 || this.lastScheduledTime % 32 >= 24)) {
+                    playHihatSoundAt(40, 0.4, this.lastScheduledTime + 0, this.masterNode);
+                    playHihatSoundAt(40, 0.2, this.lastScheduledTime + 0.5, this.masterNode);
+                    playHihatSoundAt(40, 0.2, this.lastScheduledTime + 0.75, this.masterNode);
+                    playHihatSoundAt(40, 0.4, this.lastScheduledTime + 1, this.masterNode);
+                    playHihatSoundAt(40, 0.2, this.lastScheduledTime + 1.5, this.masterNode);
+                    playHihatSoundAt(40, 0.4, this.lastScheduledTime + 1.75, this.masterNode);
+                    playHihatSoundAt(40, 0.2, this.lastScheduledTime + 2.25, this.masterNode);
+                    playHihatSoundAt(40, 0.4, this.lastScheduledTime + 2.5, this.masterNode);
+                    playHihatSoundAt(40, 0.4, this.lastScheduledTime + 3, this.masterNode);
+                    playHihatSoundAt(40, 0.4, this.lastScheduledTime + 3.5, this.masterNode);
                 }
                 if (this.lastScheduledTime % 32 >= 8) {
                     playBellSoundAt(getBellFrequencies(noteFrequencies.C6), 0.4, 1, this.lastScheduledTime, this.masterNode);
@@ -469,17 +571,29 @@ notes.forEach((noteName) => {
     });
 });
 
-function playHihatSoundAt(frequency: number, duration: number = 0.2, time: number = audioContext.currentTime, destination = masterVolumeNode): void {
+function playHihatSoundAt(frequency: number, duration: number = 0.1, time: number = audioContext.currentTime, destination = masterVolumeNode): void {
     playSimpleSoundAt(getHiHatFrequencies(frequency), 0.5, duration, {
         oscillatorType: 'square',
         attackTime: 0.002,
-        fadeTime: 0.1,
+        fadeTime: duration - 0.005,
         bandpassFrequency: 10000,
         highpassFrequency: 7000,
     }, time, destination);
 }
 // @ts-ignore
 window['playHihatSoundAt'] = playHihatSoundAt;
+
+function playZeldaSquareAt(frequency: number, duration: number = 0.2, time: number = audioContext.currentTime, destination = masterVolumeNode) {
+    const vibrato = vibratoNode(duration, 8, 1);
+    playSimpleSoundAt([frequency], 0.1, duration, {
+        oscillatorType: 'square',
+        pitchNode: vibrato,
+        //pitchVibratoFrequency: 8,
+        //pitchVibratoGain: 1
+    }, time, destination);
+}
+// @ts-ignore
+window['playZeldaSquareAt'] = playZeldaSquareAt;
 
 notes.forEach((noteName) => {
     sounds.set(`hiHat${noteName}`, {

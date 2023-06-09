@@ -7,9 +7,11 @@ import { mainCanvas, mainContext } from 'app/utils/canvas';
 import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
 import {
     clearNearbyEnemies,
+    createDungeon,
     addDungeonPortalToDisc,
     addOverworldPortalToDisc,
     returnToOverworld,
+    startDungeon,
     updateActiveCells,
 } from 'app/utils/dungeon';
 import { doCirclesIntersect, findClosestDisc, getClosestElement, getTargetVector } from 'app/utils/geometry';
@@ -137,9 +139,18 @@ function update(): void {
         setDerivedHeroStats(state);
         clearNearbyEnemies(state);
         // startDungeon(state, createTreeDungeon(Math.random(), 2000, 1));
+        const dungeon = createDungeon('arena', state.hero.level);
+        startDungeon(state, dungeon);
+        updateActiveCells(state);
+        const bossDisc = state.activeDiscs.find(d => d.boss?.definition.name === 'Spider');
+        if (bossDisc) {
+            state.hero.x = bossDisc.x;
+            state.hero.y = bossDisc.y + 200;
+            state.hero.disc = bossDisc;
+        }
     }
     if (!state.audio.playingTracks.length) {
-        playTrack(state, 'beach');
+        // playTrack(state, 'beach');
     }
     for (const track of state.audio.playingTracks) {
         track.update(state);
@@ -286,6 +297,7 @@ function updateHero(state: GameState): void {
         // Charge duration is 2 seconds by default.
         state.hero.attackChargeDuration = 2000;
         state.hero.attackChargeLevel = state.hero.chargingLevel;
+        playSound(state, 'activateCharge');
         state.hero.chargingLevel = 1;
         // Restart attack pattern when triggering charged attacks.
         hero.attackCooldown = state.fieldTime;
@@ -332,7 +344,13 @@ function gainAttackCharge(state: GameState, amount: number): void {
     if (state.hero.attackChargeLevel > 1) {
         return;
     }
+
+    let currentCharge = state.hero.chargingLevel | 0;
     state.hero.chargingLevel = Math.min(state.hero.equipment.weapon.chargeLevel, state.hero.chargingLevel + amount);
+
+    if ((state.hero.chargingLevel | 0) > currentCharge) {
+        playSound(state, 'chargeReady');
+    }
 }
 
 
@@ -409,6 +427,7 @@ function updateHeroBullets(state: GameState): void {
                 enemy.armor = Math.max(enemy.baseArmor / 10, enemy.armor * (1 - armorShred));
                 addDamageNumber(state, enemy, damage, bullet.isCrit);
                 if (enemy.life <= 0) {
+                    playSound(state, 'defeatEnemy');
                     defeatEnemy(state, enemy);
                 } else {
                     // Shots are not absorbed by defeated enemies.

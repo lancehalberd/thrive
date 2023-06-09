@@ -22,6 +22,16 @@ export function updateSimpleBullet(state: GameState, bullet: Bullet): void {
     }
 }
 
+export function updateReturnBullet(state: GameState, bullet: Bullet): void {
+    updateSimpleBullet(state, bullet);
+    // Reverse velocity at the bullet's half life.
+    const timeLeft = bullet.expirationTime - state.fieldTime;
+    if (bullet.time >= timeLeft && bullet.time <= timeLeft + 20) {
+        bullet.vx = -bullet.vx;
+        bullet.vy = -bullet.vy;
+    }
+}
+
 function getArmorShred(state: GameState, chargeLevel: number): number {
     return state.hero.armorShredEffect * (0.01 + 0.02 * chargeLevel);
 }
