@@ -383,8 +383,12 @@ function updateHeroBullets(state: GameState): void {
     let playedSound = false;
     for (const bullet of activeBullets) {
         bullet.time += FRAME_LENGTH;
-        bullet.x += bullet.vx / FRAME_LENGTH;
-        bullet.y += bullet.vy / FRAME_LENGTH;
+        bullet.update(state, bullet);
+        if (bullet.warningTime > 0) {
+            bullet.warningTime -= FRAME_LENGTH;
+            state.heroBullets.push(bullet);
+            continue;
+        }
         let bulletAbsorbed = false;
         for (const enemy of state.enemies) {
             if (enemy.isInvulnerable) {
@@ -483,6 +487,11 @@ function updateEnemyBullets(state: GameState): void {
     for (const bullet of activeBullets) {
         bullet.time += FRAME_LENGTH;
         bullet.update(state, bullet);
+        if (bullet.warningTime > 0) {
+            bullet.warningTime -= FRAME_LENGTH;
+            state.enemyBullets.push(bullet);
+            continue;
+        }
         let hitTarget = false;
         if (doCirclesIntersect(state.hero, bullet)) {
             hitTarget = true;

@@ -64,6 +64,7 @@ function basicBullet(state: GameState, source: Hero, weapon: Weapon): Bullet {
         update: updateSimpleBullet,
         hitTargets: new Set(),
         armorShred: getArmorShred(state, source.attackChargeLevel),
+        warningTime: 0,
     };
 }
 

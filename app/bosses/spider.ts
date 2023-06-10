@@ -1,8 +1,10 @@
-import { BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_SPEED, FRAME_LENGTH } from 'app/constants';
+import { FRAME_LENGTH } from 'app/constants';
 import { getVigorEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
-import { chaseTarget, createEnemy, moveEnemyInDirection, moveEnemyToTarget, shootBulletArc, shootBulletCircle, shootEnemyBullet } from 'app/utils/enemy';
-import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
+import {
+    shootBulletCircle, createBombBullet, shootCirclingBullet,
+} from 'app/utils/enemy';
+import { getTargetVector } from 'app/utils/geometry';
 import Random from 'app/utils/Random';
 import { updateReturnBullet } from 'app/weapons';
 
@@ -13,6 +15,7 @@ interface SpiderParams {
     attackTime: number
     attackMode: AttackMode
     attackSchedule: AttackMode[]
+    attackIntensity: number
 }
 export const spider: EnemyDefinition<SpiderParams> = {
     name: 'Spider',
@@ -22,8 +25,9 @@ export const spider: EnemyDefinition<SpiderParams> = {
     },
     initialParams: {
         attackTime: 0,
-        attackMode: 'petals',
+        attackMode: 'pinwheels',
         attackSchedule: [],
+        attackIntensity: 0,
     },
     dropChance: 1,
     experienceFactor: 20,
@@ -38,174 +42,69 @@ export const spider: EnemyDefinition<SpiderParams> = {
             }
             enemy.params.attackMode = enemy.params.attackSchedule.pop()!;
             enemy.params.attackTime = 0;
+            enemy.params.attackIntensity = (enemy.life <= enemy.maxLife / 2) ? 1 : 0;
         };
         enemy.params.attackTime += FRAME_LENGTH;
         if (enemy.params.attackMode === 'novas') {
-            const spacing = 800;
-            if (enemy.params.attackTime % spacing === 0) {
+            const spacing = 800 - enemy.params.attackIntensity * 400;
+            if (enemy.params.attackTime % spacing === 0 && enemy.params.attackTime <= 3000) {
                 const count = 10;
                 const parity = [0, 2, 1, 3][(enemy.params.attackTime / spacing) % 4];
                 shootBulletCircle(state, enemy, parity * 2 * Math.PI / count / 4, count, 60, {expirationTime: state.fieldTime + 3000});
             }
-            if (enemy.params.attackTime >= spacing * 4) {
+            if (enemy.params.attackTime >= 3500) {
                 nextAttack();
             }
         } else if (enemy.params.attackMode === 'petals') {
             const spacing = 200;
-            if (enemy.params.attackTime % spacing === 0) {
-                const count = (enemy.life <= enemy.maxLife / 2) ? 5 : 3;
-                shootBulletCircle(state, enemy, enemy.params.attackTime / spacing * 2 * Math.PI / 30, count, 100, {
+            if (enemy.params.attackTime > spacing * 5 && enemy.params.attackTime % spacing === 0 && enemy.params.attackTime <= spacing * 35) {
+                const count = 3 + enemy.params.attackIntensity * 2;
+                shootBulletCircle(state, enemy, enemy.params.attackTime / spacing * 2 * Math.PI / 40, count, 110, {
                     expirationTime: state.fieldTime + 3000,
                     update: updateReturnBullet,
                 });
             }
-            if (enemy.params.attackTime >= spacing * 20) {
+            if (enemy.params.attackTime >= spacing * 45) {
+                nextAttack();
+            }
+        } else if (enemy.params.attackMode === 'pinwheels') {
+            const spacing = 2000;
+            if (enemy.params.attackTime % spacing === FRAME_LENGTH && enemy.params.attackTime < spacing * 4) {
+                const count = 3 + enemy.params.attackIntensity;
+                for (let r = enemy.radius + 5; r < enemy.radius + 450; r += 40) {
+                    for (let i = 0; i < count; i++) {
+                        shootCirclingBullet(state, enemy, 2 * Math.PI * i / count + r * Math.PI / 40 / 20, r, {
+                            vTheta: - Math.PI / count,
+                            warningTime: 1000,
+                            expirationTime: state.fieldTime + 3000,
+                        });
+                    }
+                }
+            }
+            if (enemy.params.attackTime >= spacing * 6) {
                 nextAttack();
             }
         } else {
             nextAttack();
         }
-        /*if (!enemy.minions.length && enemy.life <= enemy.maxLife / 2) {
-            for (let i = 0; i < 3; i++) {
-                const theta = i * 2 * Math.PI / 3;
-                const minion = createEnemy(
-                    enemy.disc.x + (enemy.disc.radius - 30) * Math.cos(theta),
-                    enemy.disc.y + (enemy.disc.radius - 30) * Math.sin(theta), guardianTurret, enemy.level, enemy.disc);
-                minion.theta = theta;
-                enemy.minions.push(minion);
-                minion.master = enemy;
+        // Face away from the disc.
+        const vtheta = Math.PI / 200 * (1.5 -  0.5 * enemy.life / enemy.maxLife);
+        enemy.theta += vtheta;
+        const targetRadius = Math.round(enemy.params.attackMode === 'petals' ? 0 : 150 * (1 - enemy.life / enemy.maxLife));
+        const {distance2} = getTargetVector(enemy, enemy.disc);
+        let radius = Math.sqrt(distance2);
+        if (radius < targetRadius) radius++;
+        else if ( radius > targetRadius) radius--;
+        enemy.x = enemy.disc.x + radius * Math.cos(enemy.theta);
+        enemy.y = enemy.disc.y + radius * Math.sin(enemy.theta);
+        const bombSpacing = 1200 - 400 * enemy.params.attackIntensity;
+        if (enemy.modeTime % bombSpacing === 0) {
+            const dr = 100 - 70 * (1 - enemy.life / enemy.maxLife);
+            for (let r = 50; r < 400; r += dr) {
+                const theta = Math.random() * 2 * Math.PI;
+                createBombBullet(state, enemy, enemy.disc.x + r * Math.cos(theta), enemy.disc.y + r * Math.sin(theta));
             }
         }
-        if (enemy.mode === 'choose') {
-            enemy.speed = BASE_ENEMY_SPEED;
-            chaseTarget(state, enemy, state.hero);
-            if (enemy.modeTime >= 400) {
-                enemy.setMode(Random.element(['moveToEdge', 'moveToEdge', 'moveToCenter', 'chase']));
-                //enemy.setMode(Random.element(['moveToCenter']));
-            }
-            return;
-        }
-        if (enemy.mode === 'moveToEdge') {
-            enemy.speed = 1.2 * BASE_ENEMY_SPEED;
-            let {x, y, distance2} = getTargetVector(enemy.disc, enemy);
-            if (distance2 >= (enemy.disc.radius * 0.8) ** 2) {
-                enemy.setMode(Random.element(['shoot', 'shoot', 'circle']));
-            } else {
-                enemy.theta = turnTowardsAngle(enemy.theta, 0.2, Math.atan2(y, x));
-                moveEnemyInDirection(state, enemy);
-            }
-            return;
-        }
-        if (enemy.mode === 'moveToCenter') {
-            enemy.speed = 1.2 * BASE_ENEMY_SPEED;
-            if (moveEnemyToTarget(state, enemy, enemy.disc)) {
-                enemy.setMode(Random.element(['chasingSpirals', 'crossingSpirals']));
-                //enemy.setMode(Random.element(['chasingSpirals']));
-            }
-            return;
-        }
-        if (enemy.mode === 'chasingSpirals') {
-            enemy.theta = turnTowardsAngle(enemy.theta, 0.2, -Math.PI / 2);
-            if (enemy.modeTime < 400) {
-                return;
-            }
-            if (enemy.modeTime % 200 === 0) {
-                const expirationTime = state.fieldTime + 2000;
-                for (let i = 0; i < 2; i++) {
-                    const thetaIndex = (enemy.modeTime - 400) / 200 + i;
-                    const theta = -Math.PI / 2 + (i + 1) * thetaIndex * Math.PI / 12;
-                    shootEnemyBullet(state, enemy, 100 * Math.cos(theta), 100 * Math.sin(theta), {expirationTime});
-                    shootEnemyBullet(state, enemy, 100 * Math.cos(theta + Math.PI), 100 * Math.sin(theta + Math.PI), {expirationTime});
-                }
-            }
-            if (enemy.modeTime >= 4000) {
-                enemy.setMode('choose');
-            }
-            return;
-        }
-        if (enemy.mode === 'crossingSpirals') {
-            enemy.theta = turnTowardsAngle(enemy.theta, 0.2, Math.PI / 2);
-            if (enemy.modeTime < 400) {
-                return;
-            }
-            if (enemy.modeTime % 200 === 0) {
-                const expirationTime = state.fieldTime + 2000;
-                for (let i = 0; i < 2; i++) {
-                    const thetaIndex = (enemy.modeTime - 400) / 200;
-                    const theta = Math.PI / 2 + thetaIndex * Math.PI / 6 * (i ? -1 : 1);
-                    shootEnemyBullet(state, enemy, 100 * Math.cos(theta), 100 * Math.sin(theta), {expirationTime});
-                }
-            }
-            if (enemy.modeTime >= 4000) {
-                enemy.setMode('choose');
-            }
-            return;
-        }
-        if (enemy.mode === 'shoot') {
-            if (enemy.modeTime < 600) {
-                const {x, y} = getTargetVector(enemy, state.hero);
-                enemy.theta = turnTowardsAngle(enemy.theta, 0.2, Math.atan2(y, x));
-            }
-            if (enemy.modeTime === 1000) {
-                shootEnemyBullet(state, enemy,
-                    200 * Math.cos(enemy.theta), 200 * Math.sin(enemy.theta),
-                    {
-                        expirationTime: state.fieldTime + 2000,
-                        damage: enemy.damage * 5,
-                        radius: 3 * BASE_ENEMY_BULLET_RADIUS,
-                    }
-                );
-            }
-            if (enemy.modeTime >= 1500) {
-                enemy.setMode('charge');
-            }
-            return;
-        }
-        if (enemy.mode === 'charge') {
-            enemy.speed = 1.5 * BASE_ENEMY_SPEED;
-            moveEnemyInDirection(state, enemy);
-            if (enemy.modeTime % 200 === 0) {
-                const vx = 120 * Math.cos(enemy.theta + Math.PI / 2);
-                const vy = 120 * Math.sin(enemy.theta + Math.PI / 2);
-                shootEnemyBullet(state, enemy, vx, vy, {expirationTime: state.fieldTime + 3000});
-                shootEnemyBullet(state, enemy, -vx, -vy, {expirationTime: state.fieldTime + 3000});
-            }
-            if (enemy.modeTime >= 3000) {
-                enemy.setMode('choose');
-            }
-            // Stop earlier if it hits the outside of the ring.
-            if (enemy.modeTime >= 1000) {
-                let {distance2} = getTargetVector(enemy.disc, enemy);
-                if (distance2 >= (enemy.disc.radius * 0.9) **2) {
-                    enemy.setMode('choose');
-                }
-            }
-            return;
-        }
-        if (enemy.mode === 'chase') {
-            enemy.speed = BASE_ENEMY_SPEED;
-            chaseTarget(state, enemy, state.hero);
-            if (enemy.modeTime % 800 === 0) {
-                shootBulletArc(state, enemy, enemy.theta, Math.PI / 6, 3, 200);
-            }
-            if (enemy.modeTime >= 4000) {
-                enemy.setMode('choose');
-            }
-            return;
-        }
-        if (enemy.mode === 'circle') {
-            enemy.speed = 2 * BASE_ENEMY_SPEED;
-            let {x, y} = getTargetVector(enemy, enemy.disc);
-            enemy.theta = Math.atan2(y, x);
-            moveEnemyInDirection(state, enemy, enemy.theta + Math.PI / 2);
-            if (enemy.modeTime % 600 === 0) {
-                shootBulletArc(state, enemy, enemy.theta, Math.PI / 6, 3, 200);
-            }
-            if (enemy.modeTime >= 6000) {
-                enemy.setMode('choose');
-            }
-            return;
-        }*/
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
         context.save();
@@ -237,42 +136,4 @@ export const spider: EnemyDefinition<SpiderParams> = {
     getEnchantment(state: GameState, enemy: Enemy): Enchantment {
         return getVigorEnchantment(enemy.level);
     },
-};
-
-const guardianTurret: EnemyDefinition = {
-    name: 'Turret',
-    statFactors: {
-        maxLife: 2,
-        damage: 1,
-        attacksPerSecond: 1,
-        armor: 2,
-    },
-    initialParams: {},
-    dropChance: 0,
-    experienceFactor: 2,
-    radius: 20,
-    isInvulnerable: true,
-    update(state: GameState, enemy: Enemy): void {
-        if (!enemy.disc) {
-            return;
-        }
-        const {x, y} = getTargetVector(enemy, enemy.disc);
-        enemy.theta = turnTowardsAngle(enemy.theta, 0.1, Math.atan2(y, x));
-        if (enemy.modeTime > 1000 && enemy.modeTime % 400 === 0) {
-            shootBulletArc(state, enemy, enemy.theta, 2 * Math.PI / 3, 2, 150);
-        }
-    },
-    render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
-        fillCircle(context, enemy, 'yellow');
-        fillCircle(context, {
-            x: enemy.x + 20 * Math.cos(enemy.theta + Math.PI / 3),
-            y: enemy.y + 20 * Math.sin(enemy.theta + Math.PI / 3),
-            radius: 5,
-        }, 'black');
-        fillCircle(context, {
-            x: enemy.x + 20 * Math.cos(enemy.theta - Math.PI / 3),
-            y: enemy.y + 20 * Math.sin(enemy.theta - Math.PI / 3),
-            radius: 5,
-        }, 'black');
-    }
 };

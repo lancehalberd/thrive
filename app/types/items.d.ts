@@ -21,6 +21,7 @@ interface Bullet extends Circle {
     armorShred: number
     amplitude?: number
     frequency?: number
+    warningTime: number
 }
 
 interface Shot {

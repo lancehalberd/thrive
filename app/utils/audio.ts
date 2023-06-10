@@ -319,7 +319,8 @@ sounds.set('chargeReady', {
 });
 sounds.set('activateCharge', {
     play() {
-        playSimpleSoundAt([120], 0.05, 2, {oscillatorType: 'square', pitchNode: mergeNodes([glideNode(2, 0, 0.5, 80), vibratoNode(2, 10, 5)]), attackTime: 0.1, fadeTime: 0.1});
+        //playSimpleSoundAt([120], 0.05, 2, {oscillatorType: 'square', pitchNode: mergeNodes([glideNode(2, 0, 0.5, 80), vibratoNode(2, 10, 5)]), attackTime: 0.1, fadeTime: 0.1});
+        playSimpleSoundAt([100], 0.2, 2, {oscillatorType: 'triangle', pitchNode: mergeNodes([glideNode(2, 0, 1, 100), vibratoNode(2, 20, 10)]), attackTime: 0.1, fadeTime: 0.1});
     }
 });
 
