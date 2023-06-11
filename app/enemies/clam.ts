@@ -8,7 +8,7 @@ export const clam: EnemyDefinition = {
     name: 'Clam',
     statFactors: {
         attacksPerSecond: 2,
-        maxLife: BOSS_MAX_LIFE_FACTOR,
+        maxLife: 2,
         armor: 5,
     },
     initialParams: {},
@@ -66,7 +66,7 @@ export const giantClam: EnemyDefinition = {
     name: 'Giant Clam',
     statFactors: {
         attacksPerSecond: 2,
-        maxLife: 5,
+        maxLife: BOSS_MAX_LIFE_FACTOR,
         armor: 5,
     },
     dropChance: 1,
