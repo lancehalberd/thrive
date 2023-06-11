@@ -1,5 +1,5 @@
 import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, FRAME_LENGTH } from 'app/constants';
-import { getVigorEnchantment } from 'app/enchantments';
+import { getThiefEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
 import {
     chaseHeroHeading,
@@ -109,7 +109,7 @@ export const spider: EnemyDefinition<SpiderParams> = {
     },
     render: renderNormalizedEnemy((context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => renderNormalizedSpider(context, enemy, 4)),
     getEnchantment(state: GameState, enemy: Enemy): Enchantment {
-        return getVigorEnchantment(enemy.level);
+        return getThiefEnchantment(enemy.level);
     },
 };
 

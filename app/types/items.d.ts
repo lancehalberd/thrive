@@ -34,8 +34,8 @@ interface Shot {
 type WeaponType = 'katana'|'dagger'|'sword'|'bow'|'morningStar'|'staff';
 type ArmorType = 'lightArmor'|'mediumArmor'|'heavyArmor';
 
-type WeaponEnchantmentType = 'attackSpeed'|'critChance'|'critDamage'|'damage';
-type ArmorEnchantmentType  = 'speed'|'armor'|'life'|'potionEffect';
+type WeaponEnchantmentType = 'attackSpeed'|'critChance'|'critDamage'|'damage'|'dropLevel';
+type ArmorEnchantmentType  = 'speed'|'armor'|'life'|'potionEffect'|'dropChance';
 
 type EnchantmentType =  ArmorEnchantmentType | WeaponEnchantmentType;
 

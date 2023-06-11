@@ -81,6 +81,8 @@ function getInitialState(): GameState {
             critChance: 0,
             critDamage: 0,
             chargeDamage: 0,
+            dropChance: 0,
+            dropLevel: 0,
             armorShredEffect: 0,
             potionEffect: 1,
             vx: 0,

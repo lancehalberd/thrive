@@ -48,6 +48,8 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     chargeDamage: number
     armorShredEffect: number
     potionEffect: number
+    dropChance: number
+    dropLevel: number
     vx: number
     vy: number
 }
