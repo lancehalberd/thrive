@@ -36,4 +36,4 @@ interface Portal extends Geometry {
     activate(state: GameState): void
 }
 
-type DungeonType = 'reef'|'cave'|'tree'|'arena';
+type DungeonType = 'reef'|'cave'|'tree'|'arena'|'spiderDen';

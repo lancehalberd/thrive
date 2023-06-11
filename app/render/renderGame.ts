@@ -335,7 +335,22 @@ function renderEnemyLifebar(context: CanvasRenderingContext2D, enemy: Enemy): vo
     }
 }
 function renderEnemyBullet(context: CanvasRenderingContext2D, bullet: Bullet): void {
-    fillCircle(context, bullet, 'red');
+    if (bullet.warningTime > 0) {
+        context.fillStyle = 'red';
+        context.beginPath();
+        context.arc(bullet.x, bullet.y, bullet.radius, 0, 2 * Math.PI);
+        context.arc(bullet.x, bullet.y, bullet.radius - 2, 0, 2 * Math.PI, true);
+        context.fill();
+    } else {
+        if (bullet.radius > 15) {
+            context.save();
+                context.globalAlpha *= 0.5;
+                fillCircle(context, bullet, 'red');
+            context.restore();
+        } else {
+            fillCircle(context, bullet, 'red');
+        }
+    }
 }
 function renderHeroBullet(context: CanvasRenderingContext2D, bullet: Bullet): void {
     fillCircle(context, bullet, 'green');

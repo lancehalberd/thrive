@@ -91,9 +91,9 @@ export function getEnemyColor(level: number): string {
     return 'gold';
 }
 
-export function shootEnemyBullet(state: GameState, enemy: Enemy, vx: number, vy: number, stats: Partial<Bullet> = {}) {
-    //const mag = Math.sqrt(vx * vx + vy * vy);
-    state.enemyBullets.push({
+
+export function getBaseEnemyBullet(state: GameState, enemy: Enemy): Bullet {
+    return  {
         time: 0,
         //x: enemy.x + vx / mag * enemy.radius,
         //y: enemy.y + vy / mag * enemy.radius,
@@ -103,16 +103,44 @@ export function shootEnemyBullet(state: GameState, enemy: Enemy, vx: number, vy:
         y: enemy.y,
         damage: enemy.damage,
         radius: BASE_ENEMY_BULLET_RADIUS,
-        vx,
-        vy,
+        vx: 0,
+        vy: 0,
         expirationTime: state.fieldTime + BASE_ENEMY_BULLET_DURATION,
         update: updateSimpleBullet,
         hitTargets: new Set(),
         // Armor shred is not functional against the player, although maybe it could be added
         // with player recovering armor over time.
         armorShred: 0,
+        warningTime: 0,
+    };
+}
+
+export function createBombBullet(state: GameState, enemy: Enemy, x: number, y: number, stats: Partial<Bullet> = {}) {
+    const bullet: Bullet = {
+        ...getBaseEnemyBullet(state, enemy),
+        baseX: x,
+        baseY: y,
+        radius: 3 * BASE_ENEMY_BULLET_RADIUS,
+        x, y,
+        warningTime: 800,
+        expirationTime: state.fieldTime + BASE_ENEMY_BULLET_DURATION,
         ...stats,
-    });
+    }
+    //const mag = Math.sqrt(vx * vx + vy * vy);
+    state.enemyBullets.push(bullet);
+    return bullet;
+
+}
+
+export function shootEnemyBullet(state: GameState, enemy: Enemy, vx: number, vy: number, stats: Partial<Bullet> = {}) {
+    const bullet: Bullet = {
+        ...getBaseEnemyBullet(state, enemy),
+        vx, vy,
+        ...stats,
+    }
+    //const mag = Math.sqrt(vx * vx + vy * vy);
+    state.enemyBullets.push(bullet);
+    return bullet;
 }
 
 export function shootCirclingBullet(state: GameState, enemy: Enemy, theta: number, radius: number, stats: Partial<Bullet> = {}) {
@@ -139,11 +167,12 @@ export function shootCirclingBullet(state: GameState, enemy: Enemy, theta: numbe
         // Armor shred is not functional against the player, although maybe it could be added
         // with player recovering armor over time.
         armorShred: 0,
+        warningTime: 0,
         ...stats,
     });
 }
 
-function updateCirclingBullet(state: GameState, bullet: Bullet): void {
+export function updateCirclingBullet(state: GameState, bullet: Bullet): void {
     if (!bullet.source
         || typeof(bullet.theta) !== 'number'
         || typeof(bullet.vTheta) !== 'number'
@@ -195,8 +224,20 @@ export function turnTowardsTarget(state: GameState, enemy: Enemy, target: Circle
     enemy.theta = turnTowardsAngle(enemy.theta, turnSpeed, Math.atan2(y, x));
 }
 
+export function turnTowardsHeroHeading(state: GameState, enemy: Enemy, leadTime: number, turnSpeed = 0.2): void {
+    const {x, y} = getTargetVector(enemy, {
+        x: state.hero.x + state.hero.vx * leadTime / 1000,
+        y: state.hero.y + state.hero.vy * leadTime / 1000,
+    });
+    enemy.theta = turnTowardsAngle(enemy.theta, turnSpeed, Math.atan2(y, x));
+}
+
 export function chaseTarget(state: GameState, enemy: Enemy, target: Circle, speed = enemy.speed): void {
     turnTowardsTarget(state, enemy, target);
+    moveEnemyInDirection(state, enemy, enemy.theta, speed);
+}
+export function chaseHeroHeading(state: GameState, enemy: Enemy, leadTime = 500, speed = enemy.speed): void {
+    turnTowardsHeroHeading(state, enemy, leadTime);
     moveEnemyInDirection(state, enemy, enemy.theta, speed);
 }
 
@@ -210,3 +251,13 @@ export function moveEnemyToTarget(state: GameState, enemy: Enemy, {x, y}: Point,
     return distance <= speed / FRAME_LENGTH;
 }
 
+export function renderNormalizedEnemy(renderEnemy: RenderEnemy) {
+    return (context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => {
+        context.save();
+            context.translate(enemy.x, enemy.y);
+            context.rotate(enemy.theta);
+            context.scale(enemy.radius, enemy.radius);
+            renderEnemy(context, state, enemy);
+        context.restore();
+    };
+}
