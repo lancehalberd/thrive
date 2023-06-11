@@ -9,20 +9,6 @@ export function doCirclesIntersect(circleA: Circle, circleB: Circle): boolean {
     return dx * dx + dy * dy < radius * radius;
 }
 
-
-export function findClosestDisc({x, y}: {x: number, y: number}, discs: Disc[]): Disc {
-    let closestDistance2 = Number.MAX_SAFE_INTEGER, closestDisc = discs[0];
-    for (const disc of discs) {
-        const dx = disc.x - x, dy = disc.y - y;
-        const distance2 = dx * dx + dy * dy - disc.radius * disc.radius;
-        if (distance2 < closestDistance2) {
-            closestDistance2 = distance2;
-            closestDisc = disc;
-        }
-    }
-    return closestDisc;
-}
-
 export function getClosestElement<T extends Geometry>({x, y}: {x: number, y: number}, elements: T[]): T {
     let closestDistance2 = Number.MAX_SAFE_INTEGER, closestElement = elements[0];
     for (const element of elements) {
@@ -36,8 +22,8 @@ export function getClosestElement<T extends Geometry>({x, y}: {x: number, y: num
     return closestElement;
 }
 
-export function getTargetVector(circleA: Circle, circleB: Circle): {x: number, y: number, distance2: number} {
-    const dx = circleB.x - circleA.x, dy = circleB.y - circleA.y;
+export function getTargetVector(pointA: Point, pointB: Point): {x: number, y: number, distance2: number} {
+    const dx = pointB.x - pointA.x, dy = pointB.y - pointA.y;
     const distance2 = dx * dx + dy * dy;
     if (distance2 <= 0) {
         return {x: 1, y: 0, distance2: 0};

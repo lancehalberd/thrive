@@ -5,18 +5,16 @@ import { render } from 'app/render/renderGame';
 import { playSound, playTrack, setVolume } from 'app/utils/audio';
 import { mainCanvas, mainContext } from 'app/utils/canvas';
 import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
+import { findClosestDisc } from 'app/utils/disc';
 import {
-    clearNearbyEnemies,
     createDungeon,
     addDungeonPortalToDisc,
-    addOverworldPortalToDisc,
-    returnToOverworld,
     startDungeon,
-    updateActiveCells,
 } from 'app/utils/dungeon';
-import { doCirclesIntersect, findClosestDisc, getClosestElement, getTargetVector } from 'app/utils/geometry';
-import { damageHero, gainExperience, gainWeaponExperience, getWeaponProficiency, setDerivedHeroStats } from 'app/utils/hero';
+import { doCirclesIntersect, getClosestElement, getTargetVector } from 'app/utils/geometry';
+import { damageHero, gainExperience, gainWeaponExperience, getWeaponProficiency, refillAllPotions, setDerivedHeroStats } from 'app/utils/hero';
 import { getMousePosition, isMouseDown, isMiddleMouseDown, isRightMouseDown } from 'app/utils/mouse';
+import { addOverworldPortalToDisc, clearNearbyEnemies, returnToOverworld, updateActiveCells } from 'app/utils/overworld';
 import { getRightAnalogDeltas, isGameKeyDown, isKeyboardKeyDown, updateKeyboardState, wasGameKeyPressed, KEY } from 'app/utils/userInput';
 import Random from 'app/utils/Random';
 import { mediumArmors } from 'app/armor';
@@ -31,7 +29,7 @@ import {
     HERO_DAMAGE_FRAME_COUNT,
 } from 'app/constants';
 import { initializeGame } from 'app/initialize';
-import { loadGame, saveGame } from 'app/saveGame';
+import { loadGame } from 'app/saveGame';
 import { allWeapons } from 'app/weapons';
 
 const state: GameState = getInitialState();
@@ -85,6 +83,8 @@ function getInitialState(): GameState {
             chargeDamage: 0,
             armorShredEffect: 0,
             potionEffect: 1,
+            vx: 0,
+            vy: 0,
         },
         heroBullets: [],
         enemies: [],
@@ -123,11 +123,14 @@ function getInitialState(): GameState {
 }
 
 function restartGame(state: GameState): void {
-    Object.assign(state,  getInitialState());
-    state.gameHasBeenInitialized = true;
+    //Object.assign(state,  getInitialState());
+    //state.gameHasBeenInitialized = true;
+    loadGame(state);
+    delete state.dungeon;
     setDerivedHeroStats(state);
+    refillAllPotions(state);
     clearNearbyEnemies(state);
-    saveGame(state);
+    //saveGame(state);
 }
 
 function update(): void {
@@ -138,16 +141,23 @@ function update(): void {
         addContextMenuListeners(state);
         setDerivedHeroStats(state);
         clearNearbyEnemies(state);
-        // startDungeon(state, createTreeDungeon(Math.random(), 2000, 1));
-        const dungeon = createDungeon('arena', state.hero.level);
-        startDungeon(state, dungeon);
-        updateActiveCells(state);
-        const bossDisc = state.activeDiscs.find(d => d.boss?.definition.name === 'Spider');
-        if (bossDisc) {
-            state.hero.x = bossDisc.x;
-            state.hero.y = bossDisc.y + 200;
-            state.hero.disc = bossDisc;
+        // Set testDungeon/testBoss here to load the game in a dungeon and boss room.
+        const testDungeon: DungeonType|'' = '';
+        if (testDungeon) {
+            const dungeon = createDungeon(testDungeon, state.hero.level);
+            startDungeon(state, dungeon);
+            updateActiveCells(state);
+            const testBoss = '';
+            if (testBoss) {
+                const bossDisc = state.activeDiscs.find(d => d.boss?.definition.name === testBoss);
+                if (bossDisc) {
+                    state.hero.x = bossDisc.x;
+                    state.hero.y = bossDisc.y + 200;
+                    state.hero.disc = bossDisc;
+                }
+            }
         }
+        /**/
     }
     if (!state.audio.playingTracks.length) {
         // playTrack(state, 'beach');
@@ -274,6 +284,8 @@ function updateHero(state: GameState): void {
     const speed = isWalking ? hero.speed : 1.5 * hero.speed;
     hero.x += dx * speed / FRAME_LENGTH;
     hero.y += dy * speed / FRAME_LENGTH;
+    hero.vx = dx * speed;
+    hero.vy = dy * speed;
 
     // Hero attack
     const weapon = hero.equipment.weapon;

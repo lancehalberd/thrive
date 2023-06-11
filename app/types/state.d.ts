@@ -48,7 +48,10 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     chargeDamage: number
     armorShredEffect: number
     potionEffect: number
+    vx: number
+    vy: number
 }
+type RenderEnemy = (context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => void;
 interface Enemy<EnemyParams=any> extends Vitals, Geometry {
     level: number
     disc: Disc
@@ -88,7 +91,7 @@ interface EnemyDefinition<EnemyParams=any> {
     // Set on enemies that can drop dungeon portals
     portalChance?: number
     portalDungeonType?: DungeonType
-    render: (context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => void
+    render: RenderEnemy
 }
 
 interface FieldText {

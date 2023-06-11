@@ -224,8 +224,20 @@ export function turnTowardsTarget(state: GameState, enemy: Enemy, target: Circle
     enemy.theta = turnTowardsAngle(enemy.theta, turnSpeed, Math.atan2(y, x));
 }
 
+export function turnTowardsHeroHeading(state: GameState, enemy: Enemy, leadTime: number, turnSpeed = 0.2): void {
+    const {x, y} = getTargetVector(enemy, {
+        x: state.hero.x + state.hero.vx * leadTime / 1000,
+        y: state.hero.y + state.hero.vy * leadTime / 1000,
+    });
+    enemy.theta = turnTowardsAngle(enemy.theta, turnSpeed, Math.atan2(y, x));
+}
+
 export function chaseTarget(state: GameState, enemy: Enemy, target: Circle, speed = enemy.speed): void {
     turnTowardsTarget(state, enemy, target);
+    moveEnemyInDirection(state, enemy, enemy.theta, speed);
+}
+export function chaseHeroHeading(state: GameState, enemy: Enemy, leadTime = 500, speed = enemy.speed): void {
+    turnTowardsHeroHeading(state, enemy, leadTime);
     moveEnemyInDirection(state, enemy, enemy.theta, speed);
 }
 
@@ -239,3 +251,13 @@ export function moveEnemyToTarget(state: GameState, enemy: Enemy, {x, y}: Point,
     return distance <= speed / FRAME_LENGTH;
 }
 
+export function renderNormalizedEnemy(renderEnemy: RenderEnemy) {
+    return (context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => {
+        context.save();
+            context.translate(enemy.x, enemy.y);
+            context.rotate(enemy.theta);
+            context.scale(enemy.radius, enemy.radius);
+            renderEnemy(context, state, enemy);
+        context.restore();
+    };
+}
