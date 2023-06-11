@@ -15,6 +15,7 @@ interface Bullet extends Circle {
     expirationTime: number
     source?: Hero|Enemy
     update(state: GameState, bullet: Bullet): void
+    onDeath?: (state: GameState, bullet: Bullet) => void
     hitTargets: Set<any>
     time: number
     isCrit?: boolean

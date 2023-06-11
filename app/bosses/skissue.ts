@@ -1,7 +1,7 @@
 import { BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_SPEED, FRAME_LENGTH } from 'app/constants';
 import { getVigorEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
-import { chaseTarget, createEnemy, moveEnemyInDirection, moveEnemyToTarget, shootBulletArc, shootBulletCircle, shootEnemyBullet,shootBulletAtHero } from 'app/utils/enemy';
+import { chaseTarget, createEnemy, moveEnemyInDirection, moveEnemyToTarget, shootBulletArc, shootBulletCircle, shootEnemyBullet, shootBulletAtHero } from 'app/utils/enemy';
 import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 import Random from 'app/utils/RAndom';
 import { updateReturnBullet } from 'app/weapons';
@@ -17,7 +17,7 @@ interface SpiderParams {
 export const skissue: EnemyDefinition<SpiderParams> = {
     name: 'Skissue',
     statFactors: {
-        maxLife: 5,
+        maxLife: 10,
         damage: 1,
     },
     initialParams: {},
@@ -26,24 +26,87 @@ export const skissue: EnemyDefinition<SpiderParams> = {
     radius: 48,
     update(state: GameState, enemy: Enemy<SpiderParams>): void {
 
-        if (enemy.minions.length === 0) {
-            //spawn minions
-            for (let i = 0; i < 7; i++) {
-                const theta = i * 2 * Math.PI / 7;
-                const minion = createEnemy(
-                    enemy.disc.x + (enemy.disc.radius - 30) * Math.cos(theta),
-                    enemy.disc.y + (enemy.disc.radius - 30) * Math.sin(theta), skillPortal, enemy.level, enemy.disc);
-                minion.theta = theta;
-                enemy.minions.push(minion);
-                minion.master = enemy;
+        
+        if (enemy.mode === 'choose') {
+            if (enemy.modeTime >= 400) {
+                enemy.setMode(Random.element(['sakura', 'hanabi']));
+                //enemy.setMode(Random.element(['moveToCenter']));
+            }
+            return;
+        }
+        if (enemy.mode === 'sakura') {
+            if (enemy.minions.length === 0) {
+                //spawn minions
+                for (let i = 0; i < 4; i++) {
+                    const theta = i * 2 * Math.PI / 4;
+                    const minion = createEnemy(
+                        enemy.disc.x + (enemy.disc.radius - 30) * Math.cos(theta),
+                        enemy.disc.y + (enemy.disc.radius - 30) * Math.sin(theta), skillPortal, enemy.level, enemy.disc);
+                    minion.theta = theta;
+                    enemy.minions.push(minion);
+                    minion.master = enemy;
+                }
+            }
+            if (enemy.modeTime % 100 === 0) {
+                const theta1 = Math.PI * 2 / 40000 * enemy.modeTime
+                shootBulletCircle(state, enemy, theta1, 5, 100, {expirationTime: state.fieldTime + 2000});
+            }
+            if (enemy.modeTime >= 10000) {
+                enemy.setMode('choose');
+                for (const minion of enemy.minions) {
+                    minion.life = 0;
+                }
+                enemy.minions = [];
             }
         }
-        if (enemy.modeTime % 100 === 0) {
-            const theta1 = Math.PI * 2 / 40000 * enemy.modeTime
-            shootBulletCircle(state, enemy, theta1, 7, 100, {expirationTime: state.fieldTime + 2000});
+        if (enemy.mode === 'hanabi') {
+            if (enemy.modeTime % 3600 === 0) {
+                shootBulletAtHero(state, enemy, 50, {
+                    damage: 5 * enemy.damage,
+                    radius: BASE_ENEMY_BULLET_RADIUS * 2,
+                    expirationTime: state.fieldTime + 2000,
+                    onDeath(state: GameState, bullet: Bullet) {
+                        for (let i = 0; i < 5; i++) {
+                            const bulletTheta = 2 * Math.PI * i / 5;
+                            shootEnemyBullet(state, enemy, 150 * Math.cos(bulletTheta), 150 * Math.sin(bulletTheta), {                        
+                                x: bullet.x,
+                                y: bullet.y,
+                                baseX: bullet.x,
+                                baseY: bullet.y,
+                                expirationTime: state.fieldTime + 250,
+                                onDeath(state: GameState, bullet: Bullet) {
+                                    for (let i = 0; i < 5; i++) {
+                                        const bulletTheta = 2 * Math.PI * i / 5;
+                                        shootEnemyBullet(state, enemy, 200 * Math.cos(bulletTheta), 200 * Math.sin(bulletTheta), {                        
+                                            x: bullet.x,
+                                            y: bullet.y,
+                                            baseX: bullet.x,
+                                            baseY: bullet.y,
+                                            expirationTime: state.fieldTime + 500,
+                                            onDeath(state: GameState, bullet: Bullet) {
+                                                for (let i = 0; i < 5; i++) {
+                                                    const bulletTheta = 2 * Math.PI * i / 5;
+                                                    shootEnemyBullet(state, enemy, 100 * Math.cos(bulletTheta), 100 * Math.sin(bulletTheta), {                        
+                                                    x: bullet.x,
+                                                    y: bullet.y,
+                                                    baseX: bullet.x,
+                                                    baseY: bullet.y,
+                                                    expirationTime: state.fieldTime + 2000,
+                                                    });
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+            if (enemy.modeTime >= 10000) {
+                enemy.setMode('choose');
+            }
         }
-
-    
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
         context.save();
@@ -91,14 +154,18 @@ const skillPortal: EnemyDefinition = {
     radius: 20,
     isInvulnerable: true,
     update(state: GameState, enemy: Enemy<SpiderParams>): void {
-        const theta = enemy.theta + Math.PI + Math.PI / 500;
-        enemy.x = enemy.disc.x + enemy.disc.radius * Math.cos(theta);
-        enemy.y = enemy.disc.y + enemy.disc.radius * Math.sin(theta);
-        enemy.theta = theta - Math.PI;
+        
+        if (enemy.life >= enemy.maxLife / 2) {
+            const theta = enemy.theta + Math.PI + Math.PI / 250;
+            enemy.x = enemy.disc.x + enemy.disc.radius * Math.cos(theta);
+            enemy.y = enemy.disc.y + enemy.disc.radius * Math.sin(theta);
+            enemy.theta = theta - Math.PI;
 
-        if (enemy.modeTime % 100 === 0 && enemy.modeTime % 2800 < 2400) {
-            shootEnemyBullet(state, enemy, 100 * Math.cos(enemy.theta), 100 * Math.sin(enemy.theta),{expirationTime: state.fieldTime + 1500});
-            //shootBulletAtHero(state, enemy, 100)
+            if (enemy.modeTime % 100 === 0 && enemy.modeTime % 2000 < 1500) {
+                shootEnemyBullet(state, enemy, 50 * Math.cos(enemy.theta), 50 * Math.sin(enemy.theta),{expirationTime: state.fieldTime + 3000});
+            }
+        } else {
+            return;
         }
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
