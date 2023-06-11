@@ -125,7 +125,7 @@ export function getContextMenu(state: GameState): MenuOption[] {
                         }
                         // Move hero to corresponding overworld area.
                         if (level === 1) {
-                            state.hero.overworldY = -CELL_SIZE;
+                            state.hero.overworldY = 0;
                         } else if (level === 5) {
                             state.hero.overworldY = -CELL_SIZE * 3;
                         } else {
@@ -134,6 +134,7 @@ export function getContextMenu(state: GameState): MenuOption[] {
                         if (!state.dungeon) {
                             state.hero.y = state.hero.overworldY;
                         }
+                        state.hero.experience = 0;
                         setDerivedHeroStats(state);
                         updateActiveCells(state);
                         clearNearbyEnemies(state);
