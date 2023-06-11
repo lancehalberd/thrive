@@ -113,7 +113,7 @@ export function getContextMenu(state: GameState): MenuOption[] {
         {
             label: 'Set Hero Level',
             getChildren() {
-                return [5, 10, 20, 30, 40, 50, 60, 70, 80, 90].map(level => ({
+                return [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90].map(level => ({
                     label: `Lvl ${level}`,
                     onSelect() {
                         state.hero.level = level;
@@ -124,7 +124,9 @@ export function getContextMenu(state: GameState): MenuOption[] {
                             proficiency.level = level;
                         }
                         // Move hero to corresponding overworld area.
-                        if (level === 5) {
+                        if (level === 1) {
+                            state.hero.overworldY = -CELL_SIZE;
+                        } else if (level === 5) {
                             state.hero.overworldY = -CELL_SIZE * 3;
                         } else {
                             state.hero.overworldY = -CELL_SIZE * (3 + 2 * Math.floor(level / 10));

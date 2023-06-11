@@ -1,4 +1,4 @@
-import { BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_SPEED } from 'app/constants';
+import { BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_SPEED, BOSS_MAX_LIFE_FACTOR } from 'app/constants';
 import { getVigorEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
 import { chaseTarget, createEnemy, moveEnemyInDirection, moveEnemyToTarget, shootBulletArc, shootEnemyBullet } from 'app/utils/enemy';
@@ -10,7 +10,7 @@ interface GuardianParams {
 export const guardian: EnemyDefinition<GuardianParams> = {
     name: 'Guardian',
     statFactors: {
-        maxLife: 5,
+        maxLife: BOSS_MAX_LIFE_FACTOR,
         damage: 1,
     },
     initialParams: {

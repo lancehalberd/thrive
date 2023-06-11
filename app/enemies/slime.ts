@@ -1,4 +1,4 @@
-import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, FRAME_LENGTH } from 'app/constants';
+import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BOSS_MAX_LIFE_FACTOR, FRAME_LENGTH } from 'app/constants';
 import { getInsightEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
 import { createEnemy, shootBulletAtHero, shootBulletCircle } from 'app/utils/enemy';
@@ -110,7 +110,7 @@ export const megaSlime: EnemyDefinition = {
     name: 'Mega Slime',
     statFactors: {
         attacksPerSecond: 0.5,
-        maxLife: 4.8,
+        maxLife: BOSS_MAX_LIFE_FACTOR,
         damage: 1.5,
         armor: 1,
     },

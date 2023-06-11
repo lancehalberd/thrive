@@ -1,4 +1,4 @@
-import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, FRAME_LENGTH } from 'app/constants';
+import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BOSS_MAX_LIFE_FACTOR, FRAME_LENGTH } from 'app/constants';
 import { getThiefEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
 import {
@@ -24,7 +24,7 @@ interface SpiderParams {
 export const spider: EnemyDefinition<SpiderParams> = {
     name: 'Spider',
     statFactors: {
-        maxLife: 5,
+        maxLife: BOSS_MAX_LIFE_FACTOR,
         damage: 1,
     },
     initialParams: {

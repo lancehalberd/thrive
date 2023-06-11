@@ -1,4 +1,4 @@
-import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS } from 'app/constants';
+import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BOSS_MAX_LIFE_FACTOR } from 'app/constants';
 import { getPowerEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
 import { turnTowardsTarget, shootBulletArc, shootBulletAtHero, shootCirclingBullet } from 'app/utils/enemy';
@@ -8,7 +8,7 @@ export const clam: EnemyDefinition = {
     name: 'Clam',
     statFactors: {
         attacksPerSecond: 2,
-        maxLife: 2,
+        maxLife: BOSS_MAX_LIFE_FACTOR,
         armor: 5,
     },
     initialParams: {},
