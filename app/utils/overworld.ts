@@ -137,38 +137,84 @@ function getCellLevel(randomizer: typeof SRandom, cellY: number): number {
     return randomizer.range(baseLevel + 3, baseLevel + 5);
 }
 
-function getBiome(cellY: number) {
-    if (cellY === 0) return 'Beach';
-    if (cellY === 1) return 'Desert';
+
+
+function getBiome(cellY: number): Biome {
+    if (cellY === 0) {
+        return {
+            name: 'Beach',
+            color: '#FC8',
+            centerColor: '#FDB',
+            topEdgeColor: '#4CF',
+            bottomEdgeColor: '#28F',
+        };
+    }
+    if (cellY === 1) {
+        return {
+            name: 'Desert',
+            color: '#FE4',
+            centerColor: '#FF8',
+            topEdgeColor: '#DC2',
+            bottomEdgeColor: '#BA0',
+        };
+    }
     if (cellY <= 3) {
-        return 'Field';
+        return {
+            name: 'Field',
+            color: '#4E8',
+            centerColor: '#8FA',
+            topEdgeColor: '#640',
+            bottomEdgeColor: '#320',
+        };
     }
     if (cellY <= 5) { // Level 10
-        return 'Forest';
+        return {
+            name: 'Forest',
+            color: '#080',
+            centerColor: '#0B4',
+            topEdgeColor: '#640',
+            bottomEdgeColor: '#320',
+        };
     }
     if (cellY <= 7) {
-        return 'Swamp';
+        return {
+            name: 'Swamp',
+        };
     }
     if (cellY <= 9) { // Level 30
-        return 'Foothills';
+        return {
+            name: 'Foothills',
+        };
     }
     if (cellY <= 11) {
-        return 'Mountains';
+        return {
+            name: 'Mountains',
+        };
     }
     if (cellY <= 13) { // Level 50
-        return 'Frozen Peaks';
+        return {
+            name: 'Frozen Peaks',
+        };
     }
     if (cellY <= 15) { // Level 60
-        return 'Descent';
+        return {
+            name: 'Descent',
+        };
     }
     if (cellY <= 17) { // Level 70
-        return 'Badlands';
+        return {
+            name: 'Badlands',
+        };
     }
     if (cellY <= 19) { // Level 80
-        return 'Inferno';
+        return {
+            name: 'Inferno',
+        };
     }
     // Level 90
-    return 'Abyss'
+    return {
+        name: 'Abyss',
+    };
 }
 
 
@@ -264,14 +310,14 @@ export function createWorldCell(worldSeed: number, {x, y}: Point): WorldCell {
     const level = getCellLevel(cellRandomizer, y);
 
     const cellRadius = CELL_SIZE / 2;
-    const name = getBiome(y);
+    const biome = getBiome(y);
 
     const c = {x: CELL_SIZE * (x + 0.5), y: -CELL_SIZE * (y + 0.5)};
 
     let discRandomizer = cellRandomizer.addSeed(79);
     discs.push(createDisc({
         level,
-        name,
+        ...biome,
         x: c.x + (discRandomizer.generateAndMutate() - 0.5) * CELL_SIZE / 10,
         y: c.y + (discRandomizer.generateAndMutate() - 0.5) * CELL_SIZE / 10,
         radius: discRandomizer.element(platformSizes),
@@ -280,7 +326,7 @@ export function createWorldCell(worldSeed: number, {x, y}: Point): WorldCell {
     const goalDiscs: Disc[] = [];
     let westDisc = createDisc({
         level,
-        name,
+        ...biome,
         x: c.x - cellRadius,
         y: c.y,
         radius: 400,
@@ -288,7 +334,7 @@ export function createWorldCell(worldSeed: number, {x, y}: Point): WorldCell {
     goalDiscs.push(westDisc);
     goalDiscs.push(createDisc({
         level,
-        name,
+        ...biome,
         x: CELL_SIZE,
         y: c.y,
         radius: 400,
@@ -297,7 +343,7 @@ export function createWorldCell(worldSeed: number, {x, y}: Point): WorldCell {
     if (hasNorthExit) {
         goalDiscs.push(northDisc = createDisc({
             level,
-            name,
+            ...biome,
             x: c.x,
             y: c.y - cellRadius,
             radius: 400,
@@ -306,7 +352,7 @@ export function createWorldCell(worldSeed: number, {x, y}: Point): WorldCell {
     if (hasSouthExit) {
         goalDiscs.push(createDisc({
             level,
-            name,
+            ...biome,
             x: c.x,
             y: CELL_SIZE,
             radius: 400,
@@ -316,7 +362,7 @@ export function createWorldCell(worldSeed: number, {x, y}: Point): WorldCell {
         const theta = 2 * Math.PI * discRandomizer.generateAndMutate();
         const newDisc: Disc = createDisc({
             level,
-            name,
+            ...biome,
             x: c.x + cellRadius * Math.cos(theta),
             y: c.y + cellRadius * Math.sin(theta),
             radius: discRandomizer.element(platformSizes),

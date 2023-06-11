@@ -29,7 +29,7 @@ export function renderMinimap(state: GameState): void {
         mapContext.scale(1 / mapScale, 1 / mapScale);
         mapContext.translate(-state.hero.x, -state.hero.y);
         for (const disc of state.visibleDiscs) {
-            mapContext.fillStyle = disc.boss ? '#FBB' : '#DDD';
+            mapContext.fillStyle = disc.boss ? '#FBB' : (disc.color ?? '#DDD');
             mapContext.beginPath();
             mapContext.arc(disc.x, disc.y, disc.radius, 0, 2 * Math.PI);
             mapContext.fill();
@@ -421,7 +421,7 @@ function renderFieldText(context: CanvasRenderingContext2D, fieldText: FieldText
 
 const discDepth = 40;
 function renderDiscEdge1(context: CanvasRenderingContext2D, disc: Disc): void {
-    context.fillStyle = '#888';
+    context.fillStyle = disc.bottomEdgeColor ?? '#888';
     //context.fillRect(disc.x - disc.radius, disc.y, disc.radius * 2, discDepth);
     context.beginPath();
     //context.moveTo(disc.x - disc.radius, disc.y);
@@ -432,7 +432,7 @@ function renderDiscEdge1(context: CanvasRenderingContext2D, disc: Disc): void {
 }
 
 function renderDiscEdge2(context: CanvasRenderingContext2D, disc: Disc): void {
-    context.fillStyle = '#BBB';
+    context.fillStyle = disc.topEdgeColor ??  '#BBB';
     //context.fillRect(disc.x - disc.radius, disc.y, disc.radius * 2, discDepth / 2);
     context.beginPath();
     //context.moveTo(disc.x - disc.radius, disc.y);
@@ -443,7 +443,7 @@ function renderDiscEdge2(context: CanvasRenderingContext2D, disc: Disc): void {
 }
 
 function renderDisc(context: CanvasRenderingContext2D, disc: Disc): void {
-    context.fillStyle = disc.boss ? '#FBB' : '#DDD';
+    context.fillStyle = disc.boss ? '#FBB' : disc.color ?? '#DDD';
     context.beginPath();
     context.arc(disc.x, disc.y, disc.radius, 0, 2 * Math.PI);
     context.fill();
@@ -451,7 +451,7 @@ function renderDisc(context: CanvasRenderingContext2D, disc: Disc): void {
 
 
 function renderDiscCenter(context: CanvasRenderingContext2D, disc: Disc): void {
-    context.fillStyle = disc.boss ? '#FCC' : '#FFF';
+    context.fillStyle = disc.boss ? '#FCC' : disc.centerColor ?? '#FFF';
     context.beginPath();
     context.arc(disc.x, disc.y, disc.radius / 2, 0, 2 * Math.PI);
     context.fill();
