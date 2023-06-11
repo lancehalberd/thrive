@@ -127,14 +127,21 @@ export function createTreeDungeon(seed: number, radius: number, level: number): 
 }
 
 
+const reefBiome: Biome = {
+    name: 'Reef',
+    color: '#28F',
+    centerColor: '#4CF',
+    topEdgeColor: '#12D',
+    bottomEdgeColor: '#00A',
+}
+
 export function createReefDungeon(seed: number, radius: number, level: number): Dungeon {
-    const name = 'Reef';
     const discs: Disc[] = [];
     const entrance: Entrance = {x: 0, y: radius, radius: 16};
     const dungeonRandomizer = SRandom.seed(seed);
     const startingPlatform: Disc = createDisc({
         level,
-        name,
+        ...reefBiome,
         x: entrance.x,
         y: entrance.y,
         radius: 400,
@@ -147,7 +154,7 @@ export function createReefDungeon(seed: number, radius: number, level: number): 
         const theta = 5 * Math.PI / 4 + Math.PI * dungeonRandomizer.generateAndMutate() / 2;
         const newDisc: Disc = createDisc({
             level,
-            name,
+            ...reefBiome,
             x: radius * Math.cos(theta),
             y: radius * Math.sin(theta),
             radius: dungeonRandomizer.element(platformSizes),
@@ -185,7 +192,7 @@ export function createReefDungeon(seed: number, radius: number, level: number): 
     }
     linkDiscs(discs);
     return {
-        name,
+        name: reefBiome.name,
         level,
         discs,
         entrance,

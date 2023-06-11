@@ -29,10 +29,14 @@ export function renderMinimap(state: GameState): void {
         mapContext.scale(1 / mapScale, 1 / mapScale);
         mapContext.translate(-state.hero.x, -state.hero.y);
         for (const disc of state.visibleDiscs) {
-            mapContext.fillStyle = disc.boss ? '#FBB' : '#DDD';
+           /* mapContext.fillStyle = disc.boss ? '#FBB' : (disc.color ?? '#DDD');
             mapContext.beginPath();
             mapContext.arc(disc.x, disc.y, disc.radius, 0, 2 * Math.PI);
-            mapContext.fill();
+            mapContext.fill();*/
+            fillCircle(mapContext, disc, disc.boss ? '#FBB' : (disc.color ?? '#DDD'));
+        }
+        for (const hole of state.holes) {
+            fillCircle(mapContext, hole, 'black');
         }
         CELL_SIZE;
         // Debug code to draw world cell boundaries.
@@ -71,6 +75,38 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
         for (const disc of bossDiscs) {
             renderDiscCenter(context, disc);
         }
+
+        for (const hole of state.holes) {
+            fillCircle(context, hole, 'black');
+            let theta = Math.atan2(discDepth / 4, Math.sqrt(hole.radius**2 - discDepth ** 2 / 16));
+            context.fillStyle = '#BBB'; //disc.topEdgeColor ?? '#BBB';
+            context.beginPath();
+            context.arc(hole.x, hole.y - 2, hole.radius, 0, -Math.PI, true);
+            //context.lineTo(hole.x - hole.radius, hole.y + discDepth / 2);
+//125 0.1606906529519106
+// 75 0.26993279583340346
+// 100 0.2013579207903308
+            //console.log(hole.radius, theta);
+            context.arc(hole.x, hole.y + discDepth / 2, hole.radius, -Math.PI + theta, - theta);
+            context.fill();
+
+            context.beginPath();
+            context.fillStyle = '#888'; // disc.bottomEdgeColor ?? '#888';
+            context.arc(hole.x, hole.y + discDepth / 2 - 2, hole.radius, -theta, -Math.PI + theta, true);
+            theta = Math.atan2(discDepth / 2, Math.sqrt(hole.radius**2 - discDepth ** 2 / 4));
+            //context.lineTo(hole.x - hole.radius, hole.y + discDepth);
+            context.arc(hole.x, hole.y + discDepth, hole.radius, -Math.PI + theta, - theta);
+            context.fill();
+            /*context.save();
+                context.globalAlpha *= 0.4;
+                context.fillStyle = 'black'
+                context.beginPath();
+                context.arc(hole.x, hole.y, hole.radius, -Math.PI / 2, Math.PI / 6, true);
+                context.fill();
+            context.restore();*/
+        }
+
+
         for (const portal of state.portals) {
             renderPortal(context, state, portal);
         }
@@ -354,6 +390,11 @@ function renderEnemyBullet(context: CanvasRenderingContext2D, bullet: Bullet): v
 }
 function renderHeroBullet(context: CanvasRenderingContext2D, bullet: Bullet): void {
     fillCircle(context, bullet, 'green');
+    context.beginPath();
+    context.lineWidth = 1;
+    context.strokeStyle = 'white';
+    context.arc(bullet.x, bullet.y, bullet.radius, 0, 2 * Math.PI);
+    context.stroke();
 }
 function renderHero(context: CanvasRenderingContext2D, state: GameState, hero: Hero): void {
     if (hero.attackChargeDuration > 0 && hero.attackChargeLevel >= 2) {
@@ -380,6 +421,28 @@ function renderHero(context: CanvasRenderingContext2D, state: GameState, hero: H
             context.globalAlpha *= (1 - fadeAmount);
         }
         fillCircle(context, hero, 'blue');
+        context.beginPath();
+        context.strokeStyle = 'lightblue';
+        context.lineWidth = 3;
+        if (hero.equipment.armor.armorType === 'heavyArmor') {
+            context.lineWidth = 5;
+        } else if (hero.equipment.armor.armorType === 'lightArmor') {
+            context.lineWidth = 1;
+        }
+        context.arc(hero.x, hero.y, hero.radius * 0.8, 0, 2 * Math.PI);
+        context.stroke();
+        for (const shot of hero.equipment.weapon.shots) {
+            const bullet = shot.generateBullet(state, hero, hero.equipment.weapon);
+            bullet.x += bullet.vx / 10;
+            bullet.y += bullet.vy / 10;
+            //bullet.radius /= 2;
+            context.beginPath();
+            context.lineWidth = 1;
+            context.strokeStyle = 'white';
+            context.arc(bullet.x, bullet.y, bullet.radius, 0, 2 * Math.PI);
+            context.stroke();
+            //fillCircle(context, bullet, 'black');
+        }
     context.restore();
 
     // Debug code to render charge level on hero
@@ -421,7 +484,7 @@ function renderFieldText(context: CanvasRenderingContext2D, fieldText: FieldText
 
 const discDepth = 40;
 function renderDiscEdge1(context: CanvasRenderingContext2D, disc: Disc): void {
-    context.fillStyle = '#888';
+    context.fillStyle = disc.bottomEdgeColor ?? '#888';
     //context.fillRect(disc.x - disc.radius, disc.y, disc.radius * 2, discDepth);
     context.beginPath();
     //context.moveTo(disc.x - disc.radius, disc.y);
@@ -432,7 +495,7 @@ function renderDiscEdge1(context: CanvasRenderingContext2D, disc: Disc): void {
 }
 
 function renderDiscEdge2(context: CanvasRenderingContext2D, disc: Disc): void {
-    context.fillStyle = '#BBB';
+    context.fillStyle = disc.topEdgeColor ??  '#BBB';
     //context.fillRect(disc.x - disc.radius, disc.y, disc.radius * 2, discDepth / 2);
     context.beginPath();
     //context.moveTo(disc.x - disc.radius, disc.y);
@@ -443,7 +506,7 @@ function renderDiscEdge2(context: CanvasRenderingContext2D, disc: Disc): void {
 }
 
 function renderDisc(context: CanvasRenderingContext2D, disc: Disc): void {
-    context.fillStyle = disc.boss ? '#FBB' : '#DDD';
+    context.fillStyle = disc.boss ? '#FBB' : disc.color ?? '#DDD';
     context.beginPath();
     context.arc(disc.x, disc.y, disc.radius, 0, 2 * Math.PI);
     context.fill();
@@ -451,7 +514,7 @@ function renderDisc(context: CanvasRenderingContext2D, disc: Disc): void {
 
 
 function renderDiscCenter(context: CanvasRenderingContext2D, disc: Disc): void {
-    context.fillStyle = disc.boss ? '#FCC' : '#FFF';
+    context.fillStyle = disc.boss ? '#FCC' : disc.centerColor ?? '#FFF';
     context.beginPath();
     context.arc(disc.x, disc.y, disc.radius / 2, 0, 2 * Math.PI);
     context.fill();

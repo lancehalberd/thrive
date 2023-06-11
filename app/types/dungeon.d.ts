@@ -8,6 +8,19 @@ interface Disc extends Geometry {
     loot: Loot[]
     boss?: Enemy
     update?: (state: GameState, disc: Disc) => void
+    color?: string
+    centerColor?: string
+    topEdgeColor?: string
+    bottomEdgeColor?: string
+    holes: Circle[]
+}
+
+interface Biome {
+    name: string
+    color?: string
+    centerColor?: string
+    topEdgeColor?: string
+    bottomEdgeColor?: string
 }
 
 interface Entrance extends Geometry {

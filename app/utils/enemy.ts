@@ -65,7 +65,7 @@ export function getEnemyColor(level: number): string {
         return 'orange';
     }
     if (level < 20) {
-        return 'red';
+        return '#262';
     }
     if (level < 30) {
         return 'purple';
@@ -199,8 +199,17 @@ export function shootBulletCircle(state: GameState, enemy: Enemy, theta: number,
     }
 }
 
+// This is used to check if the enemy hit a wall when trying to move somewhere.
 export function isEnemyOffDisc(state: GameState, enemy: Enemy): boolean {
-    return enemy.disc && getTargetVector(enemy, enemy.disc).distance2 >= enemy.disc.radius ** 2;
+    if (getTargetVector(enemy, enemy.disc).distance2 >= enemy.disc.radius * enemy.disc.radius) {
+        return true;
+    }
+    for (const hole of state.holes) {
+        if (getTargetVector(enemy, hole).distance2 < hole.radius * hole.radius) {
+            return true;
+        }
+    }
+    return false;
 }
 
 export function shootBulletAtHero(state: GameState, enemy: Enemy, speed: number, stats: Partial<Bullet> = {}) {

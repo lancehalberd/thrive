@@ -15,14 +15,6 @@ Generate BGM using AudioDriver
         Boss Music
         Victory Fanfare
 
-Add weapon graphics to player
-    Just some circles indicating number+direction of shots.
-        Can be dynamic and change when charged.
-
-Move item text down to look centered
-Add hollow white circles on corners for each open enchantment
-Add filled white circles on corners for each used enchantment
-
 Add game over screen
     Store isGameOver on state and do a render of transparent black without clearing the screen and then
         Game Over text after 1000ms

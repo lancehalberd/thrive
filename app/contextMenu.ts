@@ -6,6 +6,7 @@ import { KEY, isKeyboardKeyDown } from 'app/utils/userInput';
 import { mainCanvas } from 'app/utils/canvas';
 import { getElementRect, tagElement } from 'app/utils/dom';
 import { getWeaponProficiency, refillAllPotions, setDerivedHeroStats } from 'app/utils/hero';
+import { clearNearbyEnemies, updateActiveCells} from 'app/utils/overworld';
 import { getMousePosition } from 'app/utils/mouse';
 import { weaponTypes } from 'app/weapons';
 
@@ -132,6 +133,8 @@ export function getContextMenu(state: GameState): MenuOption[] {
                             state.hero.y = state.hero.overworldY;
                         }
                         setDerivedHeroStats(state);
+                        updateActiveCells(state);
+                        clearNearbyEnemies(state);
                     }
                 }));
             },

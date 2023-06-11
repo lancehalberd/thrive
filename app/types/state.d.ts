@@ -48,6 +48,8 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     chargeDamage: number
     armorShredEffect: number
     potionEffect: number
+    dropChance: number
+    dropLevel: number
     vx: number
     vy: number
 }
@@ -113,6 +115,7 @@ interface GameState {
     enemies: Enemy[]
     loot: Loot[]
     activeLoot?: Loot
+    holes: Circle[];
     portals: Portal[];
     enemyBullets: Bullet[]
     fieldText: FieldText[]

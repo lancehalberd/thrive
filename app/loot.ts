@@ -14,11 +14,17 @@ import Random  from 'app/utils/Random';
 
 
 export function checkToDropBasicLoot(state: GameState, source: Enemy): void {
-    if (Math.random() < (source.definition.dropChance ?? BASE_DROP_CHANCE)) {
+    if (Math.random() < (source.definition.dropChance ?? BASE_DROP_CHANCE) + state.hero.dropChance) {
         let targetLevel = source.level;
-        while (Math.random() < 0.1) {
-            targetLevel = Math.min(100, targetLevel + 1);
+        let bonusLevelChance = state.hero.dropChance;
+        while (Math.random() < bonusLevelChance) {
+            targetLevel++;
+            bonusLevelChance--;
         }
+        while (Math.random() < 0.1) {
+            targetLevel++;
+        }
+        targetLevel = Math.min(100, targetLevel);
         if (Math.random() < 0.25) {
             dropArmorLoot(state, source, targetLevel);
         } else {

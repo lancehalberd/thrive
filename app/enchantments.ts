@@ -13,6 +13,8 @@ export const enchantmentStatLabels: {[key in EnchantmentType]: string} = {
     'critChance': 'Critical Strike Chance',
     'critDamage': 'Critical Strike Damage',
     'damage': 'Damage',
+    'dropChance': 'Item Drop Chance',
+    'dropLevel': 'Item Drop Level',
     'speed': 'Movement Speed',
     'life': 'Life',
     'armor': 'Armor',
@@ -23,6 +25,8 @@ export const enchantmentStatScale: {[key in EnchantmentType]: number} = {
     'critChance': 0.2,
     'critDamage': 1.0,
     'damage': 1.0,
+    'dropChance': 0.1,
+    'dropLevel': 2,
     'speed': 0.3,
     'life': 0.5,
     'armor': 0.5,
@@ -72,6 +76,12 @@ export function applyEnchantmentToStats(state: GameState, enchantment: ItemEncha
         case 'critDamage':
             state.hero.critDamage += effect;
             return;
+        case 'dropChance':
+            state.hero.dropChance += effect;
+            return;
+        case 'dropLevel':
+            state.hero.dropLevel += effect;
+            return;
         case 'life':
             state.hero.maxLife = Math.round(state.hero.maxLife * (1 + effect));
             return;
@@ -96,7 +106,11 @@ export function getEnchantmentBonusText(enchantmentType: EnchantmentType, value:
     if (value2) {
         text += ' to ' + getEnchantmentPercentValue(enchantmentType, value2);
     }
-    text += ' increased ' + enchantmentStatLabels[enchantmentType];
+    if (enchantmentType === 'dropLevel') {
+        text += ' chance to drop higher level items';
+    } else {
+        text += ' increased ' + enchantmentStatLabels[enchantmentType];
+    }
     return text;
 }
 
@@ -164,6 +178,17 @@ export function getInsightEnchantment(level: number): Enchantment {
         level,
         weaponEnchantmentType: 'critChance',
         armorEnchantmentType: 'potionEffect',
+        strength: getEnchantmentStrength(level),
+    };
+}
+
+export function getThiefEnchantment(level: number): Enchantment {
+    return {
+        type: 'enchantment',
+        name: 'Thief',
+        level,
+        weaponEnchantmentType: 'dropLevel',
+        armorEnchantmentType: 'dropChance',
         strength: getEnchantmentStrength(level),
     };
 }
