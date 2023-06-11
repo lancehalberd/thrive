@@ -385,6 +385,28 @@ function renderHero(context: CanvasRenderingContext2D, state: GameState, hero: H
             context.globalAlpha *= (1 - fadeAmount);
         }
         fillCircle(context, hero, 'blue');
+        context.beginPath();
+        context.strokeStyle = 'lightblue';
+        context.lineWidth = 3;
+        if (hero.equipment.armor.armorType === 'heavyArmor') {
+            context.lineWidth = 5;
+        } else if (hero.equipment.armor.armorType === 'lightArmor') {
+            context.lineWidth = 1;
+        }
+        context.arc(hero.x, hero.y, hero.radius * 0.8, 0, 2 * Math.PI);
+        context.stroke();
+        for (const shot of hero.equipment.weapon.shots) {
+            const bullet = shot.generateBullet(state, hero, hero.equipment.weapon);
+            bullet.x += bullet.vx / 10;
+            bullet.y += bullet.vy / 10;
+            //bullet.radius /= 2;
+            context.beginPath();
+            context.lineWidth = 1;
+            context.strokeStyle = 'white';
+            context.arc(bullet.x, bullet.y, bullet.radius, 0, 2 * Math.PI);
+            context.stroke();
+            //fillCircle(context, bullet, 'black');
+        }
     context.restore();
 
     // Debug code to render charge level on hero
