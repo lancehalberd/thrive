@@ -13,7 +13,7 @@ import Random from 'app/utils/Random';
 import { updateReturnBullet } from 'app/weapons';
 
 const attackModes = <const>['novas','pinwheels','petals'];
-type AttackMode = typeof attackModes[number];
+type AttackMode = (typeof attackModes[number])|'choose';
 
 interface SpiderParams {
     attackTime: number
@@ -29,7 +29,7 @@ export const spider: EnemyDefinition<SpiderParams> = {
     },
     initialParams: {
         attackTime: 0,
-        attackMode: 'pinwheels',
+        attackMode: 'choose',
         attackSchedule: [],
         attackIntensity: 0,
     },
@@ -211,6 +211,57 @@ export const babySpiderNova: EnemyDefinition<BabySpiderNovaParams> = {
             if (enemy.modeTime >= 3000) {
                 enemy.setMode('choose');
             }
+        }
+    },
+    render: renderNormalizedEnemy((context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => renderNormalizedSpider(context, enemy, 2)),
+};
+export const overworldSpiderNova: EnemyDefinition<BabySpiderNovaParams> = {
+    name: 'OverworldSpiderNova',
+    statFactors: {
+        speed: 1.5,
+    },
+    initialParams: {targetX: 0, targetY: 0},
+    radius: 24,
+    portalChance: 0.05,
+    portalDungeonType: 'spiderDen',
+    update(state: GameState, enemy: Enemy<BabySpiderNovaParams>): void {
+        if (enemy.mode === 'choose' && enemy.modeTime >= 400) {
+            const aggroRadius = 400;
+            const {distance2} = getTargetVector(enemy, state.hero);
+            if (distance2 > aggroRadius * aggroRadius) {
+                return;
+            }
+            enemy.params.targetX = state.hero.x + state.hero.vx * 500 / 1000 + 24 * (0.5 - Math.random());
+            enemy.params.targetY = state.hero.y + state.hero.vy * 500 / 1000 + 24 * (0.5 - Math.random());
+            enemy.setMode('dash');
+            return;
+        }
+        if (enemy.mode === 'dash') {
+            if (moveEnemyToTarget(state, enemy, {x: enemy.params.targetX, y: enemy.params.targetY})) {
+                enemy.setMode('attack');
+            }
+            if (isEnemyOffDisc(state, enemy) && enemy.modeTime >= 1000) {
+                enemy.setMode('attack');
+            }
+            return;
+        }
+        if (enemy.mode === 'attack') {
+            // Normal directed shots at the player
+            if (enemy.attackCooldown <= state.fieldTime) {
+                enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
+                shootBulletAtHero(state, enemy, 100);
+            }
+            // Periodic novas.
+            const spacing = 600;
+            if (enemy.modeTime % spacing === 0) {
+                const count = 7;
+                const parity = [0, 2, 1, 3][(enemy.modeTime / spacing) % 4];
+                shootBulletCircle(state, enemy, parity * 2 * Math.PI / count / 4, count, 100, {expirationTime: state.fieldTime + 1000});
+            }
+            if (enemy.modeTime >= 2000) {
+                enemy.setMode('choose');
+            }
+            return;
         }
     },
     render: renderNormalizedEnemy((context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => renderNormalizedSpider(context, enemy, 2)),

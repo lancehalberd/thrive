@@ -35,7 +35,7 @@ function createBridge(discs: Disc[], source: Disc, target: Disc, randomizer: typ
     const bridgeDiscs = generateConnectingDiscs(source, target, randomizer, smallPlatformSizes);
     for (const disc of bridgeDiscs) {
         if (randomizer.generateAndMutate() < 0.05) {
-            createEnemy(disc.x, disc.y, chest, disc.level, disc);
+            createEnemy(disc.x, disc.y, chest, disc.level + 1, disc);
         }
         if (randomizer.generateAndMutate() < 0.2) {
             createEnemy(disc.x, disc.y - 60, babySpiderBomber, disc.level, disc);

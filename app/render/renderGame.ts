@@ -354,6 +354,11 @@ function renderEnemyBullet(context: CanvasRenderingContext2D, bullet: Bullet): v
 }
 function renderHeroBullet(context: CanvasRenderingContext2D, bullet: Bullet): void {
     fillCircle(context, bullet, 'green');
+    context.beginPath();
+    context.lineWidth = 1;
+    context.strokeStyle = 'white';
+    context.arc(bullet.x, bullet.y, bullet.radius, 0, 2 * Math.PI);
+    context.stroke();
 }
 function renderHero(context: CanvasRenderingContext2D, state: GameState, hero: Hero): void {
     if (hero.attackChargeDuration > 0 && hero.attackChargeLevel >= 2) {

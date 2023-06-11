@@ -1,4 +1,5 @@
 import { CELL_SIZE } from 'app/constants';
+import { overworldSpiderNova } from 'app/bosses/spider';
 import { bat } from 'app/enemies/bat';
 import { chaser } from 'app/enemies/chaser';
 import { chest } from 'app/enemies/chest';
@@ -139,7 +140,13 @@ function getCellLevel(randomizer: typeof SRandom, cellY: number): number {
 
 
 
-function getBiome(cellY: number): Biome {
+function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
+    // There is a 10% chance to spawn lower tier biomes at higher tiers.
+    if (cellY >= 4 && randomizer.generateAndMutate() < 0.1) {
+        return getBiome(cellY - 4, randomizer);
+    } else if (cellY >= 2 && cellY < 4 && randomizer.generateAndMutate() < 0.1) {
+        return getBiome(cellY - 2, randomizer);
+    }
     if (cellY === 0) {
         return {
             name: 'Beach',
@@ -219,7 +226,7 @@ function getBiome(cellY: number): Biome {
 
 
 function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void {
-    if (disc.level === 1) {
+    if (disc.name === 'Beach') {
         if (randomizer.generateAndMutate() < 0.3) {
             createEnemy(disc.x, disc.y, clam, disc.level, disc);
         } else if (randomizer.generateAndMutate() < 0.3) {
@@ -237,7 +244,7 @@ function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void
                 createEnemy(disc.x, disc.y - 100, squid, disc.level, disc);
             }
         }
-    } else if (disc.level === 2) {
+    } else if (disc.name === 'Desert') {
         if (randomizer.generateAndMutate() < 0.3) {
             createEnemy(disc.x, disc.y, turret, disc.level, disc);
         } else if (randomizer.generateAndMutate() < 0.1) {
@@ -255,25 +262,43 @@ function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void
         if (randomizer.generateAndMutate() < 0.3) {
             createEnemy(disc.x - 100, disc.y, chaser, disc.level, disc);
         }
-    } else if (disc.level === 3) {
+    } else if (disc.name === 'Field') {
         if (randomizer.generateAndMutate() < 0.3) {
             createEnemy(disc.x, disc.y, urchin, disc.level, disc);
         } else if (randomizer.generateAndMutate() < 0.1) {
             createEnemy(disc.x, disc.y, chest, disc.level + 1, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(disc.x, disc.y - 100, bat, disc.level, disc);
+            createEnemy(disc.x, disc.y - 100, overworldSpiderNova, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(disc.x, disc.y + 100, crab, disc.level, disc);
+            createEnemy(disc.x, disc.y + 100, chaser, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(disc.x + 100, disc.y, squid, disc.level, disc);
+            createEnemy(disc.x + 100, disc.y, bat, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(disc.x - 100, disc.y, slime, disc.level, disc);
+        }
+    } else if (disc.name === 'Forest') {
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(disc.x, disc.y, urchin, disc.level, disc);
+        } else if (randomizer.generateAndMutate() < 0.1) {
+            createEnemy(disc.x, disc.y, chest, disc.level + 1, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(disc.x, disc.y - 100, overworldSpiderNova, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(disc.x, disc.y + 100, overworldSpiderNova, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(disc.x + 100, disc.y, chaser, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
             createEnemy(disc.x - 100, disc.y, chaser, disc.level, disc);
         }
-    } else {
+    }  else {
         if (randomizer.generateAndMutate() < 0.2) {
             createEnemy(disc.x, disc.y, lord, disc.level, disc);
         } else if (randomizer.generateAndMutate() < 0.2) {
@@ -310,7 +335,7 @@ export function createWorldCell(worldSeed: number, {x, y}: Point): WorldCell {
     const level = getCellLevel(cellRandomizer, y);
 
     const cellRadius = CELL_SIZE / 2;
-    const biome = getBiome(y);
+    const biome = getBiome(y, cellRandomizer);
 
     const c = {x: CELL_SIZE * (x + 0.5), y: -CELL_SIZE * (y + 0.5)};
 

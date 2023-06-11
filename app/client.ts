@@ -496,7 +496,16 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
 }
 
 function updateEnemyBullets(state: GameState): void {
-    const activeBullets = state.enemyBullets.filter(b => b.expirationTime >= state.fieldTime);
+    const activeBullets = [];
+    for (const bullet of state.enemyBullets) {
+        if (bullet.expirationTime >= state.fieldTime) {
+            activeBullets.push(bullet);
+        } else {
+            if (bullet.onDeath) {
+                bullet.onDeath(state, bullet);
+            }
+        }
+    }
     state.enemyBullets = [];
     for (const bullet of activeBullets) {
         bullet.time += FRAME_LENGTH;
