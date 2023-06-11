@@ -92,6 +92,7 @@ function getInitialState(): GameState {
         enemies: [],
         loot: [],
         portals: [],
+        holes: [],
         enemyBullets: [],
         fieldText: [],
         activeCells: [],
@@ -144,7 +145,7 @@ function update(): void {
         setDerivedHeroStats(state);
         clearNearbyEnemies(state);
         // Set testDungeon/testBoss here to load the game in a dungeon and boss room.
-        const testDungeon: DungeonType|'' = '';
+        const testDungeon: DungeonType|'' = 'spiderDen';
         if (testDungeon) {
             const dungeon = createDungeon(testDungeon, state.hero.level);
             startDungeon(state, dungeon);
@@ -338,6 +339,7 @@ function updateHero(state: GameState): void {
         assignToDisc(state.hero, state.activeDiscs);
     }
     constrainToDisc(state.hero, state.hero.disc);
+    constrainFromHoles(state.hero, state.holes);
 
     for (const portal of state.portals) {
         const isActive = !state.activeLoot && doCirclesIntersect(state.hero, portal);
@@ -387,6 +389,7 @@ function updateEnemies(state: GameState): void {
             assignToDisc(enemy, state.activeDiscs);
         }
         constrainToDisc(enemy, enemy.disc);
+        constrainFromHoles(enemy, state.holes);
     }
 }
 
@@ -542,7 +545,17 @@ function constrainToDisc(geometry: Geometry, disc?: Disc) {
         geometry.x = disc.x + disc.radius * dx / m;
         geometry.y = disc.y + disc.radius * dy / m;
     }
-
+}
+function constrainFromHoles(geometry: Geometry, holes: Circle[]) {
+    for (const hole of holes) {
+        const dx =  geometry.x - hole.x, dy = geometry.y - hole.y;
+        const distance2 = dx * dx + dy * dy;
+        if (distance2 < hole.radius * hole.radius) {
+            const m = Math.sqrt(distance2);
+            geometry.x = hole.x + hole.radius * dx / m;
+            geometry.y = hole.y + hole.radius * dy / m;
+        }
+    }
 }
 
 

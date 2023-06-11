@@ -29,10 +29,14 @@ export function renderMinimap(state: GameState): void {
         mapContext.scale(1 / mapScale, 1 / mapScale);
         mapContext.translate(-state.hero.x, -state.hero.y);
         for (const disc of state.visibleDiscs) {
-            mapContext.fillStyle = disc.boss ? '#FBB' : (disc.color ?? '#DDD');
+           /* mapContext.fillStyle = disc.boss ? '#FBB' : (disc.color ?? '#DDD');
             mapContext.beginPath();
             mapContext.arc(disc.x, disc.y, disc.radius, 0, 2 * Math.PI);
-            mapContext.fill();
+            mapContext.fill();*/
+            fillCircle(mapContext, disc, disc.boss ? '#FBB' : (disc.color ?? '#DDD'));
+        }
+        for (const hole of state.holes) {
+            fillCircle(mapContext, hole, 'black');
         }
         CELL_SIZE;
         // Debug code to draw world cell boundaries.
@@ -71,6 +75,38 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
         for (const disc of bossDiscs) {
             renderDiscCenter(context, disc);
         }
+
+        for (const hole of state.holes) {
+            fillCircle(context, hole, 'black');
+            let theta = Math.atan2(discDepth / 4, Math.sqrt(hole.radius**2 - discDepth ** 2 / 16));
+            context.fillStyle = '#BBB'; //disc.topEdgeColor ?? '#BBB';
+            context.beginPath();
+            context.arc(hole.x, hole.y - 2, hole.radius, 0, -Math.PI, true);
+            //context.lineTo(hole.x - hole.radius, hole.y + discDepth / 2);
+//125 0.1606906529519106
+// 75 0.26993279583340346
+// 100 0.2013579207903308
+            //console.log(hole.radius, theta);
+            context.arc(hole.x, hole.y + discDepth / 2, hole.radius, -Math.PI + theta, - theta);
+            context.fill();
+
+            context.beginPath();
+            context.fillStyle = '#888'; // disc.bottomEdgeColor ?? '#888';
+            context.arc(hole.x, hole.y + discDepth / 2 - 2, hole.radius, -theta, -Math.PI + theta, true);
+            theta = Math.atan2(discDepth / 2, Math.sqrt(hole.radius**2 - discDepth ** 2 / 4));
+            //context.lineTo(hole.x - hole.radius, hole.y + discDepth);
+            context.arc(hole.x, hole.y + discDepth, hole.radius, -Math.PI + theta, - theta);
+            context.fill();
+            /*context.save();
+                context.globalAlpha *= 0.4;
+                context.fillStyle = 'black'
+                context.beginPath();
+                context.arc(hole.x, hole.y, hole.radius, -Math.PI / 2, Math.PI / 6, true);
+                context.fill();
+            context.restore();*/
+        }
+
+
         for (const portal of state.portals) {
             renderPortal(context, state, portal);
         }

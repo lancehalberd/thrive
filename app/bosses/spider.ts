@@ -222,7 +222,7 @@ export const overworldSpiderNova: EnemyDefinition<BabySpiderNovaParams> = {
     },
     initialParams: {targetX: 0, targetY: 0},
     radius: 24,
-    portalChance: 0.05,
+    portalChance: 0.1,
     portalDungeonType: 'spiderDen',
     update(state: GameState, enemy: Enemy<BabySpiderNovaParams>): void {
         if (enemy.mode === 'choose' && enemy.modeTime >= 400) {

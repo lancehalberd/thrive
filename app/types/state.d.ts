@@ -115,6 +115,7 @@ interface GameState {
     enemies: Enemy[]
     loot: Loot[]
     activeLoot?: Loot
+    holes: Circle[];
     portals: Portal[];
     enemyBullets: Bullet[]
     fieldText: FieldText[]

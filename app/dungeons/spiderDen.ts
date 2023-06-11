@@ -16,6 +16,10 @@ function generateConnectingDiscs(source: Disc, target: Disc, randomizer: typeof 
         const newDisc = createDisc({
             level: target.level,
             name: target.name,
+            color: target.color,
+            centerColor: target.centerColor,
+            topEdgeColor: target.topEdgeColor,
+            bottomEdgeColor: target.bottomEdgeColor,
             x: target.x,
             y: target.y,
             enemies: [],
@@ -34,6 +38,7 @@ function generateConnectingDiscs(source: Disc, target: Disc, randomizer: typeof 
 function createBridge(discs: Disc[], source: Disc, target: Disc, randomizer: typeof SRandom): void {
     const bridgeDiscs = generateConnectingDiscs(source, target, randomizer, smallPlatformSizes);
     for (const disc of bridgeDiscs) {
+        disc.holes.push({x: disc.x, y: disc.y, radius: disc.radius / 2});
         if (randomizer.generateAndMutate() < 0.05) {
             createEnemy(disc.x, disc.y, chest, disc.level + 1, disc);
         }
@@ -53,6 +58,15 @@ function createBridge(discs: Disc[], source: Disc, target: Disc, randomizer: typ
     }
 }
 
+
+const spiderDenBiome: Biome = {
+    name: 'Spider Den',
+    color: '#EEE',
+    centerColor: '#888',
+    topEdgeColor: '#888',
+    bottomEdgeColor: '#444',
+}
+
 const smallPlatformSizes = [150, 200, 250];
 export function createSpiderDenDungeon(seed: number, level: number): Dungeon {
     const dungeonRandomizer = SRandom.seed(seed);
@@ -67,7 +81,7 @@ export function createSpiderDenDungeon(seed: number, level: number): Dungeon {
     };
     const startingPlatform: Disc = createDisc({
         level,
-        name,
+        ...spiderDenBiome,
         x: entrance.x,
         y: entrance.y,
         radius: 600,
@@ -80,7 +94,7 @@ export function createSpiderDenDungeon(seed: number, level: number): Dungeon {
         const theta = entranceTheta + i * 2 * Math.PI / 5;
         const largePlatform = createDisc({
             level,
-            name,
+            ...spiderDenBiome,
             x: radius * Math.cos(theta),
             y: radius * Math.sin(theta),
             radius: 350,
@@ -95,7 +109,7 @@ export function createSpiderDenDungeon(seed: number, level: number): Dungeon {
     createBridge(discs, previousPlatform, startingPlatform, dungeonRandomizer);
     const bossPlatform = createDisc({
         level,
-        name,
+        ...spiderDenBiome,
         x: 0,
         y: 0,
         radius: 400,

@@ -25,6 +25,7 @@ export function createDisc(props: Partial<Disc>): Disc {
         enemies: [],
         portals: [],
         loot: [],
+        holes: [],
         ...props,
     };
 }

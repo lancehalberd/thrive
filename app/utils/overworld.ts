@@ -87,20 +87,21 @@ export function updateActiveCells(state: GameState) {
     state.enemies = [];
     state.loot = [];
     state.portals = [];
+    state.holes = [];
     for (const disc of state.activeDiscs) {
         disc.enemies = disc.enemies.filter(e => e.life > 0);
-        state.enemies = [
-            ...state.enemies,
-            ...disc.enemies,
-        ];
-        state.loot = [
-            ...state.loot,
-            ...disc.loot,
-        ];
-        state.portals = [
-            ...state.portals,
-            ...disc.portals,
-        ];
+        for (const enemy of disc.enemies) {
+            state.enemies.push(enemy);
+        }
+        for (const loot of disc.loot) {
+            state.loot.push(loot);
+        }
+        for (const portal of disc.portals) {
+            state.portals.push(portal);
+        }
+        for (const hole of disc.holes) {
+            state.holes.push(hole);
+        }
     }
 }
 
