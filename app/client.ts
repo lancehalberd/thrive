@@ -145,7 +145,7 @@ function update(): void {
         setDerivedHeroStats(state);
         clearNearbyEnemies(state);
         // Set testDungeon/testBoss here to load the game in a dungeon and boss room.
-        const testDungeon: DungeonType|'' = 'spiderDen';
+        const testDungeon: DungeonType|'' = '';
         if (testDungeon) {
             const dungeon = createDungeon(testDungeon, state.hero.level);
             startDungeon(state, dungeon);
