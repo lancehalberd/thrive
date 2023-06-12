@@ -9,6 +9,7 @@ import { weaponTypeLabels, weaponTypes } from 'app/weapons';
 import {
     getExperienceForNextLevel,
     getExperienceForNextWeaponLevel,
+    getWeaponMastery,
     getWeaponProficiency,
 } from 'app/utils/hero';
 
@@ -241,27 +242,37 @@ function renderHUD(context: CanvasRenderingContext2D, state: GameState): void {
     let x = SLOT_SIZE + 2 * SLOT_PADDING;
     const weaponXpRect: Rect = {x, y, h: 10, w: 160};
     const weaponProficiency = getWeaponProficiency(state, state.hero.equipment.weapon.weaponType);
+    const weaponMastery = getWeaponMastery(state, state.hero.equipment.weapon.weaponType);
     const requiredWeaponXp = getExperienceForNextWeaponLevel(weaponProficiency.level);
     renderBar(context, weaponXpRect, weaponProficiency.experience / requiredWeaponXp, 'orange', '#888');
     context.fillStyle = 'white';
     context.textBaseline = 'middle';
     context.textAlign = 'left';
     context.font = '16px sans-serif';
-    context.fillText(weaponTypeLabels[state.hero.equipment.weapon.weaponType] + ' skill ' + weaponProficiency.level, x, y - 8);
+    let proficiencyLabel = weaponTypeLabels[state.hero.equipment.weapon.weaponType] + ' skill ' + weaponProficiency.level;
+    if (weaponMastery) {
+        proficiencyLabel += ' (+' + weaponMastery + ')';
+    }
+    context.fillText(proficiencyLabel, x, y - 8);
 
     if (state.paused) {
         let y = 200;
         for (const weaponType of weaponTypes) {
             const weaponXpRect: Rect = {x: 5, y, h: 10, w: 160};
             const weaponProficiency = getWeaponProficiency(state, weaponType);
+            const weaponMastery = getWeaponMastery(state, weaponType);
             const requiredWeaponXp = getExperienceForNextWeaponLevel(weaponProficiency.level);
             renderBar(context, weaponXpRect, weaponProficiency.experience / requiredWeaponXp, 'orange', '#888');
             context.fillStyle = 'white';
             context.textBaseline = 'middle';
             context.textAlign = 'left';
             context.font = '16px sans-serif';
-            context.fillText(weaponTypeLabels[weaponType] + ' skill ' + weaponProficiency.level, 10, y - 8);
-            y += 30
+            let proficiencyLabel = weaponTypeLabels[weaponType] + ' skill ' + weaponProficiency.level;
+            if (weaponMastery) {
+                proficiencyLabel += ' (+' + weaponMastery + ')';
+            }
+            context.fillText(proficiencyLabel, 10, y - 8);
+            y += 35
         }
     }
 

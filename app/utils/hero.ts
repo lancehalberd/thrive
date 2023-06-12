@@ -1,7 +1,18 @@
+import { guardian } from 'app/bosses/guardian';
+import { spider } from 'app/bosses/spider';
+import { giantClam } from 'app/enemies/clam';
+import { megaSlime } from 'app/enemies/slime';
 import { BASE_MAX_POTIONS, BASE_XP } from 'app/constants';
 import { applyEnchantmentsToStats } from 'app/enchantments';
 import { playSound } from 'app/utils/audio';
 import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
+
+const weaponMasteryMap: {[key in string]: WeaponType} = {
+    [guardian.name]: 'dagger',
+    [spider.name]: 'katana',
+    [giantClam.name]: 'sword',
+    [megaSlime.name]: 'bow',
+};
 
 
 export function gainExperience(state: GameState, experience: number): void {
@@ -33,6 +44,14 @@ export function getWeaponProficiency(state: GameState, weaponType = state.hero.e
     return state.hero.weaponProficiency[weaponType] = state.hero.weaponProficiency[weaponType] || {level: 0, experience: 0};
 }
 
+export function getWeaponMastery(state: GameState, weaponType = state.hero.equipment.weapon.weaponType): number {
+    return state.hero.weaponMastery[weaponType] = state.hero.weaponMastery[weaponType] || 0;
+}
+
+export function getTotalWeaponProficiency(state: GameState, weaponType = state.hero.equipment.weapon.weaponType): number {
+    return getWeaponProficiency(state, weaponType).level + getWeaponMastery(state, weaponType);
+}
+
 export function gainItemExperience(state: GameState, item: Item): void {
     const experiencePenalty = Math.min(1, Math.max(0, (state.hero.level - item.level) * 0.1));
     const experience = BASE_XP * Math.pow(1.2, item.level) * 1.5;
@@ -43,12 +62,21 @@ export function gainItemExperience(state: GameState, item: Item): void {
 }
 
 export function setDerivedHeroStats(state: GameState): void {
+
+    // This must be calculated before anything that uses weapon proficiency which is derived in part from these numbers.
+    state.hero.weaponMastery = {};
+    for (const bossName of Object.keys(state.hero.bossRecords)) {
+        const weaponType = weaponMasteryMap[bossName];
+        const bonus = 5 + Math.floor(state.hero.bossRecords[bossName]! / 5);
+        state.hero.weaponMastery[weaponType] = (state.hero.weaponMastery[weaponType] || 0) + bonus;
+    }
+
     const weaponLevel = state.hero.equipment.weapon.level;
-    const weaponProficiency = getWeaponProficiency(state);
-    state.hero.damage = Math.pow(1.05, state.hero.level - 1 + weaponProficiency.level - 1);
-    state.hero.attacksPerSecond = 1 + 0.01 * state.hero.level + 0.01 * weaponProficiency.level;
+    const weaponProficiency = getTotalWeaponProficiency(state);
+    state.hero.damage = Math.pow(1.05, state.hero.level - 1 + weaponProficiency - 1);
+    state.hero.attacksPerSecond = 1 + 0.01 * state.hero.level + 0.01 * weaponProficiency;
     // If weapon level is higher than your proficiency, attack speed is reduced down to a minimum of 10% base attack speed.
-    const proficiencyDefecit = weaponLevel - weaponProficiency.level;
+    const proficiencyDefecit = weaponLevel - weaponProficiency;
     if (proficiencyDefecit > 0) {
         state.hero.attacksPerSecond = state.hero.attacksPerSecond * Math.max(0.1, 0.95 ** proficiencyDefecit);
     }
@@ -69,18 +97,19 @@ export function setDerivedHeroStats(state: GameState): void {
         state.hero.speed *= 1.2;
     }
 
+
     // Bow gives 0.1% -> 10% increased crit chance
-    state.hero.critChance = getWeaponProficiency(state, 'bow').level * 0.001;
+    state.hero.critChance = getTotalWeaponProficiency(state, 'bow') * 0.001;
     // Dagger gives +0.01 -> 1 increased base attacks per second
-    state.hero.attacksPerSecond += getWeaponProficiency(state, 'dagger').level * 0.01;
+    state.hero.attacksPerSecond += getTotalWeaponProficiency(state, 'dagger') * 0.01;
     // Katana gives 1% -> 100% increased crit damage
-    state.hero.critDamage = getWeaponProficiency(state, 'katana').level * 0.01;
+    state.hero.critDamage = getTotalWeaponProficiency(state, 'katana') * 0.01;
     // Morning Star gives +0.01 -> 1 increased armor shred effect
-    state.hero.armorShredEffect = 1 + getWeaponProficiency(state, 'morningStar').level * 0.01;
+    state.hero.armorShredEffect = 1 + getTotalWeaponProficiency(state, 'morningStar') * 0.01;
     // Staff gives +0.01 -> 1 increased charge damage
-    state.hero.chargeDamage = getWeaponProficiency(state, 'staff').level * 0.01;
+    state.hero.chargeDamage = getTotalWeaponProficiency(state, 'staff') * 0.01;
     // Sword gives 1% -> 100% increased damage
-    state.hero.damage *= (1 + getWeaponProficiency(state, 'sword').level * 0.01);
+    state.hero.damage *= (1 + getTotalWeaponProficiency(state, 'sword') * 0.01);
 
     // Enchantments are applied last to stats.
     applyEnchantmentsToStats(state);
@@ -90,13 +119,13 @@ export function setDerivedHeroStats(state: GameState): void {
 }
 
 export function getExperienceForNextLevel(currentLevel: number): number {
-    const averageKills = 8 * currentLevel;
+    const averageKills = 5 + 2 * currentLevel;
     const xpPerKill = Math.ceil(BASE_XP * Math.pow(1.2, currentLevel - 1));
     return averageKills * xpPerKill;
 }
 
 export function getExperienceForNextWeaponLevel(currentLevel: number): number {
-    const averageKills = 4 * (currentLevel + 1);
+    const averageKills = 3 + currentLevel;
     const xpPerKill = Math.ceil(BASE_XP * Math.pow(1.2, currentLevel));
     return averageKills * xpPerKill;
 }
@@ -129,13 +158,4 @@ export function damageHero(state: GameState, damage: number): void {
     state.hero.damageHistory[0] += damageTaken;
     state.hero.recentDamageTaken += damageTaken;
     addDamageNumber(state, state.hero, damageTaken);
-}
-
-export function rollForCritDamage(state: GameState, additionalCritchance: number = 0): number {
-    const weapon = state.hero.equipment.weapon;
-    const isCrit = Math.random() < additionalCritchance + state.hero.critChance + weapon.critChance;
-    if (!isCrit) {
-        return 1;
-    }
-    return 1 + state.hero.critDamage + weapon.critDamage;
 }

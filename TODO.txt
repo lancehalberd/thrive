@@ -15,6 +15,9 @@ Generate BGM using AudioDriver
         Boss Music
         Victory Fanfare
 
+Add a toast for gaining weapon mastery on beating a boss
+    + 5 Katana Mastery!
+
 Add game over screen
     Store isGameOver on state and do a render of transparent black without clearing the screen and then
         Game Over text after 1000ms

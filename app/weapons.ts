@@ -6,7 +6,7 @@ import {
     BASE_BULLET_DURATION,
     FRAME_LENGTH,
 } from 'app/constants';
-import { rollForCritDamage } from 'app/utils/hero';
+import { rollForCritDamage } from 'app/utils/combat';
 
 export function updateSimpleBullet(state: GameState, bullet: Bullet): void {
     bullet.baseX += bullet.vx / FRAME_LENGTH;

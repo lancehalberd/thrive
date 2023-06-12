@@ -121,7 +121,8 @@ export function getContextMenu(state: GameState): MenuOption[] {
                         state.hero.equipment.armor = generateArmor(state.hero.equipment.armor.armorType, level)!;
                         for (const weaponType of weaponTypes) {
                             const proficiency = getWeaponProficiency(state, weaponType);
-                            proficiency.level = level;
+                            proficiency.level = level - 1;
+                            proficiency.experience = 0;
                         }
                         // Move hero to corresponding overworld area.
                         if (level === 1) {
@@ -135,6 +136,9 @@ export function getContextMenu(state: GameState): MenuOption[] {
                             state.hero.y = state.hero.overworldY;
                         }
                         state.hero.experience = 0;
+                        state.hero.weapons = [];
+                        state.hero.armors = [];
+                        state.hero.enchantments = [];
                         setDerivedHeroStats(state);
                         updateActiveCells(state);
                         clearNearbyEnemies(state);

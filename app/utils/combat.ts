@@ -40,3 +40,12 @@ export function abbreviate(number: number, digits?: number): string {
     }
     return `${number}`;
 }
+
+export function rollForCritDamage(state: GameState, additionalCritchance: number = 0): number {
+    const weapon = state.hero.equipment.weapon;
+    const isCrit = Math.random() < additionalCritchance + state.hero.critChance + weapon.critChance;
+    if (!isCrit) {
+        return 1;
+    }
+    return 1 + state.hero.critDamage + weapon.critDamage;
+}

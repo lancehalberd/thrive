@@ -61,6 +61,8 @@ function getInitialState(): GameState {
             },
             weapons: [],
             weaponProficiency: {},
+            weaponMastery: {},
+            bossRecords: {},
             armors: [],
             enchantments: [],
             // Derived stats will get set later.
@@ -495,6 +497,9 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
                 y: enemy.disc.y + 100,
             }, enchantment)
         }
+        const name = enemy.definition.name;
+        state.hero.bossRecords[name] = Math.max(state.hero.bossRecords[name] || 0, enemy.level);
+        setDerivedHeroStats(state);
     }
 }
 
