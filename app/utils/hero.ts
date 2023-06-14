@@ -7,7 +7,7 @@ import { applyEnchantmentsToStats } from 'app/enchantments';
 import { playSound } from 'app/utils/audio';
 import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
 
-const weaponMasteryMap: {[key in string]: WeaponType} = {
+export const weaponMasteryMap: {[key in string]: WeaponType} = {
     [guardian.name]: 'dagger',
     [spider.name]: 'katana',
     [giantClam.name]: 'sword',
@@ -31,8 +31,8 @@ export function gainWeaponExperience(state: GameState, weaponType: WeaponType, s
     const weaponProficiency = getWeaponProficiency(state, weaponType);
     const weaponXpPenalty = Math.min(1, Math.max(0, (weaponProficiency.level - sourceLevel) * 0.1));
     const requiredExperience = getExperienceForNextWeaponLevel(weaponProficiency.level);
-    // You cannot gain more than 10% of the experience for the next weapon level at once.
-    weaponProficiency.experience += Math.min(Math.ceil(experience * (1 - weaponXpPenalty)), requiredExperience / 5);
+    // You cannot gain more than 25% of the experience for the next weapon level at once.
+    weaponProficiency.experience += Math.min(Math.ceil(experience * (1 - weaponXpPenalty)), requiredExperience / 4);
     if (weaponProficiency.experience >= requiredExperience) {
         weaponProficiency.level++;
         weaponProficiency.experience -= requiredExperience;
@@ -73,7 +73,7 @@ export function setDerivedHeroStats(state: GameState): void {
 
     const weaponLevel = state.hero.equipment.weapon.level;
     const weaponProficiency = getTotalWeaponProficiency(state);
-    state.hero.damage = Math.pow(1.05, state.hero.level - 1 + weaponProficiency - 1);
+    state.hero.damage = Math.pow(1.05, state.hero.level - 1 + weaponProficiency);
     state.hero.attacksPerSecond = 1 + 0.01 * state.hero.level + 0.01 * weaponProficiency;
     // If weapon level is higher than your proficiency, attack speed is reduced down to a minimum of 10% base attack speed.
     const proficiencyDefecit = weaponLevel - weaponProficiency;
@@ -119,13 +119,27 @@ export function setDerivedHeroStats(state: GameState): void {
 }
 
 export function getExperienceForNextLevel(currentLevel: number): number {
-    const averageKills = 5 + 2 * currentLevel;
+    // This is:
+    // ~5 kills for 1 -> 2
+    // ~16 kills for 10 -> 11
+    // 30 kills for 20 -> 21
+    // 100 kills for 50 -> 51
+    // 125 kills for 60 -> 61
+    // 200 kills for 75 -> 76
+    // 250 kills for 80 -> 81
+    // 500 kills for 90 -> 91
+    // 1000 kills for 95 -> 96
+    // 2500 kills for 98 -> 99
+    // 5000 kills for 99 -> 100
+    const averageKills = Math.min(50, 4 + currentLevel) * 100 / (100 - currentLevel);
     const xpPerKill = Math.ceil(BASE_XP * Math.pow(1.2, currentLevel - 1));
     return averageKills * xpPerKill;
 }
+// @ts-ignore-next-line
+window['getExperienceForNextLevel'] = getExperienceForNextLevel;
 
 export function getExperienceForNextWeaponLevel(currentLevel: number): number {
-    const averageKills = 3 + currentLevel;
+    const averageKills = Math.min(20, 5 + currentLevel) * 100 / (100 - currentLevel);
     const xpPerKill = Math.ceil(BASE_XP * Math.pow(1.2, currentLevel));
     return averageKills * xpPerKill;
 }

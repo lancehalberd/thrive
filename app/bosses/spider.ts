@@ -20,6 +20,7 @@ interface SpiderParams {
     attackMode: AttackMode
     attackSchedule: AttackMode[]
     attackIntensity: number
+    bombIntensity: number
 }
 export const spider: EnemyDefinition<SpiderParams> = {
     name: 'Spider',
@@ -32,6 +33,7 @@ export const spider: EnemyDefinition<SpiderParams> = {
         attackMode: 'choose',
         attackSchedule: [],
         attackIntensity: 0,
+        bombIntensity: 0,
     },
     dropChance: 1,
     experienceFactor: 20,
@@ -72,7 +74,7 @@ export const spider: EnemyDefinition<SpiderParams> = {
             const spacing = 2000;
             if (enemy.params.attackTime % spacing === FRAME_LENGTH && enemy.params.attackTime < spacing * 4) {
                 const count = 3 + enemy.params.attackIntensity;
-                for (let r = enemy.radius + 5; r < enemy.radius + 450; r += 40) {
+                for (let r = 20; r < enemy.radius + 450; r += 40) {
                     for (let i = 0; i < count; i++) {
                         shootCirclingBullet(state, enemy, 2 * Math.PI * i / count + r * Math.PI / 40 / 20, r, {
                             vTheta: - Math.PI / count,
@@ -98,12 +100,74 @@ export const spider: EnemyDefinition<SpiderParams> = {
         else if ( radius > targetRadius) radius--;
         enemy.x = enemy.disc.x + radius * Math.cos(enemy.theta);
         enemy.y = enemy.disc.y + radius * Math.sin(enemy.theta);
-        const bombSpacing = 1200 - 400 * enemy.params.attackIntensity;
-        if (enemy.modeTime % bombSpacing === 0) {
-            const dr = 100 - 70 * (1 - enemy.life / enemy.maxLife);
-            for (let r = 50; r < 400; r += dr) {
-                const theta = Math.random() * 2 * Math.PI;
-                createBombBullet(state, enemy, enemy.disc.x + r * Math.cos(theta), enemy.disc.y + r * Math.sin(theta));
+        if (enemy.mode === 'choose') {
+            const p = enemy.life / enemy.maxLife;
+            if (enemy.modeTime >= 1000 && p <= 0.9) {
+                const modes = ['random'];
+                if (p <= 0.33) {
+                    enemy.params.bombIntensity = 2;
+                    modes.push('spiral');
+                } else if (p <= 0.66) {
+                    enemy.params.bombIntensity = 1;
+                    modes.push('rings')
+                }
+                enemy.setMode(Random.element(modes));
+            }
+        }
+        if (enemy.mode === 'spiral') {
+            const time = enemy.modeTime;
+            const totalTime = 5000;
+            const spacing = 60;
+            if (enemy.modeTime % spacing === 0) {
+                const count = totalTime / spacing;
+                const t = time / spacing;
+                const r = 50 + 350 * t / count;
+
+                const arms = 2 +  enemy.params.bombIntensity;
+                for (let i = 0; i < arms; i++) {
+                    const theta = 8 * Math.PI * t / count - r / Math.PI / 3 + 2 * Math.PI * i / arms;
+                    createBombBullet(state, enemy, enemy.disc.x + r * Math.cos(theta), enemy.disc.y + r * Math.sin(theta), {
+                        warningTime: 1000,
+                        expirationTime: state.fieldTime + 1200,
+                    });
+                }
+            }
+            if (enemy.modeTime >= totalTime) {
+                enemy.setMode('choose');
+            }
+        }
+        if (enemy.mode === 'rings') {
+            const totalTime = 5000;
+            const time = enemy.modeTime;
+            const bombSpacing = 800 - 100 * enemy.params.bombIntensity;
+            if (enemy.modeTime % bombSpacing === 0) {
+                const t = time / bombSpacing;
+                const r = 50 + t * 350 / (totalTime / bombSpacing);
+                const count = Math.floor(2 * Math.PI * r / (2 * 3 * BASE_ENEMY_BULLET_RADIUS));
+                for (let i = 0; i < count; i++) {
+                    const theta = 2 * Math.PI * (i + (t % 2) * 0.5) / count;
+                    createBombBullet(state, enemy, enemy.disc.x + r * Math.cos(theta), enemy.disc.y + r * Math.sin(theta), {
+                        warningTime: 1000,
+                        expirationTime: state.fieldTime + 1200,
+                    });
+                }
+            }
+            if (enemy.modeTime >= totalTime) {
+                enemy.setMode('choose');
+            }
+        }
+        if (enemy.mode === 'random') {
+            const totalTime = 5000;
+            const bombSpacing = 1200 - 300 * enemy.params.bombIntensity;
+            if (enemy.modeTime % bombSpacing === 0) {
+                const dr = 100 - 70 * (1 - enemy.life / enemy.maxLife);
+                for (let r = 50; r < 400; r += dr) {
+                    const theta = Math.random() * 2 * Math.PI;
+                    createBombBullet(state, enemy, enemy.disc.x + r * Math.cos(theta), enemy.disc.y + r * Math.sin(theta));
+                }
+            }
+            if (enemy.modeTime >= totalTime) {
+                enemy.setMode('choose');
             }
         }
     },
@@ -122,18 +186,26 @@ function renderNormalizedSpider(context: CanvasRenderingContext2D, enemy: Enemy,
     // Colored "split mask halves"
     context.fillStyle = enemy.baseColor;
     context.beginPath();
-    context.arc(0, 0, 0.8, Math.PI / 12, 11 * Math.PI / 12);
+    context.arc(0, 0, 0.8, Math.PI / 24, 23 * Math.PI / 24);
     context.fill();
     context.beginPath();
-    context.arc(0, 0, 0.8, 13 * Math.PI / 12, 23 * Math.PI / 12);
+    context.arc(0, 0, 0.8, 25 * Math.PI / 24, 47 * Math.PI / 24);
     context.fill();
 
     // 4 eyes on each mask half
+    context.fillStyle = 'black';
     for (let i = 0; i < eyeCount; i++) {
         const thetaSpace = 5 * Math.PI / 6 / (eyeCount + 1);
         const theta = Math.PI / 12 + (1 + i) * thetaSpace;
-        fillCircle(context, {x: 0.6 * Math.cos(theta), y: 0.6 * Math.sin(theta), radius: 0.1}, 'black');
-        fillCircle(context, {x: 0.6 * Math.cos(-theta), y: 0.6 * Math.sin(-theta), radius: 0.1}, 'black');
+        context.beginPath();
+        const eyeAngle = Math.PI / 2 + (2 * Math.PI / 3 - Math.PI / 2) * i / eyeCount;
+        const eyeRadius = 0.55;
+        context.arc(eyeRadius * Math.cos(theta), eyeRadius * Math.sin(theta), 0.2, eyeAngle,  eyeAngle - Math.PI, true);
+        context.fill();
+        context.beginPath();
+        context.arc(eyeRadius * Math.cos(-theta), eyeRadius * Math.sin(-theta), 0.2, -eyeAngle,  -(eyeAngle - Math.PI), false);
+        context.fill();
+        //fillCircle(context, {x: 0.6 * Math.cos(-theta), y: 0.6 * Math.sin(-theta), radius: 0.1}, 'black');
     }
 
 }

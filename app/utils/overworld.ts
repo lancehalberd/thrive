@@ -142,10 +142,13 @@ function getCellLevel(randomizer: typeof SRandom, cellY: number): number {
 
 
 function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
-    // There is a 10% chance to spawn lower tier biomes at higher tiers.
-    if (cellY >= 4 && randomizer.generateAndMutate() < 0.1) {
+    // There is a 20% chance to spawn lower tier biomes at higher tiers.
+    // We always reduce by 2+ tiers so that the same tier doesn't appear at very different
+    // levels next to each other. If that happens, a player can accidentally enter more
+    // difficult areas without any warning.
+    if (cellY >= 4 && randomizer.generateAndMutate() < 0.2) {
         return getBiome(cellY - 4, randomizer);
-    } else if (cellY >= 2 && cellY < 4 && randomizer.generateAndMutate() < 0.1) {
+    } else if (cellY >= 2 && cellY < 4 && randomizer.generateAndMutate() < 0.2) {
         return getBiome(cellY - 2, randomizer);
     }
     if (cellY === 0) {
@@ -300,6 +303,7 @@ function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void
             createEnemy(disc.x - 100, disc.y, chaser, disc.level, disc);
         }
     }  else {
+        // For undefined biomes, just include a variety of enemies that can drop dungeons.
         if (randomizer.generateAndMutate() < 0.2) {
             createEnemy(disc.x, disc.y, lord, disc.level, disc);
         } else if (randomizer.generateAndMutate() < 0.2) {
@@ -307,6 +311,8 @@ function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void
         } else if (randomizer.generateAndMutate() < 0.2) {
             createEnemy(disc.x, disc.y, turret, disc.level, disc);
         } else if (randomizer.generateAndMutate() < 0.2) {
+            createEnemy(disc.x, disc.y, clam, disc.level, disc);
+        }  else if (randomizer.generateAndMutate() < 0.2) {
             createEnemy(disc.x, disc.y, chest, disc.level + 1, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
@@ -319,7 +325,7 @@ function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void
             createEnemy(disc.x, disc.y + 50, bat, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(disc.x, disc.y - 50, crab, disc.level, disc);
+            createEnemy(disc.x, disc.y - 50, overworldSpiderNova, disc.level, disc);
         }
     }
 }

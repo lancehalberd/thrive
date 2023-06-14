@@ -15,15 +15,10 @@ Generate BGM using AudioDriver
         Boss Music
         Victory Fanfare
 
-Add a toast for gaining weapon mastery on beating a boss
-    + 5 Katana Mastery!
-
 Add game over screen
     Store isGameOver on state and do a render of transparent black without clearing the screen and then
         Game Over text after 1000ms
         Press Enter to restart after 2000ms
-
-Add instructions somewhere, possibly just a link on the page.
 
 Show some game over stats
     - Store these somewhere particular so that they aren't erased by restarting the game.
@@ -50,9 +45,6 @@ Add stats for improving charge attacks
 
 Add bat cave boss Vampire Bat
 
-Show Proficiency bonuses text box when hovering over proficiencies:
-    For daggers: 10% increased attack speed and 80% increased damage
-    For all weapons: 10% increased attack speed
 
 Add 15 bonus proficiency to starting weapon
     Counts towards bonuses, but not towards level cap or XP requirements for leveling.

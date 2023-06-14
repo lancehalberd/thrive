@@ -9,7 +9,7 @@ export function addDamageNumber(state: GameState, target: Geometry, damage: numb
         text: abbreviate(damage),
         color: isCrit ? 'yellow' : 'red',
         borderColor: 'black',
-        expirationTime: state.fieldTime + 1000,
+        expirationTime: state.fieldTime + 500,
         time: 0,
     });
 }

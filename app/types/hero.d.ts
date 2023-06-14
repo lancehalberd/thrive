@@ -2,6 +2,7 @@
 interface Hero extends CoreHeroStats, Vitals, Geometry {
     overworldX: number
     overworldY: number
+    disc: Disc
     // The angle the hero is facing.
     theta: number
     damageHistory: number[]

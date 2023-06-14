@@ -119,6 +119,7 @@ export function loadGame(state: GameState) {
         state.hero.weapons = data.weapons.map(loadWeapon);
         state.hero.armors = data.armors.map(loadArmor);
         state.hero.enchantments = data.enchantments;
+        state.hero.bossRecords = data.bossRecords;
     } catch (e) {
         console.error(e);
         debugger;
