@@ -1,3 +1,5 @@
+Add Staff + Morning Star
+
 Generate SFX using AudioDriver.
     Gain Level SFX
     Gain Weapon Level SFX
