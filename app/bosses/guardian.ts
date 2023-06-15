@@ -1,4 +1,4 @@
-import { BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_SPEED, BOSS_MAX_LIFE_FACTOR } from 'app/constants';
+import { BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED, BASE_ENEMY_SPEED, BOSS_MAX_LIFE_FACTOR } from 'app/constants';
 import { getVigorEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
 import { chaseTarget, createEnemy, moveEnemyInDirection, moveEnemyToTarget, shootBulletArc, shootEnemyBullet } from 'app/utils/enemy';
@@ -71,8 +71,8 @@ export const guardian: EnemyDefinition<GuardianParams> = {
                 for (let i = 0; i < 2; i++) {
                     const thetaIndex = (enemy.modeTime - 400) / 200 + i;
                     const theta = -Math.PI / 2 + (i + 1) * thetaIndex * Math.PI / 12;
-                    shootEnemyBullet(state, enemy, 100 * Math.cos(theta), 100 * Math.sin(theta), {expirationTime});
-                    shootEnemyBullet(state, enemy, 100 * Math.cos(theta + Math.PI), 100 * Math.sin(theta + Math.PI), {expirationTime});
+                    shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(theta), BASE_ENEMY_BULLET_SPEED * Math.sin(theta), {expirationTime});
+                    shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(theta + Math.PI), BASE_ENEMY_BULLET_SPEED * Math.sin(theta + Math.PI), {expirationTime});
                 }
             }
             if (enemy.modeTime >= 4000) {
@@ -90,7 +90,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
                 for (let i = 0; i < 2; i++) {
                     const thetaIndex = (enemy.modeTime - 400) / 200;
                     const theta = Math.PI / 2 + thetaIndex * Math.PI / 6 * (i ? -1 : 1);
-                    shootEnemyBullet(state, enemy, 100 * Math.cos(theta), 100 * Math.sin(theta), {expirationTime});
+                    shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(theta), BASE_ENEMY_BULLET_SPEED * Math.sin(theta), {expirationTime});
                 }
             }
             if (enemy.modeTime >= 4000) {
@@ -105,7 +105,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
             }
             if (enemy.modeTime === 1000) {
                 shootEnemyBullet(state, enemy,
-                    200 * Math.cos(enemy.theta), 200 * Math.sin(enemy.theta),
+                    2 * BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta), 2 * BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta),
                     {
                         expirationTime: state.fieldTime + 2000,
                         damage: enemy.damage * 5,
@@ -122,8 +122,8 @@ export const guardian: EnemyDefinition<GuardianParams> = {
             enemy.speed = 1.5 * BASE_ENEMY_SPEED;
             moveEnemyInDirection(state, enemy);
             if (enemy.modeTime % 200 === 0) {
-                const vx = 120 * Math.cos(enemy.theta + Math.PI / 2);
-                const vy = 120 * Math.sin(enemy.theta + Math.PI / 2);
+                const vx = 1.2 * BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta + Math.PI / 2);
+                const vy = 1.2 * BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta + Math.PI / 2);
                 shootEnemyBullet(state, enemy, vx, vy, {expirationTime: state.fieldTime + 3000});
                 shootEnemyBullet(state, enemy, -vx, -vy, {expirationTime: state.fieldTime + 3000});
             }
@@ -143,7 +143,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
             enemy.speed = BASE_ENEMY_SPEED;
             chaseTarget(state, enemy, state.hero);
             if (enemy.modeTime % 800 === 0) {
-                shootBulletArc(state, enemy, enemy.theta, Math.PI / 6, 3, 200);
+                shootBulletArc(state, enemy, enemy.theta, Math.PI / 6, 3, 2 * BASE_ENEMY_BULLET_SPEED);
             }
             if (enemy.modeTime >= 4000) {
                 enemy.setMode('choose');
@@ -156,7 +156,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
             enemy.theta = Math.atan2(y, x);
             moveEnemyInDirection(state, enemy, enemy.theta + Math.PI / 2);
             if (enemy.modeTime % 600 === 0) {
-                shootBulletArc(state, enemy, enemy.theta, Math.PI / 6, 3, 200);
+                shootBulletArc(state, enemy, enemy.theta, Math.PI / 6, 3, 2 * BASE_ENEMY_BULLET_SPEED);
             }
             if (enemy.modeTime >= 6000) {
                 enemy.setMode('choose');

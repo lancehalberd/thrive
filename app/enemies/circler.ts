@@ -1,4 +1,4 @@
-import { FRAME_LENGTH } from 'app/constants';
+import { BASE_ENEMY_BULLET_SPEED, FRAME_LENGTH } from 'app/constants';
 import { fillCircle } from 'app/render/renderGeometry';
 import { shootEnemyBullet } from 'app/utils/enemy';
 import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
@@ -39,13 +39,13 @@ export const circler: EnemyDefinition = {
         }
         enemy.theta = turnTowardsAngle(enemy.theta, 0.2, targetTheta);
         // Note this enemy moves sideways.
-        enemy.x += enemy.speed * Math.cos(enemy.theta + Math.PI / 2) / FRAME_LENGTH;
-        enemy.y += enemy.speed * Math.sin(enemy.theta + Math.PI / 2) / FRAME_LENGTH;
+        enemy.x += enemy.speed * Math.cos(enemy.theta + Math.PI / 2) * FRAME_LENGTH / 1000;
+        enemy.y += enemy.speed * Math.sin(enemy.theta + Math.PI / 2) * FRAME_LENGTH / 1000;
 
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootEnemyBullet(state, enemy, 100 * Math.cos(enemy.theta), 100 * Math.sin(enemy.theta));
-            shootEnemyBullet(state, enemy, 100 * Math.cos(enemy.theta + Math.PI), 100 * Math.sin(enemy.theta + Math.PI));
+            shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta), BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta));
+            shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta + Math.PI), BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta + Math.PI));
         }
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {

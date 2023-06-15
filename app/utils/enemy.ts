@@ -219,13 +219,13 @@ export function shootBulletAtHero(state: GameState, enemy: Enemy, speed: number,
 }
 
 export function moveEnemyInCurrentDirection(state: GameState, enemy: Enemy, speed = enemy.speed): void {
-    enemy.x += speed * Math.cos(enemy.theta) / FRAME_LENGTH;
-    enemy.y += speed * Math.sin(enemy.theta) / FRAME_LENGTH;
+    enemy.x += speed * Math.cos(enemy.theta) * FRAME_LENGTH / 1000;
+    enemy.y += speed * Math.sin(enemy.theta) * FRAME_LENGTH / 1000;
 }
 
 export function moveEnemyInDirection(state: GameState, enemy: Enemy, theta: number = enemy.theta, speed = enemy.speed): void {
-    enemy.x += speed * Math.cos(theta) / FRAME_LENGTH;
-    enemy.y += speed * Math.sin(theta) / FRAME_LENGTH;
+    enemy.x += speed * Math.cos(theta) * FRAME_LENGTH / 1000;
+    enemy.y += speed * Math.sin(theta) * FRAME_LENGTH / 1000;
 }
 
 export function turnTowardsTarget(state: GameState, enemy: Enemy, target: Circle, turnSpeed = 0.2): void {
@@ -255,9 +255,9 @@ export function moveEnemyToTarget(state: GameState, enemy: Enemy, {x, y}: Point,
     const dx = x - enemy.x, dy = y - enemy.y;
     enemy.theta = turnTowardsAngle(enemy.theta, 0.2, Math.atan2(dy, dx));
     const distance = Math.sqrt(dx * dx + dy* dy);
-    enemy.x += Math.min(speed / FRAME_LENGTH, distance) * Math.cos(enemy.theta);
-    enemy.y += Math.min(speed / FRAME_LENGTH, distance) * Math.sin(enemy.theta);
-    return distance <= speed / FRAME_LENGTH;
+    enemy.x += Math.min(speed * FRAME_LENGTH / 1000, distance) * Math.cos(enemy.theta);
+    enemy.y += Math.min(speed * FRAME_LENGTH / 1000, distance) * Math.sin(enemy.theta);
+    return distance <= speed * FRAME_LENGTH / 1000;
 }
 
 export function renderNormalizedEnemy(renderEnemy: RenderEnemy) {

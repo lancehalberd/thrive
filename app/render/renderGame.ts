@@ -226,8 +226,8 @@ function renderHero(context: CanvasRenderingContext2D, state: GameState, hero: H
         context.stroke();
         for (const shot of hero.equipment.weapon.shots) {
             const bullet = shot.generateBullet(state, hero, hero.equipment.weapon);
-            bullet.x += bullet.vx / 10;
-            bullet.y += bullet.vy / 10;
+            bullet.x += bullet.vx / 20;
+            bullet.y += bullet.vy / 20;
             //bullet.radius /= 2;
             context.beginPath();
             context.lineWidth = 1;

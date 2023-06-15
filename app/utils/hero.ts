@@ -83,7 +83,7 @@ export function setDerivedHeroStats(state: GameState): void {
     const lifePercentage = state.hero.life / state.hero.maxLife;
     state.hero.maxLife = 20 * state.hero.level;
     state.hero.armor = 0;
-    state.hero.speed = 100;
+    state.hero.speed = 250;
     state.hero.potionEffect = 1;
     state.hero.dropChance = 0;
     state.hero.dropLevel = 0;

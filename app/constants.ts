@@ -39,11 +39,12 @@ export const BASE_MAX_POTIONS = 5;
 export const BASE_XP = 10;
 export const BASE_ATTACKS_PER_SECOND = 2;
 export const BASE_WEAPON_DPS_PER_LEVEL = 40;
-export const BASE_BULLET_SPEED = 200;
+export const BASE_BULLET_SPEED = 500;
 export const BASE_BULLET_RADIUS = 10;
 export const BASE_BULLET_DURATION = 1000;
 
-export const BASE_ENEMY_SPEED = 80;
+export const BASE_ENEMY_SPEED = 200;
+export const BASE_ENEMY_BULLET_SPEED = 250;
 export const BASE_ENEMY_BULLET_RADIUS = 10;
 export const BASE_ENEMY_BULLET_DURATION = 1000;
 export const BOSS_MAX_LIFE_FACTOR = 10;

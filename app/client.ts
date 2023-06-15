@@ -296,8 +296,8 @@ function updateHero(state: GameState): void {
     // Currently walking is always disabled, but we can add a key for it later if we want.
     const isWalking = false;
     const speed = isWalking ? hero.speed : 1.5 * hero.speed;
-    hero.x += dx * speed / FRAME_LENGTH;
-    hero.y += dy * speed / FRAME_LENGTH;
+    hero.x += dx * speed * FRAME_LENGTH / 1000;
+    hero.y += dy * speed * FRAME_LENGTH / 1000;
     hero.vx = dx * speed;
     hero.vy = dy * speed;
 

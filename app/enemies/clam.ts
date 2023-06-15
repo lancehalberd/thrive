@@ -1,4 +1,4 @@
-import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BOSS_MAX_LIFE_FACTOR } from 'app/constants';
+import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED, BOSS_MAX_LIFE_FACTOR } from 'app/constants';
 import { getPowerEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
 import { turnTowardsTarget, shootBulletArc, shootBulletAtHero, shootCirclingBullet } from 'app/utils/enemy';
@@ -31,7 +31,7 @@ export const clam: EnemyDefinition = {
         if (enemy.mode === 'opening') {
             if (enemy.attackCooldown <= state.fieldTime) {
                 enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-                shootBulletAtHero(state, enemy, 120, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS});
+                shootBulletAtHero(state, enemy, 1.2 * BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS});
             }
             if (enemy.modeTime >= 400) {
                 enemy.setMode('open');
@@ -46,7 +46,7 @@ export const clam: EnemyDefinition = {
         }
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletArc(state, enemy, enemy.theta, Math.PI, 7, 100);
+            shootBulletArc(state, enemy, enemy.theta, Math.PI, 7, BASE_ENEMY_BULLET_SPEED);
         }
         if (enemy.modeTime >= 2000) {
             enemy.setMode('closing');
@@ -94,7 +94,7 @@ export const giantClam: EnemyDefinition = {
         if (enemy.mode === 'opening') {
             if (enemy.attackCooldown <= state.fieldTime) {
                 enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-                shootBulletArc(state, enemy, enemy.theta, Math.PI / 3, 3, 120, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage});
+                shootBulletArc(state, enemy, enemy.theta, Math.PI / 3, 3, 1.2 * BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage});
             }
             if (enemy.modeTime >= 400) {
                 enemy.setMode('open');
@@ -109,12 +109,12 @@ export const giantClam: EnemyDefinition = {
         }
         if (enemy.life <= enemy.maxLife / 2) {
             if (state.fieldTime % 200 === 0) {
-                shootBulletAtHero(state, enemy, 120, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS});
+                shootBulletAtHero(state, enemy, 1.2 * BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS});
             }
         }
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletArc(state, enemy, enemy.theta, Math.PI, 7, 100, {expirationTime: state.fieldTime + 2000});
+            shootBulletArc(state, enemy, enemy.theta, Math.PI, 7, BASE_ENEMY_BULLET_SPEED, {expirationTime: state.fieldTime + 2000});
         }
         if (enemy.modeTime >= 2000) {
             enemy.setMode('closing');

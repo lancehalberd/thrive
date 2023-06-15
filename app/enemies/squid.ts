@@ -1,4 +1,4 @@
-import { FRAME_LENGTH } from 'app/constants';
+import { BASE_ENEMY_BULLET_SPEED, FRAME_LENGTH } from 'app/constants';
 import { fillCircle } from 'app/render/renderGeometry';
 import { turnTowardsTarget, shootBulletArc } from 'app/utils/enemy';
 import { getTargetVector } from 'app/utils/geometry';
@@ -38,7 +38,7 @@ export const squid: EnemyDefinition = {
             for (let i = 0; i < 4; i++) {
                 const randomDirection = enemy.theta + (Math.random() - 0.5) * Math.PI / 4;
                 const randomSpread = Math.PI / 12 + Math.random() * Math.PI / 3;
-                const speed = 80 + i * 20;
+                const speed = 0.8 * BASE_ENEMY_BULLET_SPEED + i * 0.2 * BASE_ENEMY_BULLET_SPEED;
                 shootBulletArc(state, enemy, randomDirection, randomSpread, 3, speed);
             }
             // Bursts backwards.

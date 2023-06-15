@@ -1,3 +1,4 @@
+import { BASE_ENEMY_BULLET_SPEED } from 'app/constants';
 import { fillCircle } from 'app/render/renderGeometry';
 import { moveEnemyInDirection, shootBulletAtHero, shootEnemyBullet, turnTowardsTarget } from 'app/utils/enemy';
 import { getTargetVector } from 'app/utils/geometry';
@@ -52,17 +53,17 @@ export const bat: EnemyDefinition = {
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             if (isAggro) {
-                shootEnemyBullet(state, enemy, 60 * Math.cos(enemy.theta), 60 * Math.sin(enemy.theta), {
+                shootEnemyBullet(state, enemy, 0.6 * BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta), 0.6 * BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta), {
                     expirationTime: state.fieldTime + 2000, amplitude: 10, frequency: 6,
                     update: updateSonarBullet,
                 });
-                shootEnemyBullet(state, enemy, 60 * Math.cos(enemy.theta), 60 * Math.sin(enemy.theta), {
+                shootEnemyBullet(state, enemy, 0.6 * BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta), 0.6 * BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta), {
                     expirationTime: state.fieldTime + 2000, amplitude: -10, frequency: 6,
                     update: updateSonarBullet,
                 });
             } else {
-                shootBulletAtHero(state, enemy, 120, {amplitude: 20, frequency: 5});
-                shootBulletAtHero(state, enemy, 120, {amplitude: -20, frequency: 5});
+                shootBulletAtHero(state, enemy, 1.2 * BASE_ENEMY_BULLET_SPEED, {amplitude: 20, frequency: 5});
+                shootBulletAtHero(state, enemy, 1.2 * BASE_ENEMY_BULLET_SPEED, {amplitude: -20, frequency: 5});
             }
         }
     },

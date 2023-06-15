@@ -93,7 +93,7 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
     }
     if (state.paused) {
         const instructions = [
-            'press ENTER to pause/unpause.',
+            'Press ENTER to pause/unpause.',
             '',
             'Use WASD to move.',
             'Move mouse to aim.',
