@@ -9,7 +9,7 @@ export function addDamageNumber(state: GameState, target: Geometry, damage: numb
         text: abbreviate(damage),
         color: isCrit ? 'yellow' : 'red',
         borderColor: 'black',
-        expirationTime: state.fieldTime + 1000,
+        expirationTime: state.fieldTime + 500,
         time: 0,
     });
 }
@@ -39,4 +39,13 @@ export function abbreviate(number: number, digits?: number): string {
         return (number / 1000 + '').slice(0, 4) + 'K';
     }
     return `${number}`;
+}
+
+export function rollForCritDamage(state: GameState, additionalCritchance: number = 0): number {
+    const weapon = state.hero.equipment.weapon;
+    const isCrit = Math.random() < additionalCritchance + state.hero.critChance + weapon.critChance;
+    if (!isCrit) {
+        return 1;
+    }
+    return 1 + state.hero.critDamage + weapon.critDamage;
 }

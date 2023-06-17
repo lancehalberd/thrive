@@ -12,7 +12,10 @@ import {
     startDungeon,
 } from 'app/utils/dungeon';
 import { doCirclesIntersect, getClosestElement, getTargetVector } from 'app/utils/geometry';
-import { damageHero, gainExperience, gainWeaponExperience, getWeaponProficiency, refillAllPotions, setDerivedHeroStats } from 'app/utils/hero';
+import {
+    damageHero, gainExperience, gainWeaponExperience, getWeaponMastery, getWeaponProficiency,
+    refillAllPotions, setDerivedHeroStats, weaponMasteryMap,
+} from 'app/utils/hero';
 import { getMousePosition, isMouseDown, isMiddleMouseDown, isRightMouseDown } from 'app/utils/mouse';
 import { addOverworldPortalToDisc, clearNearbyEnemies, returnToOverworld, updateActiveCells } from 'app/utils/overworld';
 import { getRightAnalogDeltas, isGameKeyDown, isKeyboardKeyDown, updateKeyboardState, wasGameKeyPressed, KEY } from 'app/utils/userInput';
@@ -30,7 +33,7 @@ import {
 } from 'app/constants';
 import { initializeGame } from 'app/initialize';
 import { loadGame } from 'app/saveGame';
-import { allWeapons } from 'app/weapons';
+import { allWeapons, weaponTypeLabels } from 'app/weapons';
 
 const state: GameState = getInitialState();
 // @ts-ignore
@@ -44,6 +47,8 @@ function getInitialState(): GameState {
         worldSeed: Math.random(),
         fieldTime: 0,
         hero: {
+            // placeholder disc
+            disc: {level:1, x: 0, y: 0, radius: 100, name: '', links: [], enemies: [], portals: [], loot: [], holes: []},
             level: 1,
             experience: 0,
             speed: 100,
@@ -61,6 +66,8 @@ function getInitialState(): GameState {
             },
             weapons: [],
             weaponProficiency: {},
+            weaponMastery: {},
+            bossRecords: {},
             armors: [],
             enchantments: [],
             // Derived stats will get set later.
@@ -130,6 +137,9 @@ function restartGame(state: GameState): void {
     //state.gameHasBeenInitialized = true;
     loadGame(state);
     delete state.dungeon;
+    // Delete the current boss, otherwise the current disc
+    // will stay active if it has a boss.
+    delete state.hero.disc.boss;
     setDerivedHeroStats(state);
     refillAllPotions(state);
     clearNearbyEnemies(state);
@@ -160,6 +170,7 @@ function update(): void {
                 }
             }
         }
+        state.paused = true;
         /**/
     }
     if (!state.audio.playingTracks.length) {
@@ -285,8 +296,8 @@ function updateHero(state: GameState): void {
     // Currently walking is always disabled, but we can add a key for it later if we want.
     const isWalking = false;
     const speed = isWalking ? hero.speed : 1.5 * hero.speed;
-    hero.x += dx * speed / FRAME_LENGTH;
-    hero.y += dy * speed / FRAME_LENGTH;
+    hero.x += dx * speed * FRAME_LENGTH / 1000;
+    hero.y += dy * speed * FRAME_LENGTH / 1000;
     hero.vx = dx * speed;
     hero.vy = dy * speed;
 
@@ -467,7 +478,7 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
     enemy.life = 0;
     enemy.definition.onDeath?.(state, enemy);
     const experiencePenalty = Math.min(1, Math.max(0, (state.hero.level - enemy.level) * 0.1));
-    const experience = BASE_XP * Math.pow(1.2, enemy.level) * (enemy.definition.experienceFactor ?? 1);
+    const experience = BASE_XP * Math.pow(1.2, enemy.level - 1) * (enemy.definition.experienceFactor ?? 1);
     gainExperience(state, Math.ceil(experience * (1 - experiencePenalty)));
     const weapon = state.hero.equipment.weapon;
     // Gain more weapon experience when using higher level weapons.
@@ -494,7 +505,27 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
                 x: enemy.disc.x,
                 y: enemy.disc.y + 100,
             }, enchantment)
-        },
+        }
+        const name = enemy.definition.name;
+        const weaponType = weaponMasteryMap[name];
+        const oldMasteryLevel = getWeaponMastery(state, weaponType);
+        state.hero.bossRecords[name] = Math.max(state.hero.bossRecords[name] || 0, enemy.level);
+        setDerivedHeroStats(state);
+        const newMasteryLevel = getWeaponMastery(state, weaponType);
+        if (newMasteryLevel > oldMasteryLevel) {
+            state.fieldText.push({
+                x: state.hero.x,
+                y: state.hero.y - 10,
+                vx: 0,
+                vy: -0.5,
+                text: '+' + (newMasteryLevel - oldMasteryLevel) + ' ' + weaponTypeLabels[weaponType] + ' Mastery!',
+                color: 'blue',
+                borderColor: 'white',
+                expirationTime: state.fieldTime + 3000,
+                time: 0,
+            });
+        }
+
     }
 }
 

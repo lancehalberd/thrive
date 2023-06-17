@@ -16,3 +16,16 @@ export function drawRect(context: CanvasRenderingContext2D, {x, y, w, h}: Rect, 
         context.rect(x, y, w, h);
     }
 }
+
+export function renderBar(
+    context: CanvasRenderingContext2D,
+    {x, y, w, h}: Rect,
+    p: number,
+    fillColor: string,
+    backColor = 'black'
+): void {
+    context.fillStyle = backColor;
+    context.fillRect(x, y, w, h);
+    context.fillStyle = fillColor;
+    context.fillRect(x, y, w * Math.max(0, Math.min(1,p)), h);
+}

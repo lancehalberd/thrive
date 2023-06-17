@@ -1,4 +1,4 @@
-import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BOSS_MAX_LIFE_FACTOR, FRAME_LENGTH } from 'app/constants';
+import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED, BOSS_MAX_LIFE_FACTOR, FRAME_LENGTH } from 'app/constants';
 import { getThiefEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
 import {
@@ -20,6 +20,7 @@ interface SpiderParams {
     attackMode: AttackMode
     attackSchedule: AttackMode[]
     attackIntensity: number
+    bombIntensity: number
 }
 export const spider: EnemyDefinition<SpiderParams> = {
     name: 'Spider',
@@ -32,6 +33,7 @@ export const spider: EnemyDefinition<SpiderParams> = {
         attackMode: 'choose',
         attackSchedule: [],
         attackIntensity: 0,
+        bombIntensity: 0,
     },
     dropChance: 1,
     experienceFactor: 20,
@@ -51,7 +53,7 @@ export const spider: EnemyDefinition<SpiderParams> = {
             if (enemy.params.attackTime % spacing === 0 && enemy.params.attackTime <= 3000) {
                 const count = 10;
                 const parity = [0, 2, 1, 3][(enemy.params.attackTime / spacing) % 4];
-                shootBulletCircle(state, enemy, parity * 2 * Math.PI / count / 4, count, 60, {expirationTime: state.fieldTime + 3000});
+                shootBulletCircle(state, enemy, parity * 2 * Math.PI / count / 4, count, 0.6 * BASE_ENEMY_BULLET_SPEED, {expirationTime: state.fieldTime + 3000});
             }
             if (enemy.params.attackTime >= 3500) {
                 nextAttack();
@@ -60,7 +62,7 @@ export const spider: EnemyDefinition<SpiderParams> = {
             const spacing = 200;
             if (enemy.params.attackTime > spacing * 5 && enemy.params.attackTime % spacing === 0 && enemy.params.attackTime <= spacing * 35) {
                 const count = 3 + enemy.params.attackIntensity * 2;
-                shootBulletCircle(state, enemy, enemy.params.attackTime / spacing * 2 * Math.PI / 40, count, 110, {
+                shootBulletCircle(state, enemy, enemy.params.attackTime / spacing * 2 * Math.PI / 40, count, 1.1 * BASE_ENEMY_BULLET_SPEED, {
                     expirationTime: state.fieldTime + 3000,
                     update: updateReturnBullet,
                 });
@@ -72,7 +74,7 @@ export const spider: EnemyDefinition<SpiderParams> = {
             const spacing = 2000;
             if (enemy.params.attackTime % spacing === FRAME_LENGTH && enemy.params.attackTime < spacing * 4) {
                 const count = 3 + enemy.params.attackIntensity;
-                for (let r = enemy.radius + 5; r < enemy.radius + 450; r += 40) {
+                for (let r = 20; r < enemy.radius + 450; r += 40) {
                     for (let i = 0; i < count; i++) {
                         shootCirclingBullet(state, enemy, 2 * Math.PI * i / count + r * Math.PI / 40 / 20, r, {
                             vTheta: - Math.PI / count,
@@ -98,12 +100,74 @@ export const spider: EnemyDefinition<SpiderParams> = {
         else if ( radius > targetRadius) radius--;
         enemy.x = enemy.disc.x + radius * Math.cos(enemy.theta);
         enemy.y = enemy.disc.y + radius * Math.sin(enemy.theta);
-        const bombSpacing = 1200 - 400 * enemy.params.attackIntensity;
-        if (enemy.modeTime % bombSpacing === 0) {
-            const dr = 100 - 70 * (1 - enemy.life / enemy.maxLife);
-            for (let r = 50; r < 400; r += dr) {
-                const theta = Math.random() * 2 * Math.PI;
-                createBombBullet(state, enemy, enemy.disc.x + r * Math.cos(theta), enemy.disc.y + r * Math.sin(theta));
+        if (enemy.mode === 'choose') {
+            const p = enemy.life / enemy.maxLife;
+            if (enemy.modeTime >= 1000 && p <= 0.9) {
+                const modes = ['random'];
+                if (p <= 0.33) {
+                    enemy.params.bombIntensity = 2;
+                    modes.push('spiral');
+                } else if (p <= 0.66) {
+                    enemy.params.bombIntensity = 1;
+                    modes.push('rings')
+                }
+                enemy.setMode(Random.element(modes));
+            }
+        }
+        if (enemy.mode === 'spiral') {
+            const time = enemy.modeTime;
+            const totalTime = 5000;
+            const spacing = 60;
+            if (enemy.modeTime % spacing === 0) {
+                const count = totalTime / spacing;
+                const t = time / spacing;
+                const r = 50 + 350 * t / count;
+
+                const arms = 2 +  enemy.params.bombIntensity;
+                for (let i = 0; i < arms; i++) {
+                    const theta = 8 * Math.PI * t / count - r / Math.PI / 3 + 2 * Math.PI * i / arms;
+                    createBombBullet(state, enemy, enemy.disc.x + r * Math.cos(theta), enemy.disc.y + r * Math.sin(theta), {
+                        warningTime: 1000,
+                        expirationTime: state.fieldTime + 1200,
+                    });
+                }
+            }
+            if (enemy.modeTime >= totalTime) {
+                enemy.setMode('choose');
+            }
+        }
+        if (enemy.mode === 'rings') {
+            const totalTime = 5000;
+            const time = enemy.modeTime;
+            const bombSpacing = 800 - 100 * enemy.params.bombIntensity;
+            if (enemy.modeTime % bombSpacing === 0) {
+                const t = time / bombSpacing;
+                const r = 50 + t * 350 / (totalTime / bombSpacing);
+                const count = Math.floor(2 * Math.PI * r / (2 * 3 * BASE_ENEMY_BULLET_RADIUS));
+                for (let i = 0; i < count; i++) {
+                    const theta = 2 * Math.PI * (i + (t % 2) * 0.5) / count;
+                    createBombBullet(state, enemy, enemy.disc.x + r * Math.cos(theta), enemy.disc.y + r * Math.sin(theta), {
+                        warningTime: 1000,
+                        expirationTime: state.fieldTime + 1200,
+                    });
+                }
+            }
+            if (enemy.modeTime >= totalTime) {
+                enemy.setMode('choose');
+            }
+        }
+        if (enemy.mode === 'random') {
+            const totalTime = 5000;
+            const bombSpacing = 1200 - 300 * enemy.params.bombIntensity;
+            if (enemy.modeTime % bombSpacing === 0) {
+                const dr = 100 - 70 * (1 - enemy.life / enemy.maxLife);
+                for (let r = 50; r < 400; r += dr) {
+                    const theta = Math.random() * 2 * Math.PI;
+                    createBombBullet(state, enemy, enemy.disc.x + r * Math.cos(theta), enemy.disc.y + r * Math.sin(theta));
+                }
+            }
+            if (enemy.modeTime >= totalTime) {
+                enemy.setMode('choose');
             }
         }
     },
@@ -122,18 +186,26 @@ function renderNormalizedSpider(context: CanvasRenderingContext2D, enemy: Enemy,
     // Colored "split mask halves"
     context.fillStyle = enemy.baseColor;
     context.beginPath();
-    context.arc(0, 0, 0.8, Math.PI / 12, 11 * Math.PI / 12);
+    context.arc(0, 0, 0.8, Math.PI / 24, 23 * Math.PI / 24);
     context.fill();
     context.beginPath();
-    context.arc(0, 0, 0.8, 13 * Math.PI / 12, 23 * Math.PI / 12);
+    context.arc(0, 0, 0.8, 25 * Math.PI / 24, 47 * Math.PI / 24);
     context.fill();
 
     // 4 eyes on each mask half
+    context.fillStyle = 'black';
     for (let i = 0; i < eyeCount; i++) {
         const thetaSpace = 5 * Math.PI / 6 / (eyeCount + 1);
         const theta = Math.PI / 12 + (1 + i) * thetaSpace;
-        fillCircle(context, {x: 0.6 * Math.cos(theta), y: 0.6 * Math.sin(theta), radius: 0.1}, 'black');
-        fillCircle(context, {x: 0.6 * Math.cos(-theta), y: 0.6 * Math.sin(-theta), radius: 0.1}, 'black');
+        context.beginPath();
+        const eyeAngle = Math.PI / 2 + (2 * Math.PI / 3 - Math.PI / 2) * i / eyeCount;
+        const eyeRadius = 0.55;
+        context.arc(eyeRadius * Math.cos(theta), eyeRadius * Math.sin(theta), 0.2, eyeAngle,  eyeAngle - Math.PI, true);
+        context.fill();
+        context.beginPath();
+        context.arc(eyeRadius * Math.cos(-theta), eyeRadius * Math.sin(-theta), 0.2, -eyeAngle,  -(eyeAngle - Math.PI), false);
+        context.fill();
+        //fillCircle(context, {x: 0.6 * Math.cos(-theta), y: 0.6 * Math.sin(-theta), radius: 0.1}, 'black');
     }
 
 }
@@ -160,7 +232,7 @@ export const babySpiderBomber: EnemyDefinition = {
 
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletAtHero(state, enemy, 100);
+            shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED);
         }
 
         const bombSpacing = 500;
@@ -206,7 +278,7 @@ export const babySpiderNova: EnemyDefinition<BabySpiderNovaParams> = {
             if (enemy.modeTime % spacing === 0) {
                 const count = 7;
                 const parity = [0, 2, 1, 3][(enemy.modeTime / spacing) % 4];
-                shootBulletCircle(state, enemy, parity * 2 * Math.PI / count / 4, count, 100, {expirationTime: state.fieldTime + 1000});
+                shootBulletCircle(state, enemy, parity * 2 * Math.PI / count / 4, count, BASE_ENEMY_BULLET_SPEED, {expirationTime: state.fieldTime + 1000});
             }
             if (enemy.modeTime >= 3000) {
                 enemy.setMode('choose');
@@ -249,14 +321,14 @@ export const overworldSpiderNova: EnemyDefinition<BabySpiderNovaParams> = {
             // Normal directed shots at the player
             if (enemy.attackCooldown <= state.fieldTime) {
                 enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-                shootBulletAtHero(state, enemy, 100);
+                shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED);
             }
             // Periodic novas.
             const spacing = 600;
             if (enemy.modeTime % spacing === 0) {
                 const count = 7;
                 const parity = [0, 2, 1, 3][(enemy.modeTime / spacing) % 4];
-                shootBulletCircle(state, enemy, parity * 2 * Math.PI / count / 4, count, 100, {expirationTime: state.fieldTime + 1000});
+                shootBulletCircle(state, enemy, parity * 2 * Math.PI / count / 4, count, BASE_ENEMY_BULLET_SPEED, {expirationTime: state.fieldTime + 1000});
             }
             if (enemy.modeTime >= 2000) {
                 enemy.setMode('choose');
@@ -300,14 +372,14 @@ export const spiderFlower: EnemyDefinition = {
         const spacing = 200;
         if (enemy.modeTime % spacing === 0) {
             const count = 3;
-            shootBulletCircle(state, enemy, enemy.modeTime / spacing * 2 * Math.PI / 40, count, 110, {
+            shootBulletCircle(state, enemy, enemy.modeTime / spacing * 2 * Math.PI / 40, count, 1.1 * BASE_ENEMY_BULLET_SPEED, {
                 expirationTime: state.fieldTime + 3000,
                 update: updateReturnBullet,
             });
         }
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletAtHero(state, enemy, 100, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage});
+            shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage});
         }
     },
     render: renderNormalizedEnemy((context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => renderNormalizedSpider(context, enemy, 3)),
@@ -343,7 +415,7 @@ export const spiderPinwheel: EnemyDefinition = {
         }
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletAtHero(state, enemy, 100, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage});
+            shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage});
         }
     },
     render: renderNormalizedEnemy((context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => renderNormalizedSpider(context, enemy, 3)),

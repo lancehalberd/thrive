@@ -14,6 +14,7 @@ interface SaveGameData {
     weapons: SavedWeapon[]
     armors: SavedArmor[]
     enchantments: Enchantment[]
+    bossRecords: {[key in string]: number}
 }
 
 interface SavedWeapon {
@@ -50,6 +51,7 @@ function getSaveData(state: GameState): SaveGameData {
         weapons: state.hero.weapons.map(saveWeapon),
         armors: state.hero.armors.map(saveArmor),
         enchantments: state.hero.enchantments.map(saveEnchantment),
+        bossRecords: state.hero.bossRecords,
     };
 }
 
@@ -117,6 +119,7 @@ export function loadGame(state: GameState) {
         state.hero.weapons = data.weapons.map(loadWeapon);
         state.hero.armors = data.armors.map(loadArmor);
         state.hero.enchantments = data.enchantments;
+        state.hero.bossRecords = data.bossRecords;
     } catch (e) {
         console.error(e);
         debugger;
