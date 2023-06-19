@@ -13,7 +13,7 @@ import {
 } from 'app/utils/dungeon';
 import { doCirclesIntersect, getClosestElement, getTargetVector } from 'app/utils/geometry';
 import {
-    damageHero, gainExperience, gainWeaponExperience, getMaxChargeLevel, getWeaponMastery, getWeaponProficiency,
+    damageHero, gainExperience, gainWeaponExperience, getHeroShaveRadius, getMaxChargeLevel, getWeaponMastery, getWeaponProficiency,
     refillAllPotions, setDerivedHeroStats, weaponMasteryMap,
 } from 'app/utils/hero';
 import { getMousePosition, isMouseDown, isMiddleMouseDown, isRightMouseDown } from 'app/utils/mouse';
@@ -543,6 +543,8 @@ function updateEnemyBullets(state: GameState): void {
         }
     }
     state.enemyBullets = [];
+    let shaved = false;
+    const shaveRadius = getHeroShaveRadius(state);
     for (const bullet of activeBullets) {
         bullet.time += FRAME_LENGTH;
         bullet.update(state, bullet);
@@ -555,6 +557,12 @@ function updateEnemyBullets(state: GameState): void {
         if (doCirclesIntersect(state.hero, bullet)) {
             hitTarget = true;
             damageHero(state, bullet.damage);
+        } else if (doCirclesIntersect({...state.hero, radius: state.hero.radius + shaveRadius}, bullet)) {
+            gainAttackCharge(state, 5 * FRAME_LENGTH / 1000 / 20);
+            if (!shaved) {
+                playSound(state, 'shaveBullet');
+                shaved = true;
+            }
         }
         if (!hitTarget) {
             state.enemyBullets.push(bullet);

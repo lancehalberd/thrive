@@ -3,6 +3,7 @@ import { fillCircle, renderBar } from 'app/render/renderGeometry';
 import { renderHUD } from 'app/render/renderHUD';
 import { getRightAnalogDeltas } from 'app/utils/userInput'
 import { doCirclesIntersect } from 'app/utils/geometry';
+import { getHeroShaveRadius } from 'app/utils/hero';
 
 
 export function render(context: CanvasRenderingContext2D, state: GameState): void {
@@ -238,12 +239,12 @@ function renderHero(context: CanvasRenderingContext2D, state: GameState, hero: H
         }
     context.restore();
 
-    // Debug code to render charge level on hero
-    /*context.fillStyle = 'white';
-    context.textBaseline = 'middle';
-    context.textAlign = 'center';
-    context.font = '16px sans-serif';
-    context.fillText(state.hero.chargingLevel.toFixed(2), hero.x, hero.y);*/
+    context.beginPath();
+    context.lineWidth = 0;
+    context.setLineDash([5, 10]);
+    context.strokeStyle = 'blue';
+    context.arc(hero.x, hero.y, hero.radius + getHeroShaveRadius(state), 0, 2 * Math.PI);
+    context.stroke();
 }
 
 function renderFieldText(context: CanvasRenderingContext2D, fieldText: FieldText): void {

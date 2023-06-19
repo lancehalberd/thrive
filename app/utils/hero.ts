@@ -2,7 +2,7 @@ import { guardian } from 'app/bosses/guardian';
 import { spider } from 'app/bosses/spider';
 import { giantClam } from 'app/enemies/clam';
 import { megaSlime } from 'app/enemies/slime';
-import { BASE_MAX_POTIONS, BASE_XP } from 'app/constants';
+import { BASE_MAX_POTIONS, BASE_XP, BULLET_SHAVE_RADIUS } from 'app/constants';
 import { applyEnchantmentsToStats } from 'app/enchantments';
 import { playSound } from 'app/utils/audio';
 import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
@@ -176,4 +176,14 @@ export function damageHero(state: GameState, damage: number): void {
 
 export function getMaxChargeLevel(state: GameState): number {
     return state.hero.equipment.weapon.chargeLevel;
+}
+
+export function getHeroShaveRadius(state: GameState): number {
+    if (state.hero.equipment.armor.armorType === 'lightArmor') {
+        return 1.25 * BULLET_SHAVE_RADIUS;
+    }
+    if (state.hero.equipment.armor.armorType === 'heavyArmor') {
+        return 0.75 * BULLET_SHAVE_RADIUS;
+    }
+    return BULLET_SHAVE_RADIUS;
 }

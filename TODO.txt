@@ -1,7 +1,5 @@
 Add Staff + Morning Star
 
-Add Bullet Shaving grants charge progress
-
 Mechanic Ideas
     Unlockable slots for equiping enchantments on players
         - armor slots, weapon slots and other
