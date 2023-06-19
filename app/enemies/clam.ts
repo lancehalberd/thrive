@@ -125,6 +125,31 @@ export const giantClam: EnemyDefinition = {
     },
 };
 
+function renderClamArc(context: CanvasRenderingContext2D, r: number, p: number): void {
+    context.beginPath();
+    context.strokeStyle = 'black';
+    context.moveTo(0, r);
+    if (p === 0.5) {
+        context.lineTo(0, -r);
+        context.stroke();
+        return;
+    }
+    let sign = 1;
+    if (p > 0.5) {
+        p = (p - 0.5) * 2;
+    } else {
+        p = (0.5 - p) * 2;
+        sign = -1;
+    }
+    const steps = 10;
+    for (let i = 1; i <= steps; i++) {
+        const y = r * Math.cos(Math.PI * i / steps); //r - 2 * r * i / steps;
+        const x = Math.sqrt(r * r - y * y) * p * sign;
+        context.lineTo(x, y);
+    }
+    context.stroke();
+}
+
 function renderClam(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
     fillCircle(context, enemy, 'black');
     fillCircle(context, {...enemy, radius: 5}, enemy.baseColor);
@@ -142,11 +167,16 @@ function renderClam(context: CanvasRenderingContext2D, state: GameState, enemy: 
                 // 3/4 closed
                 context.arc(-enemy.radius, 0, Math.sqrt(2) * enemy.radius, 5 * Math.PI / 3,  1 * Math.PI / 3, false);
                 context.fill();
-
+                for (let i = 1; i < 6; i++) {
+                    renderClamArc(context, enemy.radius, 2 * i / 6 / 3);
+                }
             } else {
                 // 1/2 closed
                 context.lineTo(0, -enemy.radius);
                 context.fill();
+                for (let i = 1; i < 6; i++) {
+                    renderClamArc(context, enemy.radius, i / 6 / 2);
+                }
             }
         } else if (enemy.mode === 'open') {
             context.fillStyle = enemy.baseColor;
@@ -154,71 +184,14 @@ function renderClam(context: CanvasRenderingContext2D, state: GameState, enemy: 
             context.arc(0, 0, enemy.radius, Math.PI / 2,  3 * Math.PI / 2);
             context.arc(enemy.radius, 0, Math.sqrt(2) * enemy.radius, 4 * Math.PI / 3,  2 * Math.PI / 3, true);
             context.fill();
+            for (let i = 1; i < 6; i++) {
+                renderClamArc(context, enemy.radius, i / 6 / 3);
+            }
         } else {
             fillCircle(context, {...enemy, x: 0, y: 0}, enemy.baseColor);
-           /* context.moveTo(0, enemy.radius);
-            context.arcTo(
-                -2 * enemy.radius / 3, 0.8 * enemy.radius,
-                -2 * enemy.radius / 3, 0,
-                enemy.radius
-            );
-            context.lineTo( -2 * enemy.radius / 3, 0),
-            context.moveTo(0, -enemy.radius);
-            context.arcTo(
-                -2 * enemy.radius / 3, 0.8 * -enemy.radius,
-                -2 * enemy.radius / 3, 0,
-                enemy.radius
-            );
-            context.lineTo( -2 * enemy.radius / 3, 0),
-
-            context.moveTo(0, enemy.radius);
-            context.arcTo(
-                -1 * enemy.radius / 3, 0.6 * enemy.radius,
-                -1 * enemy.radius / 3, 0,
-                1.4 * enemy.radius
-            );
-            context.lineTo( -1 * enemy.radius / 3, 0),
-            context.moveTo(0, -enemy.radius);
-            context.arcTo(
-                -1 * enemy.radius / 3, 0.6 * -enemy.radius,
-                -1 * enemy.radius / 3, 0,
-                1.4 * enemy.radius
-            );
-            context.lineTo( -1 * enemy.radius / 3, 0),
-
-            context.moveTo(0, enemy.radius);
-            context.lineTo(0, -enemy.radius);
-
-            context.moveTo(0, enemy.radius);
-            context.arcTo(
-                2 * enemy.radius / 3, 0.8 * enemy.radius,
-                2 * enemy.radius / 3, 0,
-                enemy.radius
-            );
-            context.lineTo( 2 * enemy.radius / 3, 0),
-            context.moveTo(0, -enemy.radius);
-            context.arcTo(
-                2 * enemy.radius / 3, 0.8 * -enemy.radius,
-                2 * enemy.radius / 3, 0,
-                enemy.radius
-            );
-            context.lineTo( 2 * enemy.radius / 3, 0),
-
-            context.moveTo(0, enemy.radius);
-            context.arcTo(
-                1 * enemy.radius / 3, 0.6 * enemy.radius,
-                1 * enemy.radius / 3, 0,
-                1.4 * enemy.radius
-            );
-            context.lineTo( 1 * enemy.radius / 3, 0),
-            context.moveTo(0, -enemy.radius);
-            context.arcTo(
-                1 * enemy.radius / 3, 0.6 * -enemy.radius,
-                1 * enemy.radius / 3, 0,
-                1.4 * enemy.radius
-            );
-            context.lineTo( 1 * enemy.radius / 3, 0),
-            context.stroke();*/
+            for (let i = 1; i < 6; i++) {
+                renderClamArc(context, enemy.radius, i / 6);
+            }
         }
     context.restore();
 }
