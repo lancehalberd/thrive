@@ -50,7 +50,7 @@ export function getDungeonLevelBonus(type: DungeonType): number {
 
 export function createDungeon(type: DungeonType, level: number, seed = Math.random()) {
     const radius = 1600 + 8 * level;
-    level = Math.max(0, Math.min(100, level + getDungeonLevelBonus(type)));
+    level = Math.max(0, level + getDungeonLevelBonus(type));
     if (type === 'reef') return createReefDungeon(seed, radius, level);
     if (type === 'cave') return createCaveDungeon(seed, radius, level);
     if (type === 'arena') return createArenaDungeon(seed, radius, level);
@@ -92,7 +92,7 @@ export function createTreeDungeon(seed: number, radius: number, level: number): 
                 finished = true;
                 newDisc.radius = 400;
                 projectDiscToClosestDisc(discs, newDisc, dungeonRandomizer.range(16, 128));
-                newDisc.boss = createEnemy(newDisc.x, newDisc.y, guardian, Math.min(100, level + 2), newDisc);
+                newDisc.boss = createEnemy(newDisc.x, newDisc.y, guardian, level + 2, newDisc);
                 newDisc.boss.isBoss = true;
                 discs.push(newDisc);
             }
@@ -165,7 +165,7 @@ export function createReefDungeon(seed: number, radius: number, level: number): 
                 finished = true;
                 newDisc.radius = 400;
                 projectDiscToClosestDisc(discs, newDisc, dungeonRandomizer.range(16, 128));
-                newDisc.boss = createEnemy(newDisc.x, newDisc.y, giantClam, Math.min(100, level + 2), newDisc);
+                newDisc.boss = createEnemy(newDisc.x, newDisc.y, giantClam, level + 2, newDisc);
                 newDisc.boss.isBoss = true;
                 discs.push(newDisc);
             }
@@ -231,7 +231,7 @@ export function createCaveDungeon(seed: number, radius: number, level: number): 
                 finished = true;
                 newDisc.radius = 400;
                 projectDiscToClosestDisc(discs, newDisc, dungeonRandomizer.range(16, 128));
-                newDisc.boss = createEnemy(newDisc.x, newDisc.y, megaSlime, Math.min(100, level + 2), newDisc);
+                newDisc.boss = createEnemy(newDisc.x, newDisc.y, megaSlime, level + 2, newDisc);
                 newDisc.boss.isBoss = true;
                 discs.push(newDisc);
             }
@@ -315,7 +315,7 @@ export function createArenaDungeon(seed: number, radius: number, level: number):
             previousDisc.radius = 400;
             projectDiscToDisc(previousDisc, discs[discs.length - 2], dungeonRandomizer.range(32, 48));
             previousDisc.boss = createEnemy(previousDisc.x, previousDisc.y,
-                bosses.pop()!, Math.min(100, level + 2), previousDisc);
+                bosses.pop()!, level + 2, previousDisc);
             previousDisc.boss.isBoss = true;
         }
     }

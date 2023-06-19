@@ -119,6 +119,7 @@ export function getContextMenu(state: GameState): MenuOption[] {
                         state.hero.level = level;
                         state.hero.equipment.weapon = generateWeapon(state.hero.equipment.weapon.weaponType, level)!;
                         state.hero.equipment.armor = generateArmor(state.hero.equipment.armor.armorType, level)!;
+                        state.hero.bossRecords = {};
                         for (const weaponType of weaponTypes) {
                             const proficiency = getWeaponProficiency(state, weaponType);
                             proficiency.level = level - 1;

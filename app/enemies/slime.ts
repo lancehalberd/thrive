@@ -120,7 +120,7 @@ export const megaSlime: EnemyDefinition = {
     experienceFactor: 5,
     radius: 40,
     getEnchantment(state: GameState, enemy: Enemy) {
-        return getInsightEnchantment(enemy.level);
+        return getInsightEnchantment(state, enemy.level);
     },
     update(state: GameState, enemy: Enemy): void {
         updateSlimeMovement(state, enemy);

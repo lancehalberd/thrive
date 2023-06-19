@@ -138,57 +138,66 @@ export function applyEnchantmentToEquipment(enchantment: Enchantment, item: Equi
     return false;
 }
 
-export function getSpeedEnchantment(level: number): Enchantment {
+export function getSpeedEnchantment(state: GameState, level: number): Enchantment {
     return {
         type: 'enchantment',
         name: 'Speed',
-        level,
+        level: applyBonusLevel(state, level),
         weaponEnchantmentType: 'attackSpeed',
         armorEnchantmentType: 'speed',
         strength: getEnchantmentStrength(level),
     };
 }
 
-export function getPowerEnchantment(level: number): Enchantment {
+export function getPowerEnchantment(state: GameState, level: number): Enchantment {
     return {
         type: 'enchantment',
         name: 'Power',
-        level,
+        level: applyBonusLevel(state, level),
         weaponEnchantmentType: 'damage',
         armorEnchantmentType: 'armor',
         strength: getEnchantmentStrength(level),
     };
 }
 
-export function getVigorEnchantment(level: number): Enchantment {
+export function getVigorEnchantment(state: GameState, level: number): Enchantment {
     return {
         type: 'enchantment',
         name: 'Vigor',
-        level,
+        level: applyBonusLevel(state, level),
         weaponEnchantmentType: 'critDamage',
         armorEnchantmentType: 'life',
         strength: getEnchantmentStrength(level),
     };
 }
 
-export function getInsightEnchantment(level: number): Enchantment {
+export function getInsightEnchantment(state: GameState, level: number): Enchantment {
     return {
         type: 'enchantment',
         name: 'Insight',
-        level,
+        level: applyBonusLevel(state, level),
         weaponEnchantmentType: 'critChance',
         armorEnchantmentType: 'potionEffect',
         strength: getEnchantmentStrength(level),
     };
 }
 
-export function getThiefEnchantment(level: number): Enchantment {
+export function getThiefEnchantment(state: GameState, level: number): Enchantment {
     return {
         type: 'enchantment',
         name: 'Thief',
-        level,
+        level: applyBonusLevel(state, level),
         weaponEnchantmentType: 'dropLevel',
         armorEnchantmentType: 'dropChance',
         strength: getEnchantmentStrength(level),
     };
+}
+
+function applyBonusLevel(state: GameState, level: number): number {
+    let bonusLevelChance = state.hero.dropChance;
+    while (Math.random() < bonusLevelChance) {
+        level++;
+        bonusLevelChance--;
+    }
+    return Math.min(100, level);
 }

@@ -213,6 +213,22 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
         context.strokeRect(5 + i * 15, experienceRect.y + experienceRect.h + 5, 10, 15);
     }
 
+
+    const chargeRect: Rect = {x: 25, y: experienceRect.y + experienceRect.h + 30, h: 8, w: 140};
+    context.fillStyle = 'white';
+    context.fillText('' + ((state.hero.chargingLevel | 0) - 1), 5, chargeRect.y + chargeRect.h / 2 + 1);
+    if (state.hero.attackChargeLevel > 1) {
+        renderBar(context, chargeRect, state.hero.attackChargeDuration / state.hero.totalChargeDuration, 'red', 'white');
+    } else {
+        //const isFull = state.hero.chargingLevel >= getMaxChargeLevel(state);
+        if ((state.hero.chargingLevel | 0) > 1) {
+            renderBar(context, chargeRect, 1, 'red', 'white');
+            renderBar(context, chargeRect,  state.hero.chargingLevel % 1, 'purple');
+        } else {
+            renderBar(context, chargeRect,  state.hero.chargingLevel % 1, 'purple', 'white');
+        }
+    }
+
     const boss = state.hero.disc?.boss;
     if (!state.paused && boss) {
         const lifeRect: Rect = {x: 210, y: CANVAS_HEIGHT - 60, h: 24, w: CANVAS_WIDTH - 420};

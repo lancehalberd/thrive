@@ -44,6 +44,7 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
         attackChargeLevel: 1,
         mode: 'choose',
         modeTime: 0,
+        time: 0,
         isInvulnerable: definition.isInvulnerable,
         setMode(this: Enemy, mode: string): void {
             this.mode = mode;
@@ -265,7 +266,7 @@ export function renderNormalizedEnemy(renderEnemy: RenderEnemy) {
         context.save();
             context.translate(enemy.x, enemy.y);
             context.rotate(enemy.theta);
-            context.scale(enemy.radius, enemy.radius);
+            context.scale(enemy.radius / 100, enemy.radius / 100);
             renderEnemy(context, state, enemy);
         context.restore();
     };

@@ -47,4 +47,4 @@ export const BASE_ENEMY_SPEED = 200;
 export const BASE_ENEMY_BULLET_SPEED = 250;
 export const BASE_ENEMY_BULLET_RADIUS = 10;
 export const BASE_ENEMY_BULLET_DURATION = 1000;
-export const BOSS_MAX_LIFE_FACTOR = 10;
+export const BOSS_MAX_LIFE_FACTOR = 20;

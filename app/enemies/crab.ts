@@ -1,6 +1,6 @@
 import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED } from 'app/constants';
 import { fillCircle } from 'app/render/renderGeometry';
-import { isEnemyOffDisc, moveEnemyInDirection, shootBulletArc, shootBulletAtHero } from 'app/utils/enemy';
+import { isEnemyOffDisc, moveEnemyInDirection, renderNormalizedEnemy, shootBulletArc, shootBulletAtHero } from 'app/utils/enemy';
 import { getTargetVector } from 'app/utils/geometry';
 import Random from 'app/utils/Random';
 
@@ -15,6 +15,7 @@ export const crab: EnemyDefinition = {
     experienceFactor: 2,
     radius: 24,
     update(state: GameState, enemy: Enemy): void {
+        enemy.theta = Math.PI / 2;
         const aggroRadius = 400;
         const {distance2} = getTargetVector(enemy, state.hero);
         const isAggro = distance2 <= aggroRadius * aggroRadius;
@@ -81,36 +82,50 @@ export const crab: EnemyDefinition = {
             enemy.setMode('choose');
         }
     },
-    render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
-        fillCircle(context, enemy, enemy.baseColor);
-        /*fillCircle(context, {
-            x: enemy.x + 16 * Math.cos(Math.PI / 2),
-            y: enemy.y + 16 * Math.sin(Math.PI / 2),
-            radius: 3,
-        }, 'black');
-        fillCircle(context, {
-            x: enemy.x + 16 * Math.cos(Math.PI / 6),
-            y: enemy.y + 16 * Math.sin(Math.PI / 6),
-            radius: 3,
-        }, 'black');
-        fillCircle(context, {
-            x: enemy.x + 16 * Math.cos(5 * Math.PI / 6),
-            y: enemy.y + 16 * Math.sin(5 * Math.PI / 6),
-            radius: 3,
-        }, 'black');*/
+    render:  renderNormalizedEnemy((context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => {
+        fillCircle(context, {x: 0, y: 0, radius: 100}, enemy.baseColor);
         context.strokeStyle = 'black';
+        context.fillStyle = 'black';
+        fillCircle(context, {x: 0, y: 0, radius: 30}, 'black');
         context.beginPath();
-        context.lineWidth = 2;
-        for (let i = 0; i < 2; i++) {
-            const theta = Math.PI * i;
-            const dx = Math.cos(theta), dy = Math.sin(theta);
-            context.moveTo(enemy.x + 5 * dx, enemy.y + 5 * dy - 4);
-            context.lineTo(enemy.x + 23 * dx, enemy.y + 23 * dy - 8);
-            context.moveTo(enemy.x + 5 * dx, enemy.y + 5 * dy);
-            context.lineTo(enemy.x + 23 * dx, enemy.y + 23 * dy);
-            context.moveTo(enemy.x + 5 * dx, enemy.y + 5 * dy + 4);
-            context.lineTo(enemy.x + 23 * dx, enemy.y + 23 * dy + 8);
-        }
+        context.lineWidth = 10;
+        const frame = ((enemy.time / 200) | 0) % 2;
+        const clawTheta = frame ? Math.PI / 12 : - Math.PI / 12 ;
+        const legDelta = frame ? 10 : -10;
+
+        context.moveTo(-25, 50);
+        context.lineTo(-50, 120);
+
+        context.moveTo(10, 40);
+        context.lineTo(-10, 100 + legDelta);
+        context.lineTo(20, 140 + legDelta);
+
+        context.moveTo(30, 30);
+        context.lineTo(20, 80 - legDelta);
+        context.lineTo(50, 110 - legDelta);
+
+
+        context.moveTo(-25, -50);
+        context.lineTo(-50, -120);
+
+        context.moveTo(10, -40);
+        context.lineTo(-10, -100 + legDelta);
+        context.lineTo(20, -140 + legDelta);
+
+        context.moveTo(30, -30);
+        context.lineTo(20, -80 - legDelta);
+        context.lineTo(50, -110 - legDelta);
         context.stroke();
-    }
+
+        context.beginPath();
+        context.arc(-50, 120, 25, -Math.PI - clawTheta, Math.PI / 2 + clawTheta);
+        context.lineTo(-50, 120);
+        context.fill();
+
+
+        context.beginPath();
+        context.arc(-50, -120, 25, -Math.PI / 2 + clawTheta, Math.PI - clawTheta);
+        context.lineTo(-50, -120);
+        context.fill();
+    }),
 };

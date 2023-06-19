@@ -173,7 +173,7 @@ export const spider: EnemyDefinition<SpiderParams> = {
     },
     render: renderNormalizedEnemy((context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => renderNormalizedSpider(context, enemy, 4)),
     getEnchantment(state: GameState, enemy: Enemy): Enchantment {
-        return getThiefEnchantment(enemy.level);
+        return getThiefEnchantment(state, enemy.level);
     },
 };
 

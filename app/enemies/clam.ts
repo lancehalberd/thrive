@@ -121,7 +121,7 @@ export const giantClam: EnemyDefinition = {
         }
     },
     getEnchantment(state: GameState, enemy: Enemy): Enchantment {
-        return getPowerEnchantment(enemy.level);
+        return getPowerEnchantment(state, enemy.level);
     },
 };
 
@@ -132,16 +132,22 @@ function renderClam(context: CanvasRenderingContext2D, state: GameState, enemy: 
         context.translate(enemy.x, enemy.y);
         context.rotate(enemy.theta);
         context.fillStyle = enemy.baseColor;
+        context.lineWidth = 1;
+        context.strokeStyle = 'black';
         if (enemy.mode === 'opening' || enemy.mode === 'closing') {
             context.fillStyle = enemy.baseColor;
             context.beginPath();
             context.arc(0, 0, enemy.radius, Math.PI / 2,  3 * Math.PI / 2);
             if ((enemy.modeTime >= 200 && enemy.mode === 'closing') || (enemy.modeTime <= 200 && enemy.mode === 'opening')) {
+                // 3/4 closed
                 context.arc(-enemy.radius, 0, Math.sqrt(2) * enemy.radius, 5 * Math.PI / 3,  1 * Math.PI / 3, false);
+                context.fill();
+
             } else {
+                // 1/2 closed
                 context.lineTo(0, -enemy.radius);
+                context.fill();
             }
-            context.fill();
         } else if (enemy.mode === 'open') {
             context.fillStyle = enemy.baseColor;
             context.beginPath();
@@ -150,29 +156,69 @@ function renderClam(context: CanvasRenderingContext2D, state: GameState, enemy: 
             context.fill();
         } else {
             fillCircle(context, {...enemy, x: 0, y: 0}, enemy.baseColor);
+           /* context.moveTo(0, enemy.radius);
+            context.arcTo(
+                -2 * enemy.radius / 3, 0.8 * enemy.radius,
+                -2 * enemy.radius / 3, 0,
+                enemy.radius
+            );
+            context.lineTo( -2 * enemy.radius / 3, 0),
+            context.moveTo(0, -enemy.radius);
+            context.arcTo(
+                -2 * enemy.radius / 3, 0.8 * -enemy.radius,
+                -2 * enemy.radius / 3, 0,
+                enemy.radius
+            );
+            context.lineTo( -2 * enemy.radius / 3, 0),
+
+            context.moveTo(0, enemy.radius);
+            context.arcTo(
+                -1 * enemy.radius / 3, 0.6 * enemy.radius,
+                -1 * enemy.radius / 3, 0,
+                1.4 * enemy.radius
+            );
+            context.lineTo( -1 * enemy.radius / 3, 0),
+            context.moveTo(0, -enemy.radius);
+            context.arcTo(
+                -1 * enemy.radius / 3, 0.6 * -enemy.radius,
+                -1 * enemy.radius / 3, 0,
+                1.4 * enemy.radius
+            );
+            context.lineTo( -1 * enemy.radius / 3, 0),
+
+            context.moveTo(0, enemy.radius);
+            context.lineTo(0, -enemy.radius);
+
+            context.moveTo(0, enemy.radius);
+            context.arcTo(
+                2 * enemy.radius / 3, 0.8 * enemy.radius,
+                2 * enemy.radius / 3, 0,
+                enemy.radius
+            );
+            context.lineTo( 2 * enemy.radius / 3, 0),
+            context.moveTo(0, -enemy.radius);
+            context.arcTo(
+                2 * enemy.radius / 3, 0.8 * -enemy.radius,
+                2 * enemy.radius / 3, 0,
+                enemy.radius
+            );
+            context.lineTo( 2 * enemy.radius / 3, 0),
+
+            context.moveTo(0, enemy.radius);
+            context.arcTo(
+                1 * enemy.radius / 3, 0.6 * enemy.radius,
+                1 * enemy.radius / 3, 0,
+                1.4 * enemy.radius
+            );
+            context.lineTo( 1 * enemy.radius / 3, 0),
+            context.moveTo(0, -enemy.radius);
+            context.arcTo(
+                1 * enemy.radius / 3, 0.6 * -enemy.radius,
+                1 * enemy.radius / 3, 0,
+                1.4 * enemy.radius
+            );
+            context.lineTo( 1 * enemy.radius / 3, 0),
+            context.stroke();*/
         }
-        /*let p = 1
-        if (enemy.mode === 'opening') {
-            p = Math.max(0.2, 1 - enemy.modeTime / 1000);
-        } else if (enemy.mode === 'closing') {
-            p = Math.min(1, 0.2 + enemy.modeTime / 1000);
-        } else if (enemy.mode === 'open') {
-            p = 0.2;
-        }
-        const drawArc = (p: number) => {
-            if (p === 0.5) {
-                context.lineTo(0, -enemy.radius);
-            } else if (p < 0.5) {
-                const x =
-            }
-        }
-        // Fill in the shell cover
-        context.fillStyle = enemy.baseColor;
-        context.beginPath();
-        context.arc(0, 0, enemy.radius, Math.PI / 2,  3 * Math.PI / 2);
-        drawArc(p);
-        context.fill();
-        // Draw lines across the shell
-        */
     context.restore();
 }

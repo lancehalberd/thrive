@@ -13,6 +13,7 @@ interface Enemy<EnemyParams=any> extends Vitals, Geometry {
     attackChargeLevel: number
     mode: string
     modeTime: number
+    time: number
     setMode(this: Enemy, mode: string): void
     isBoss?: boolean
     isInvulnerable?: boolean

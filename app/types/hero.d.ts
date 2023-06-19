@@ -22,8 +22,10 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     chargingLevel: number
     // How charged the player's current attacks are.
     attackChargeLevel: number
-    // How long the player's current charged attack status lasts. 1 full weapon cycle by default.
+    // How long the player's current charged attack status will continue for in milliseconds.
     attackChargeDuration: number
+    // How long the player's current charge attack status lasted in total in milliseconds.
+    totalChargeDuration: number
     potions: number
     isShooting: boolean
     critChance: number

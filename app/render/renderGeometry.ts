@@ -22,10 +22,12 @@ export function renderBar(
     {x, y, w, h}: Rect,
     p: number,
     fillColor: string,
-    backColor = 'black'
+    backColor?: string
 ): void {
-    context.fillStyle = backColor;
-    context.fillRect(x, y, w, h);
+    if (backColor) {
+        context.fillStyle = backColor;
+        context.fillRect(x, y, w, h);
+    }
     context.fillStyle = fillColor;
     context.fillRect(x, y, w * Math.max(0, Math.min(1,p)), h);
 }

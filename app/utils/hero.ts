@@ -173,3 +173,7 @@ export function damageHero(state: GameState, damage: number): void {
     state.hero.recentDamageTaken += damageTaken;
     addDamageNumber(state, state.hero, damageTaken);
 }
+
+export function getMaxChargeLevel(state: GameState): number {
+    return state.hero.equipment.weapon.chargeLevel;
+}

@@ -183,7 +183,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
         }, 'black');
     },
     getEnchantment(state: GameState, enemy: Enemy): Enchantment {
-        return getVigorEnchantment(enemy.level);
+        return getVigorEnchantment(state, enemy.level);
     },
 };
 

@@ -13,7 +13,7 @@ import {
 } from 'app/utils/dungeon';
 import { doCirclesIntersect, getClosestElement, getTargetVector } from 'app/utils/geometry';
 import {
-    damageHero, gainExperience, gainWeaponExperience, getWeaponMastery, getWeaponProficiency,
+    damageHero, gainExperience, gainWeaponExperience, getMaxChargeLevel, getWeaponMastery, getWeaponProficiency,
     refillAllPotions, setDerivedHeroStats, weaponMasteryMap,
 } from 'app/utils/hero';
 import { getMousePosition, isMouseDown, isMiddleMouseDown, isRightMouseDown } from 'app/utils/mouse';
@@ -81,6 +81,7 @@ function getInitialState(): GameState {
             chargingLevel: 1,
             attackChargeLevel: 1,
             attackChargeDuration: 0,
+            totalChargeDuration: 2000,
             potions: BASE_MAX_POTIONS,
             isShooting: false,
             // Base crit damage/chance is on weapons, this just stores
@@ -171,10 +172,9 @@ function update(): void {
             }
         }
         state.paused = true;
-        /**/
     }
     if (!state.audio.playingTracks.length) {
-        // playTrack(state, 'beach');
+        playTrack;//(state, 'beach');
     }
     for (const track of state.audio.playingTracks) {
         track.update(state);
@@ -321,7 +321,8 @@ function updateHero(state: GameState): void {
         )
     ) {
         // Charge duration is 2 seconds by default.
-        state.hero.attackChargeDuration = 2000;
+        state.hero.totalChargeDuration = 2000;
+        state.hero.attackChargeDuration = state.hero.totalChargeDuration;
         state.hero.attackChargeLevel = state.hero.chargingLevel;
         playSound(state, 'activateCharge');
         state.hero.chargingLevel = 1;
@@ -373,7 +374,7 @@ function gainAttackCharge(state: GameState, amount: number): void {
     }
 
     let currentCharge = state.hero.chargingLevel | 0;
-    state.hero.chargingLevel = Math.min(state.hero.equipment.weapon.chargeLevel, state.hero.chargingLevel + amount);
+    state.hero.chargingLevel = Math.min(getMaxChargeLevel(state), state.hero.chargingLevel + amount);
 
     if ((state.hero.chargingLevel | 0) > currentCharge) {
         playSound(state, 'chargeReady');
@@ -394,6 +395,7 @@ function updateEnemies(state: GameState): void {
             continue;
         }
         enemy.modeTime += FRAME_LENGTH;
+        enemy.time += FRAME_LENGTH;
         enemy.definition.update(state, enemy);
         // No changing discs during boss fights.
         if (!boss) {
