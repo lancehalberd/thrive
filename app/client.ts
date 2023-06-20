@@ -2,6 +2,7 @@ import { addContextMenuListeners } from 'app/contextMenu';
 import { checkToDropBasicLoot, dropEnchantmentLoot } from 'app/loot';
 import { getHoverInventorySlot, updateInventory } from 'app/inventory';
 import { render } from 'app/render/renderGame';
+import { uniqueEnchantmentHash } from 'app/uniqueEnchantmentHash';
 import { playSound, playTrack, setVolume } from 'app/utils/audio';
 import { mainCanvas, mainContext } from 'app/utils/canvas';
 import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
@@ -20,6 +21,7 @@ import { getMousePosition, isMouseDown, isMiddleMouseDown, isRightMouseDown } fr
 import { addOverworldPortalToDisc, clearNearbyEnemies, returnToOverworld, updateActiveCells } from 'app/utils/overworld';
 import { getRightAnalogDeltas, isGameKeyDown, isKeyboardKeyDown, updateKeyboardState, wasGameKeyPressed, KEY } from 'app/utils/userInput';
 import Random from 'app/utils/Random';
+import { rollWithMissBonus } from 'app/utils/rollWithMissBonus';
 import { mediumArmors } from 'app/armor';
 import {
     BASE_MAX_POTIONS,
@@ -30,6 +32,7 @@ import {
     FRAME_LENGTH,
     GAME_KEY,
     HERO_DAMAGE_FRAME_COUNT,
+    SIGHT_RADIUS,
 } from 'app/constants';
 import { initializeGame } from 'app/initialize';
 import { loadGame } from 'app/saveGame';
@@ -95,6 +98,7 @@ function getInitialState(): GameState {
             potionEffect: 1,
             vx: 0,
             vy: 0,
+            uniqueEnchantments: [],
         },
         heroBullets: [],
         enemies: [],
@@ -115,6 +119,8 @@ function getInitialState(): GameState {
             y: CANVAS_HEIGHT / 2,
             isDown: false,
             wasPressed: false,
+            isRightDown: false,
+            wasRightPressed: false,
         },
         isUsingKeyboard: true,
         keyboard: {
@@ -130,6 +136,8 @@ function getInitialState(): GameState {
         audio: {
             playingTracks: [],
         },
+        missedRolls: {},
+        sightRadius: SIGHT_RADIUS,
     };
 }
 
@@ -144,6 +152,7 @@ function restartGame(state: GameState): void {
     setDerivedHeroStats(state);
     refillAllPotions(state);
     clearNearbyEnemies(state);
+    state.sightRadius = SIGHT_RADIUS;
     //saveGame(state);
 }
 
@@ -176,6 +185,20 @@ function update(): void {
     if (!state.audio.playingTracks.length) {
         playTrack;//(state, 'beach');
     }
+
+
+    // This shouldn't drop below 50% otherwise vision won't change even when you can be 1 shot.
+    const healthThreshold = Math.max(0.5, 1 - 0.2 * state.hero.potionEffect);
+    // Ranges from 0.4 - 1 as health ranges from 0 to maxLife - 1 potion.
+    const sightPercentage = 0.5 + 0.5 * Math.min(1, state.hero.life / state.hero.maxLife / healthThreshold);
+    const targetSightRadius = sightPercentage * SIGHT_RADIUS;
+    if (state.sightRadius < targetSightRadius) {
+        state.sightRadius = Math.min(state.sightRadius + 4, targetSightRadius);
+    } else if (state.sightRadius > targetSightRadius) {
+        state.sightRadius = Math.max(state.sightRadius - 2, targetSightRadius);
+    }
+
+
     for (const track of state.audio.playingTracks) {
         track.update(state);
     }
@@ -194,6 +217,7 @@ function update(): void {
         state.hero.theta = Math.atan2(aimDy, aimDx);
         state.mouse.x = x;
         state.mouse.y = y;
+        // Track main(left) mouse button state
         if (isMouseDown()) {
             state.mouse.wasPressed = !state.mouse.isDown;
             state.mouse.isDown = true;
@@ -204,6 +228,14 @@ function update(): void {
         }
         if (state.mouse.wasPressed) {
             state.hero.isShooting = true;
+        }
+        // Track right mouse button state.
+        if (isRightMouseDown()) {
+            state.mouse.wasRightPressed = !state.mouse.isRightDown;
+            state.mouse.isRightDown = true;
+        } else {
+            state.mouse.wasRightPressed = false;
+            state.mouse.isRightDown = false;
         }
     }
     if (wasGameKeyPressed(state, GAME_KEY.MENU)) {
@@ -316,18 +348,25 @@ function updateHero(state: GameState): void {
             state.hero.attackChargeLevel = 1;
         }
     } else if (state.hero.chargingLevel >= 2 &&
-        (isGameKeyDown(state, GAME_KEY.SPECIAL_ATTACK)
-            || (state.isUsingKeyboard && isRightMouseDown())
+        (wasGameKeyPressed(state, GAME_KEY.SPECIAL_ATTACK)
+            || (state.isUsingKeyboard && state.mouse.wasRightPressed)
         )
     ) {
+        let skipRegularCharge = false;
+        for (const enchantment of state.hero.uniqueEnchantments) {
+            const definition = uniqueEnchantmentHash[enchantment.uniqueEnchantmentKey];
+            skipRegularCharge = skipRegularCharge || !!definition.onActivateCharge?.(state, enchantment);
+        }
         // Charge duration is 2 seconds by default.
-        state.hero.totalChargeDuration = 2000;
-        state.hero.attackChargeDuration = state.hero.totalChargeDuration;
-        state.hero.attackChargeLevel = state.hero.chargingLevel;
-        playSound(state, 'activateCharge');
-        state.hero.chargingLevel = 1;
-        // Restart attack pattern when triggering charged attacks.
-        hero.attackCooldown = state.fieldTime;
+        if (!skipRegularCharge) {
+            state.hero.totalChargeDuration = 2000;
+            state.hero.attackChargeDuration = state.hero.totalChargeDuration;
+            state.hero.attackChargeLevel = state.hero.chargingLevel;
+            playSound(state, 'activateCharge');
+            state.hero.chargingLevel = 1;
+            // Restart attack pattern when triggering charged attacks.
+            hero.attackCooldown = state.fieldTime;
+        }
     }
     if (state.hero.isShooting) {
         const attackCooldownDuration = 1000 / attacksPerSecond;
@@ -338,7 +377,12 @@ function updateHero(state: GameState): void {
         for (const shot of weapon.shots) {
             const shotTime = attackCooldownDuration * (shot.timingOffset ?? 0);
             if (shotTime >= attackTime - FRAME_LENGTH / 2 && shotTime < attackTime + FRAME_LENGTH / 2) {
-                state.heroBullets.push(shot.generateBullet(state, hero, weapon));
+                const bullet = shot.generateBullet(state, hero, weapon);
+                for (const enchantment of hero.uniqueEnchantments) {
+                    const definition = uniqueEnchantmentHash[enchantment.uniqueEnchantmentKey];
+                    definition.modifyBullet?.(state, enchantment, bullet);
+                }
+                state.heroBullets.push(bullet);
             }
         }
     }
@@ -407,7 +451,7 @@ function updateEnemies(state: GameState): void {
 }
 
 function updateHeroBullets(state: GameState): void {
-    const activeBullets = state.heroBullets.filter(b => b.expirationTime >= state.fieldTime);
+    const activeBullets = state.heroBullets.filter(b => b.time < b.duration);
     state.heroBullets = [];
     const boss = state.hero.disc?.boss;
     let playedSound = false;
@@ -490,7 +534,9 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
     }
     gainWeaponExperience(state, state.hero.equipment.weapon.weaponType, enemy.level, weaponXpFactor * experience);
     checkToDropBasicLoot(state, enemy);
-    if (enemy.disc && enemy.definition.portalDungeonType && Math.random() <= (enemy.definition.portalChance ?? 0)) {
+    if (enemy.disc && enemy.definition.portalDungeonType
+        && rollWithMissBonus(state, enemy.definition.portalDungeonType + 'Portal', (enemy.definition.portalChance ?? 0))
+    ) {
          addDungeonPortalToDisc(enemy, enemy.definition.portalDungeonType, enemy.level, Math.random(), enemy.disc);
     }
     if (enemy.disc?.boss === enemy) {
@@ -534,7 +580,7 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
 function updateEnemyBullets(state: GameState): void {
     const activeBullets = [];
     for (const bullet of state.enemyBullets) {
-        if (bullet.expirationTime >= state.fieldTime) {
+        if (bullet.time < bullet.duration) {
             activeBullets.push(bullet);
         } else {
             if (bullet.onDeath) {
@@ -543,7 +589,7 @@ function updateEnemyBullets(state: GameState): void {
         }
     }
     state.enemyBullets = [];
-    let shaved = false;
+    let shaved = false, onHit = false;
     const shaveRadius = getHeroShaveRadius(state);
     for (const bullet of activeBullets) {
         bullet.time += FRAME_LENGTH;
@@ -555,10 +601,18 @@ function updateEnemyBullets(state: GameState): void {
         }
         let hitTarget = false;
         if (doCirclesIntersect(state.hero, bullet)) {
+            if (!onHit) {
+                for (const enchantment of state.hero.uniqueEnchantments) {
+                    const definition = uniqueEnchantmentHash[enchantment.uniqueEnchantmentKey];
+                    definition.onHit?.(state, enchantment);
+                }
+                onHit = true;
+            }
             hitTarget = true;
             damageHero(state, bullet.damage);
-        } else if (doCirclesIntersect({...state.hero, radius: state.hero.radius + shaveRadius}, bullet)) {
-            gainAttackCharge(state, 5 * FRAME_LENGTH / 1000 / 20);
+        } else if (!bullet.shaved && doCirclesIntersect({...state.hero, radius: state.hero.radius + shaveRadius}, bullet)) {
+            gainAttackCharge(state, 1 / 10);
+            bullet.shaved = true;
             if (!shaved) {
                 playSound(state, 'shaveBullet');
                 shaved = true;

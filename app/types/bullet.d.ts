@@ -11,8 +11,9 @@ interface Bullet extends Circle {
     // Amount of charge the player will gain for hitting an enemy.
     chargeGain?: number
     isEnemyPiercing?: boolean
-    // Bullet will be removed after this timestamp
-    expirationTime: number
+    // Total duration of the bullet in milliseconds.
+    // A bullet expires when time >= duration.
+    duration: number
     source?: Hero|Enemy
     update(state: GameState, bullet: Bullet): void
     onDeath?: (state: GameState, bullet: Bullet) => void
@@ -23,4 +24,5 @@ interface Bullet extends Circle {
     amplitude?: number
     frequency?: number
     warningTime: number
+    shaved?: boolean
 }

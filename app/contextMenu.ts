@@ -1,7 +1,9 @@
 import { armorTypes } from 'app/armor';
 import { CANVAS_SCALE, CELL_SIZE } from 'app/constants';
+import { applyUniqueItemEnchantments, generateArmor, generateWeapon, resetArmor, resetWeapon } from 'app/utils/item';
+import { addUniqueEnchantmentToItem } from 'app/uniqueEnchantments';
+import { uniqueEnchantmentHash } from 'app/uniqueEnchantmentHash';
 import { createDungeon, dungeonTypes, startDungeon } from 'app/utils/dungeon';
-import { generateArmor, generateWeapon } from 'app/loot';
 import { KEY, isKeyboardKeyDown } from 'app/utils/userInput';
 import { mainCanvas } from 'app/utils/canvas';
 import { getElementRect, tagElement } from 'app/utils/dom';
@@ -113,7 +115,7 @@ export function getContextMenu(state: GameState): MenuOption[] {
         {
             label: 'Set Hero Level',
             getChildren() {
-                return [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90].map(level => ({
+                return [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(level => ({
                     label: `Lvl ${level}`,
                     onSelect() {
                         state.hero.level = level;
@@ -183,6 +185,42 @@ export function getContextMenu(state: GameState): MenuOption[] {
                 }));
             },
         },
+        {
+            label: 'Set Unique Weapon',
+            getChildren() {
+                return Object.values(uniqueEnchantmentHash)
+                    .filter(enchantment => enchantment.enchantmentType === 'uniqueWeaponEnchantment')
+                    .map(uniqueWeaponEnchantment => ({
+                        label: uniqueWeaponEnchantment.name,
+                        onSelect() {
+                            const weapon = state.hero.equipment.weapon;
+                            weapon.bonusEnchantmentSlots = [];
+                            resetWeapon(weapon);
+                            addUniqueEnchantmentToItem(weapon, uniqueWeaponEnchantment);
+                            applyUniqueItemEnchantments(weapon);
+                            setDerivedHeroStats(state);
+                        }
+                    }));
+            }
+        },
+        {
+            label: 'Set Unique Armor',
+            getChildren() {
+                return Object.values(uniqueEnchantmentHash)
+                    .filter(enchantment => enchantment.enchantmentType === 'uniqueArmorEnchantment')
+                    .map(uniqueArmorEnchantment => ({
+                        label: uniqueArmorEnchantment.name,
+                        onSelect() {
+                            const armor = state.hero.equipment.armor;
+                            armor.bonusEnchantmentSlots = [];
+                            resetArmor(armor);
+                            addUniqueEnchantmentToItem(armor, uniqueArmorEnchantment);
+                            applyUniqueItemEnchantments(armor);
+                            setDerivedHeroStats(state);
+                        }
+                    }));
+            }
+        }
 
     ];
 

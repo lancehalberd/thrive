@@ -268,10 +268,10 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
         if (state.isUsingXbox) {
             const slot = getSelectedInventorySlot(state);
             if (slot) {
-                renderItemDetails(context, hoverItem, slot, equippedItem);
+                renderItemDetails(context, state, hoverItem, slot, equippedItem);
             }
         } else {
-            renderItemDetails(context, hoverItem, state.mouse, equippedItem);
+            renderItemDetails(context, state, hoverItem, state.mouse, equippedItem);
         }
     }
     if (hoveredProficiencyType) {

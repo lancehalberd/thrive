@@ -15,7 +15,7 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
     const dps = heroAttacksPerSecond * heroDamage;
     const targetDuration = 1 + level * 10 / 100;
     const maxLife = Math.ceil((dps * targetDuration) * (definition.statFactors.maxLife ?? 1));
-    const baseArmor = 2 * level * (definition.statFactors.armor ?? 1);
+    const baseArmor = heroDamage / 20 * (definition.statFactors.armor ?? 1);
 
     const enemy = {
         definition,
@@ -51,7 +51,9 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
             this.modeTime = 0;
         }
     };
-    disc.enemies.push(enemy);
+    if (disc) {
+        disc.enemies.push(enemy);
+    }
     return enemy;
 }
 
@@ -106,7 +108,7 @@ export function getBaseEnemyBullet(state: GameState, enemy: Enemy): Bullet {
         radius: BASE_ENEMY_BULLET_RADIUS,
         vx: 0,
         vy: 0,
-        expirationTime: state.fieldTime + BASE_ENEMY_BULLET_DURATION,
+        duration: BASE_ENEMY_BULLET_DURATION,
         update: updateSimpleBullet,
         hitTargets: new Set(),
         // Armor shred is not functional against the player, although maybe it could be added
@@ -124,7 +126,7 @@ export function createBombBullet(state: GameState, enemy: Enemy, x: number, y: n
         radius: 3 * BASE_ENEMY_BULLET_RADIUS,
         x, y,
         warningTime: 800,
-        expirationTime: state.fieldTime + BASE_ENEMY_BULLET_DURATION,
+        duration: BASE_ENEMY_BULLET_DURATION,
         ...stats,
     }
     //const mag = Math.sqrt(vx * vx + vy * vy);
@@ -162,7 +164,7 @@ export function shootCirclingBullet(state: GameState, enemy: Enemy, theta: numbe
         orbitRadius: radius,
         theta,
         vTheta: 2 * Math.PI,
-        expirationTime: state.fieldTime + BASE_ENEMY_BULLET_DURATION,
+        duration: BASE_ENEMY_BULLET_DURATION,
         update: updateCirclingBullet,
         hitTargets: new Set(),
         // Armor shred is not functional against the player, although maybe it could be added

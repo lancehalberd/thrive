@@ -54,11 +54,11 @@ export const bat: EnemyDefinition = {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             if (isAggro) {
                 shootEnemyBullet(state, enemy, 0.6 * BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta), 0.6 * BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta), {
-                    expirationTime: state.fieldTime + 2000, amplitude: 10, frequency: 6,
+                    duration: 2000, amplitude: 10, frequency: 6,
                     update: updateSonarBullet,
                 });
                 shootEnemyBullet(state, enemy, 0.6 * BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta), 0.6 * BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta), {
-                    expirationTime: state.fieldTime + 2000, amplitude: -10, frequency: 6,
+                    duration: 2000, amplitude: -10, frequency: 6,
                     update: updateSonarBullet,
                 });
             } else {

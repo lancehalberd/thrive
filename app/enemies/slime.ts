@@ -13,6 +13,7 @@ export const slime: EnemyDefinition = {
     },
     initialParams: {},
     dropChance: BASE_DROP_CHANCE,
+    uniqueMultiplier: 20,
     experienceFactor: 2,
     radius: 24,
     portalChance: 0.1,
@@ -84,6 +85,7 @@ export const greatSlime: EnemyDefinition = {
     },
     initialParams: {},
     dropChance: 2 * BASE_DROP_CHANCE,
+    uniqueMultiplier: 2,
     portalChance: 0,
     experienceFactor: 2,
     radius: 32,
@@ -128,7 +130,7 @@ export const megaSlime: EnemyDefinition = {
             shootBulletAtHero(state, enemy, 1.5 * BASE_ENEMY_BULLET_SPEED, {damage: 1.5 * enemy.damage, radius: 2 * BASE_ENEMY_BULLET_RADIUS});
         }
         if (enemy.mode === 'choose' && enemy.modeTime === 0) {
-            shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 12, 1.2 * BASE_ENEMY_BULLET_SPEED, {expirationTime: state.fieldTime + 2000});
+            shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 12, 1.2 * BASE_ENEMY_BULLET_SPEED, {duration: 2000});
         }
     },
     onDeath(state: GameState, enemy: Enemy): void {
@@ -145,7 +147,7 @@ export const megaSlime: EnemyDefinition = {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             for (let i = 0; i < 4; i++) {
                 const speed = 0.3 * BASE_ENEMY_BULLET_SPEED + i * 0.3 * BASE_ENEMY_BULLET_SPEED;
-                shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 10, speed, {expirationTime: state.fieldTime + 2000});
+                shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 10, speed, {duration: 2000});
             }
         }
     },

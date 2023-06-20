@@ -18,6 +18,7 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     armors: Armor[],
     enchantments: Enchantment[],
     activeEnchantment?: Enchantment,
+    uniqueEnchantments: UniqueEnchantmentInstance[],
     // How much the player has charged since he last attacked, which will be applied to the next weapon cycle.
     chargingLevel: number
     // How charged the player's current attacks are.

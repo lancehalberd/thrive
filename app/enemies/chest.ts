@@ -6,6 +6,7 @@ export const chest: EnemyDefinition = {
     statFactors: {},
     initialParams: {},
     dropChance: 1,
+    uniqueMultiplier: 5,
     experienceFactor: 0,
     radius: 24,
     update(state: GameState, enemy: Enemy): void {

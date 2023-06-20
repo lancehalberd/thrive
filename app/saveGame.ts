@@ -1,5 +1,5 @@
 import { getWeaponProficiency } from 'app/utils/hero';
-import { generateArmor, generateWeapon } from 'app/loot';
+import { applyUniqueItemEnchantments, generateArmor, generateWeapon } from 'app/utils/item';
 
 interface SaveGameData {
     worldSeed: number
@@ -15,17 +15,20 @@ interface SaveGameData {
     armors: SavedArmor[]
     enchantments: Enchantment[]
     bossRecords: {[key in string]: number}
+    missedRolls: {[key in string]: number}
 }
 
 interface SavedWeapon {
     type: WeaponType
     level: number
     enchantmentSlots: ItemEnchantment[]
+    bonusEnchantmentSlots: ItemEnchantment[]
 }
 interface SavedArmor {
     type: ArmorType
     level: number
     enchantmentSlots: ItemEnchantment[]
+    bonusEnchantmentSlots: ItemEnchantment[]
 }
 
 function getSaveData(state: GameState): SaveGameData {
@@ -52,6 +55,7 @@ function getSaveData(state: GameState): SaveGameData {
         armors: state.hero.armors.map(saveArmor),
         enchantments: state.hero.enchantments.map(saveEnchantment),
         bossRecords: state.hero.bossRecords,
+        missedRolls: state.missedRolls,
     };
 }
 
@@ -68,11 +72,14 @@ function saveArmor(armor: Armor): SavedArmor {
         type: armor.armorType,
         level: armor.level,
         enchantmentSlots: armor.enchantmentSlots,
+        bonusEnchantmentSlots: armor.bonusEnchantmentSlots,
     };
 }
 function loadArmor(data: SavedArmor): Armor {
     const armor = generateArmor(data.type, data.level);
     armor.enchantmentSlots = data.enchantmentSlots;
+    armor.bonusEnchantmentSlots = data.bonusEnchantmentSlots || [];
+    applyUniqueItemEnchantments(armor);
     return armor;
 }
 
@@ -81,11 +88,14 @@ function saveWeapon(weapon: Weapon): SavedWeapon {
         type: weapon.weaponType,
         level: weapon.level,
         enchantmentSlots: weapon.enchantmentSlots,
+        bonusEnchantmentSlots: weapon.bonusEnchantmentSlots,
     };
 }
 function loadWeapon(data: SavedWeapon): Weapon {
     const weapon = generateWeapon(data.type, data.level);
     weapon.enchantmentSlots = data.enchantmentSlots;
+    weapon.bonusEnchantmentSlots = data.bonusEnchantmentSlots || [];
+    applyUniqueItemEnchantments(weapon);
     return weapon;
 }
 
@@ -121,6 +131,7 @@ export function loadGame(state: GameState) {
         state.hero.enchantments = data.enchantments;
         // Data below this point might not exist on old save files.
         state.hero.bossRecords = data.bossRecords || {};
+        state.missedRolls = data.missedRolls || {};
     } catch (e) {
         console.error(e);
         debugger;

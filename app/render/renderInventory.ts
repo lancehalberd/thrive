@@ -4,6 +4,7 @@ import { embossText } from 'app/render/renderText';
 import { armorTypeLabels } from 'app/armor';
 import { enchantmentStrengthLabels, getEnchantmentBonusText } from 'app/enchantments';
 import { getSelectedInventorySlot } from 'app/inventory';
+import { uniqueEnchantmentHash } from 'app/uniqueEnchantmentHash';
 import { weaponTypeLabels } from 'app/weapons';
 
 export function renderInventorySlot(context: CanvasRenderingContext2D, state: GameState, {x, y, w, h, item}: InventorySlot): void {
@@ -93,17 +94,21 @@ function renderItemSlots(context: CanvasRenderingContext2D, x: number, y: number
         context.arc(sx, sy, 4, 0, 2 * Math.PI);
         context.stroke();
     }
+    if (item.bonusEnchantmentSlots.length > 0) {
+        fillCircle(context, {x, y, radius: 7}, 'yellow');
+    }
 }
 
 
 const minDetailsWidth = 200;
 const minDetailsHeight = 50;
 
-export function renderItemDetails(context: CanvasRenderingContext2D, item: Item, {x, y}: Point, equippedItem?: Equipment): void {
+export function renderItemDetails(context: CanvasRenderingContext2D, state: GameState, item: Item, {x, y}: Point, equippedItem?: Equipment): void {
     let w = minDetailsWidth, h = minDetailsHeight;
+    context.font = `16px monospace`;
     const textLines: string[] = equippedItem && equippedItem !== item && item.type !== 'enchantment'
-        ? getItemComparisonTextLines(item, equippedItem)
-        : getItemTextLines(item);
+        ? getItemComparisonTextLines(state, item, equippedItem)
+        : getItemTextLines(state, item);
     const lineWidths: number[] = [];
     for (const line of textLines) {
         const lineWidth = context.measureText(line).width;
@@ -120,14 +125,13 @@ export function renderItemDetails(context: CanvasRenderingContext2D, item: Item,
     context.fillStyle = 'white';
     context.textBaseline = 'top';
     context.textAlign = 'left';
-    context.font = `16px sans-serif`;
     for (let i = 0; i < textLines.length; i++) {
         const line = textLines[i];
         context.fillText(line, x + 10, y + 10 + 20 * i);
     }
 }
 
-function getItemTextLines(item: Item): string[] {
+function getItemTextLines(state: GameState, item: Item): string[] {
     if (item.type === 'enchantment') {
         return [
             enchantmentStrengthLabels[item.strength] + ' ' + item.name + ' enchantment',
@@ -139,8 +143,10 @@ function getItemTextLines(item: Item): string[] {
         return [
             item.name,
             'Lv ' + item.level + ' ' + weaponTypeLabels[item.weaponType],
-            Math.round(item.damage * item.shots.length * item.attacksPerSecond) + ' DPS',
-            ...getEnchantmentTextLines(item),
+            //Math.round(item.damage * item.shots.length * item.attacksPerSecond) + ' DPS',
+            item.damage + ' Damage',
+            (item.shots.length * item.attacksPerSecond).toFixed(2) + ' Attacks per second',
+            ...getEnchantmentTextLines(state, item),
         ];
     }
     if (item.type === 'armor') {
@@ -149,21 +155,27 @@ function getItemTextLines(item: Item): string[] {
             'Lv ' + item.level + ' ' + armorTypeLabels[item.armorType],
             item.armor + ' Armor',
             '+' + item.life + ' Life',
-            ...getEnchantmentTextLines(item),
+            ...getEnchantmentTextLines(state, item),
         ];
     }
     return [];
 }
 
-function getItemComparisonTextLines(newItem: Equipment, equippedItem: Equipment): string[] {
+function getItemComparisonTextLines(state: GameState, newItem: Equipment, equippedItem: Equipment): string[] {
     if (newItem.type === 'weapon' && equippedItem.type === 'weapon') {
-        const oldDps = Math.round(equippedItem.damage * equippedItem.shots.length * equippedItem.attacksPerSecond);
-        const newDps = Math.round(newItem.damage * newItem.shots.length * newItem.attacksPerSecond);
+        //const oldDps = Math.round(equippedItem.damage * equippedItem.shots.length * equippedItem.attacksPerSecond);
+        //const newDps = Math.round(newItem.damage * newItem.shots.length * newItem.attacksPerSecond);
         return [
             newItem.name,
             'Lv ' + newItem.level + ' ' + weaponTypeLabels[newItem.weaponType],
-            oldDps + ' → ' + newDps + ' DPS',
-            ...getEnchantmentComparisonTextLines(newItem, equippedItem),
+            //oldDps + ' → ' + newDps + ' DPS',
+            equippedItem.damage +  ' → ' + newItem.damage + ' Damage',
+            (equippedItem.shots.length * equippedItem.attacksPerSecond).toFixed(2)
+                + ' → '
+                + (newItem.shots.length * newItem.attacksPerSecond).toFixed(2)
+                + ' Attacks per second',
+            ...getEnchantmentComparisonTextLines(state, newItem, equippedItem),
+            ...getBonusEnchantmentComparisonTextLines(state, newItem, equippedItem),
         ];
     }
     if (newItem.type === 'armor' && equippedItem.type === 'armor') {
@@ -172,34 +184,82 @@ function getItemComparisonTextLines(newItem: Equipment, equippedItem: Equipment)
             'Lv ' + newItem.level + ' ' + armorTypeLabels[newItem.armorType],
             equippedItem.armor + ' → ' + newItem.armor + ' Armor',
            '+' + equippedItem.life + ' → ' +'+' + newItem.life + ' Life',
-            ...getEnchantmentComparisonTextLines(newItem, equippedItem),
+            ...getEnchantmentComparisonTextLines(state, newItem, equippedItem),
+            ...getBonusEnchantmentComparisonTextLines(state, newItem, equippedItem),
         ];
     }
     return [];
 }
 
 
-function getEnchantmentTextLines(item: Equipment): string[] {
-    return item.enchantmentSlots.map(getEnchantmentText);
+function getEnchantmentTextLines(state: GameState, item: Equipment): string[] {
+    return [
+        ...item.enchantmentSlots.map(e => getEnchantmentText(state, e)).flat(),
+        ...item.bonusEnchantmentSlots.map(e => getEnchantmentText(state, e)).flat(),
+     ];
 }
 
-function getEnchantmentComparisonTextLines(newItem: Equipment, equippedItem: Equipment): string[] {
+function getEnchantmentComparisonTextLines(state: GameState, newItem: Equipment, equippedItem: Equipment): string[] {
     const lines: string[] = [];
     for (let i = 0; i < newItem.enchantmentSlots.length || i < equippedItem.enchantmentSlots.length; i++) {
-        lines.push(getEnchantmentText(equippedItem.enchantmentSlots[i]) + ' → ' + getEnchantmentText(newItem.enchantmentSlots[i]));
+        const currentLines = getEnchantmentText(state, equippedItem.enchantmentSlots[i]);
+        const newLines = getEnchantmentText(state, newItem.enchantmentSlots[i]);
+        const maxLines = Math.max(currentLines.length, newLines.length);
+        const maxCurrentLineLength = Math.max(...currentLines.map(l => l.length));
+        // This is a pretty hacky way of trying to show a transition between two lines of text
+        for (let j = 0; j < maxLines;j++) {
+            const currentLine = currentLines[j];
+            const newLine = newLines[j];
+            let padding = ' '.repeat(maxCurrentLineLength - (currentLine?.length || 0));
+            if (currentLine && newLine) {
+                lines.push(currentLine + ' → ' + padding + newLine);
+            } else if(currentLine) {
+                lines.push(currentLine);
+            } else {
+                lines.push(padding + '   ' + newLine);
+            }
+        }
     }
     return lines;
 }
 
-function getEnchantmentText(enchantment?: ItemEnchantment): string {
+function getBonusEnchantmentComparisonTextLines(state: GameState, newItem: Equipment, equippedItem: Equipment): string[] {
+    const lines: string[] = [];
+    for (let i = 0; i < newItem.bonusEnchantmentSlots.length || i < equippedItem.bonusEnchantmentSlots.length; i++) {
+        const currentLines = getEnchantmentText(state, equippedItem.bonusEnchantmentSlots[i]);
+        const newLines = getEnchantmentText(state, newItem.bonusEnchantmentSlots[i]);
+        const maxLines = Math.max(currentLines.length, newLines.length);
+        const maxCurrentLineLength = Math.max(...currentLines.map(l => l.length));
+        // This is a pretty hacky way of trying to show a transition between two lines of text
+        for (let j = 0; j < maxLines;j++) {
+            const currentLine = currentLines[j];
+            const newLine = newLines[j];
+            let padding = ' '.repeat(maxCurrentLineLength - (currentLine?.length || 0));
+            if (currentLine && newLine) {
+                lines.push(currentLine + ' → ' + padding + newLine);
+            } else if(currentLine) {
+                lines.push(currentLine);
+            } else {
+                lines.push(padding + '   ' + newLine);
+            }
+        }
+    }
+    return lines;
+}
+
+function getEnchantmentText(state: GameState, enchantment?: ItemEnchantment): string[] {
     if (!enchantment) {
-        return '-- ';
+        return ['-- '];
     }
     if (enchantment.enchantmentType === 'empty') {
-        return 'Empty Slot';
+        return ['Empty Slot'];
+    }
+    if (enchantment.enchantmentType === 'uniqueArmorEnchantment' || enchantment.enchantmentType === 'uniqueWeaponEnchantment') {
+        const definition = uniqueEnchantmentHash[enchantment.uniqueEnchantmentKey];
+        return definition.getDescription?.(state, enchantment);
     }
     if (!enchantment.value) {
-        return enchantment.enchantmentType
+        return [enchantment.enchantmentType];
     }
     return getEnchantmentBonusText(enchantment.enchantmentType, enchantment.value);
 }

@@ -13,10 +13,12 @@ type ArmorEnchantmentType  = 'speed'|'armor'|'life'|'potionEffect'|'dropChance';
 
 type EnchantmentType =  ArmorEnchantmentType | WeaponEnchantmentType;
 
-interface ItemEnchantment {
+interface BasicItemEnchantment {
     enchantmentType: 'empty' | EnchantmentType
     value: number
 }
+
+type ItemEnchantment = BasicItemEnchantment | UniqueArmorEnchantmentInstance | UniqueWeaponEnchantmentInstance;
 
 interface Weapon {
     type: 'weapon'
@@ -33,6 +35,7 @@ interface Weapon {
     name: string
     shots: Shot[]
     enchantmentSlots: ItemEnchantment[]
+    bonusEnchantmentSlots: ItemEnchantment[]
 }
 
 interface Armor {
@@ -44,6 +47,7 @@ interface Armor {
     speedFactor: number
     name: string
     enchantmentSlots: ItemEnchantment[]
+    bonusEnchantmentSlots: ItemEnchantment[]
 }
 
 interface Enchantment {
@@ -53,6 +57,38 @@ interface Enchantment {
     weaponEnchantmentType: WeaponEnchantmentType
     armorEnchantmentType: ArmorEnchantmentType
     strength: number
+}
+
+interface UniqueEnchantment {
+    key: string
+    name: string
+    chance: number
+    enchantmentType: 'uniqueArmorEnchantment'|'uniqueWeaponEnchantment'
+    getDescription: (state: GameState, enchantment: UniqueEnchantmentInstance) => string[]
+    // Modify the hero stats after all other enchantments are applied (not implemented yet)
+    modifyHero?: (state: GameState, enchantment: UniqueEnchantmentInstance) => void
+    // Modify each bullet as it is shot
+    modifyBullet?: (state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet) => void
+    // Modify the actual weapon stats (only applies on weapons)
+    modifyWeapon?: (enchantment: UniqueEnchantmentInstance, weapon: Weapon) => void
+    // Modify the actual weapon stats (only applies on armors)
+    modifyArmor?: (enchantment: UniqueEnchantmentInstance, armor: Armor) => void
+    // Called when charge attack is activated. If this returns true, the default charge behavior will not apply.
+    onActivateCharge?: (state: GameState, enchantment: UniqueEnchantmentInstance) => boolean|void
+    // Called when the player is hit by a bullet.
+    onHit?: (state: GameState, enchantment: UniqueEnchantmentInstance) => void
+}
+
+
+interface UniqueEnchantmentInstance {
+    uniqueEnchantmentKey: string
+    tier: 1|2|3|4|5
+}
+interface UniqueArmorEnchantmentInstance extends UniqueEnchantmentInstance {
+    enchantmentType: 'uniqueArmorEnchantment'
+}
+interface UniqueWeaponEnchantmentInstance extends UniqueEnchantmentInstance {
+    enchantmentType: 'uniqueWeaponEnchantment'
 }
 
 type Item = Armor | Weapon | Enchantment;

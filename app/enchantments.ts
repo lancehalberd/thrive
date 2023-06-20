@@ -1,3 +1,4 @@
+import { uniqueEnchantmentHash } from 'app/uniqueEnchantmentHash';
 
 export const enchantmentStrengthLabels = [
     'Failed',
@@ -33,7 +34,7 @@ export const enchantmentStatScale: {[key in EnchantmentType]: number} = {
     'potionEffect': 1,
 };
 
-function getEnchantmentStrength(level: number): number {
+export function getEnchantmentStrength(level: number): 1|2|3|4|5 {
     if (level >= 80) {
         return 5;
     }
@@ -60,6 +61,11 @@ export function applyEnchantmentsToStats(state: GameState): void {
 
 export function applyEnchantmentToStats(state: GameState, enchantment: ItemEnchantment): void {
     if (enchantment.enchantmentType === 'empty') {
+        return;
+    }
+    if (enchantment.enchantmentType === 'uniqueArmorEnchantment' || enchantment.enchantmentType === 'uniqueWeaponEnchantment') {
+        const definition = uniqueEnchantmentHash[enchantment.uniqueEnchantmentKey];
+        definition.modifyHero?.(state, enchantment);
         return;
     }
     const effect = enchantment.value * enchantmentStatScale[enchantment.enchantmentType] / 100;
@@ -101,7 +107,7 @@ export function getEnchantmentPercentValue(enchantmentType: EnchantmentType, val
     return Math.floor(value * enchantmentStatScale[enchantmentType]) + '%';
 }
 
-export function getEnchantmentBonusText(enchantmentType: EnchantmentType, value: number, value2?: number): string {
+export function getEnchantmentBonusText(enchantmentType: EnchantmentType, value: number, value2?: number): string[] {
     let text = getEnchantmentPercentValue(enchantmentType, value)
     if (value2) {
         text += ' to ' + getEnchantmentPercentValue(enchantmentType, value2);
@@ -111,7 +117,7 @@ export function getEnchantmentBonusText(enchantmentType: EnchantmentType, value:
     } else {
         text += ' increased ' + enchantmentStatLabels[enchantmentType];
     }
-    return text;
+    return [text];
 }
 
 export function applyEnchantmentToEquipment(enchantment: Enchantment, item: Equipment): boolean {

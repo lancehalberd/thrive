@@ -12,6 +12,7 @@ export const crab: EnemyDefinition = {
     },
     initialParams: {},
     dropChance: 1.5 * BASE_DROP_CHANCE,
+    uniqueMultiplier: 2,
     experienceFactor: 2,
     radius: 24,
     update(state: GameState, enemy: Enemy): void {
@@ -68,15 +69,15 @@ export const crab: EnemyDefinition = {
             }
         }
         if (enemy.modeTime % 500 === 0) {
-            const expirationTime = state.fieldTime + 500;
-            shootBulletArc(state, enemy, 0, Math.PI / 8, 3, enemy.mode === 'moveRight' ? 1.5 * BASE_ENEMY_BULLET_SPEED : BASE_ENEMY_BULLET_SPEED, {expirationTime});
-            shootBulletArc(state, enemy, Math.PI, Math.PI / 8, 3, enemy.mode === 'moveLeft' ? 1.5 * BASE_ENEMY_BULLET_SPEED : BASE_ENEMY_BULLET_SPEED, {expirationTime});
+            const duration = 500;
+            shootBulletArc(state, enemy, 0, Math.PI / 8, 3, enemy.mode === 'moveRight' ? 1.5 * BASE_ENEMY_BULLET_SPEED : BASE_ENEMY_BULLET_SPEED, {duration});
+            shootBulletArc(state, enemy, Math.PI, Math.PI / 8, 3, enemy.mode === 'moveLeft' ? 1.5 * BASE_ENEMY_BULLET_SPEED : BASE_ENEMY_BULLET_SPEED, {duration});
         }
         if (isAggro && enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             //shootEnemyBullet(state, enemy, 100, 0);
             //shootEnemyBullet(state, enemy, -100, 0);
-            shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage, expirationTime: state.fieldTime + 2000});
+            shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage, duration: 2000});
         }
         if (enemy.modeTime >= 1000) {
             enemy.setMode('choose');

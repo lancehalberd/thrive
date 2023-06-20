@@ -14,6 +14,7 @@ export const turret: EnemyDefinition = {
     },
     initialParams: {},
     dropChance: 2 * BASE_DROP_CHANCE,
+    uniqueMultiplier: 2,
     experienceFactor: 2,
     radius: 24,
     update(state: GameState, enemy: Enemy): void {
@@ -28,7 +29,7 @@ export const turret: EnemyDefinition = {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             for (let i = 0; i < 3; i++) {
                 const theta = enemy.theta - Math.PI / 6 + Math.PI / 6 * i;
-                shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(theta), BASE_ENEMY_BULLET_SPEED * Math.sin(theta), {expirationTime: state.fieldTime + 2000});
+                shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(theta), BASE_ENEMY_BULLET_SPEED * Math.sin(theta), {duration: 2000});
             }
         }
     },

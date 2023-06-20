@@ -62,6 +62,7 @@ export function gainItemExperience(state: GameState, item: Item): void {
 }
 
 export function setDerivedHeroStats(state: GameState): void {
+    state.hero.uniqueEnchantments = [];
 
     // This must be calculated before anything that uses weapon proficiency which is derived in part from these numbers.
     state.hero.weaponMastery = {};
@@ -71,7 +72,8 @@ export function setDerivedHeroStats(state: GameState): void {
         state.hero.weaponMastery[weaponType] = (state.hero.weaponMastery[weaponType] || 0) + bonus;
     }
 
-    const weaponLevel = state.hero.equipment.weapon.level;
+    const {armor, weapon} = state.hero.equipment;
+    const weaponLevel = weapon.level;
     const weaponProficiency = getTotalWeaponProficiency(state);
     state.hero.damage = Math.pow(1.05, state.hero.level - 1 + weaponProficiency);
     state.hero.attacksPerSecond = 1 + 0.01 * state.hero.level + 0.01 * weaponProficiency;
@@ -88,7 +90,6 @@ export function setDerivedHeroStats(state: GameState): void {
     state.hero.dropChance = 0;
     state.hero.dropLevel = 0;
 
-    const armor = state.hero.equipment.armor;
     if (armor) {
         state.hero.maxLife += armor.life;
         state.hero.armor += armor.armor;
@@ -116,6 +117,18 @@ export function setDerivedHeroStats(state: GameState): void {
 
     // Make sure updating stats doesn't change the hero's life percentage beyond rounding it.
     state.hero.life = Math.round(lifePercentage * state.hero.maxLife);
+
+    const allSlots = [
+        ...armor.enchantmentSlots,
+        ...armor.bonusEnchantmentSlots,
+        ...weapon.enchantmentSlots,
+        ...weapon.bonusEnchantmentSlots,
+    ];
+    for (const enchantment of allSlots) {
+        if (enchantment.enchantmentType === 'uniqueArmorEnchantment' || enchantment.enchantmentType === 'uniqueWeaponEnchantment') {
+            state.hero.uniqueEnchantments.push(enchantment);
+        }
+    }
 }
 
 export function getExperienceForNextLevel(currentLevel: number): number {
@@ -175,15 +188,19 @@ export function damageHero(state: GameState, damage: number): void {
 }
 
 export function getMaxChargeLevel(state: GameState): number {
-    return state.hero.equipment.weapon.chargeLevel;
+    const proficiency = getTotalWeaponProficiency(state);
+    return state.hero.equipment.weapon.chargeLevel + Math.floor(proficiency / 25);
 }
 
 export function getHeroShaveRadius(state: GameState): number {
+    const p = (state.hero.attackChargeLevel > 1)
+        ? 0
+        : 1 - (state.hero.chargingLevel - 1) / (getMaxChargeLevel(state) - 1);
     if (state.hero.equipment.armor.armorType === 'lightArmor') {
-        return 1.25 * BULLET_SHAVE_RADIUS;
+        return p * 1.25 * BULLET_SHAVE_RADIUS;
     }
     if (state.hero.equipment.armor.armorType === 'heavyArmor') {
-        return 0.75 * BULLET_SHAVE_RADIUS;
+        return p * 0.75 * BULLET_SHAVE_RADIUS;
     }
-    return BULLET_SHAVE_RADIUS;
+    return p * BULLET_SHAVE_RADIUS;
 }

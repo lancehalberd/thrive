@@ -8,6 +8,7 @@ function createLightArmor(level: number, name: string): Armor {
         armor: level,
         speedFactor: 1.2,
         enchantmentSlots: [],
+        bonusEnchantmentSlots: [],
     };
 }
 
@@ -37,6 +38,7 @@ function createMediumArmor(level: number, name: string): Armor {
         armor: Math.ceil(level * 1.5),
         speedFactor: 1,
         enchantmentSlots: [],
+        bonusEnchantmentSlots: [],
     };
 }
 
@@ -66,6 +68,7 @@ function createHeavyArmor(level: number, name: string): Armor {
         armor: Math.ceil(level * 2),
         speedFactor: 0.8,
         enchantmentSlots: [],
+        bonusEnchantmentSlots: [],
     };
 }
 

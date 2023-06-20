@@ -104,7 +104,7 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
     context.restore();
     context.beginPath();
     context.rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    context.arc(FIELD_CENTER.x, FIELD_CENTER.y, SIGHT_RADIUS, 0, 2 * Math.PI, true);
+    context.arc(FIELD_CENTER.x, FIELD_CENTER.y, state.sightRadius, 0, 2 * Math.PI, true);
     context.fillStyle = '#000';
     context.fill();
 
@@ -239,12 +239,17 @@ function renderHero(context: CanvasRenderingContext2D, state: GameState, hero: H
         }
     context.restore();
 
-    context.beginPath();
-    context.lineWidth = 0;
-    context.setLineDash([5, 10]);
-    context.strokeStyle = 'blue';
-    context.arc(hero.x, hero.y, hero.radius + getHeroShaveRadius(state), 0, 2 * Math.PI);
-    context.stroke();
+    const shaveRadius = getHeroShaveRadius(state);
+    if (shaveRadius > 0) {
+        context.save();
+            context.beginPath();
+            context.lineWidth = 0;
+            context.setLineDash([5, 10]);
+            context.strokeStyle = 'blue';
+            context.arc(hero.x, hero.y, hero.radius + shaveRadius, 0, 2 * Math.PI);
+            context.stroke();
+        context.restore();
+    }
 }
 
 function renderFieldText(context: CanvasRenderingContext2D, fieldText: FieldText): void {

@@ -16,6 +16,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
     initialParams: {
     },
     dropChance: 1,
+    uniqueMultiplier: 20,
     experienceFactor: 20,
     radius: 40,
     update(state: GameState, enemy: Enemy): void {
@@ -67,12 +68,12 @@ export const guardian: EnemyDefinition<GuardianParams> = {
                 return;
             }
             if (enemy.modeTime % 200 === 0) {
-                const expirationTime = state.fieldTime + 2000;
+                const duration = 2000;
                 for (let i = 0; i < 2; i++) {
                     const thetaIndex = (enemy.modeTime - 400) / 200 + i;
                     const theta = -Math.PI / 2 + (i + 1) * thetaIndex * Math.PI / 12;
-                    shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(theta), BASE_ENEMY_BULLET_SPEED * Math.sin(theta), {expirationTime});
-                    shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(theta + Math.PI), BASE_ENEMY_BULLET_SPEED * Math.sin(theta + Math.PI), {expirationTime});
+                    shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(theta), BASE_ENEMY_BULLET_SPEED * Math.sin(theta), {duration});
+                    shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(theta + Math.PI), BASE_ENEMY_BULLET_SPEED * Math.sin(theta + Math.PI), {duration});
                 }
             }
             if (enemy.modeTime >= 4000) {
@@ -86,11 +87,11 @@ export const guardian: EnemyDefinition<GuardianParams> = {
                 return;
             }
             if (enemy.modeTime % 200 === 0) {
-                const expirationTime = state.fieldTime + 2000;
+                const duration = 2000;
                 for (let i = 0; i < 2; i++) {
                     const thetaIndex = (enemy.modeTime - 400) / 200;
                     const theta = Math.PI / 2 + thetaIndex * Math.PI / 6 * (i ? -1 : 1);
-                    shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(theta), BASE_ENEMY_BULLET_SPEED * Math.sin(theta), {expirationTime});
+                    shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(theta), BASE_ENEMY_BULLET_SPEED * Math.sin(theta), {duration});
                 }
             }
             if (enemy.modeTime >= 4000) {
@@ -107,7 +108,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
                 shootEnemyBullet(state, enemy,
                     2 * BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta), 2 * BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta),
                     {
-                        expirationTime: state.fieldTime + 2000,
+                        duration: 2000,
                         damage: enemy.damage * 5,
                         radius: 3 * BASE_ENEMY_BULLET_RADIUS,
                     }
@@ -124,8 +125,8 @@ export const guardian: EnemyDefinition<GuardianParams> = {
             if (enemy.modeTime % 200 === 0) {
                 const vx = 1.2 * BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta + Math.PI / 2);
                 const vy = 1.2 * BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta + Math.PI / 2);
-                shootEnemyBullet(state, enemy, vx, vy, {expirationTime: state.fieldTime + 3000});
-                shootEnemyBullet(state, enemy, -vx, -vy, {expirationTime: state.fieldTime + 3000});
+                shootEnemyBullet(state, enemy, vx, vy, {duration: 3000});
+                shootEnemyBullet(state, enemy, -vx, -vy, {duration: 3000});
             }
             if (enemy.modeTime >= 3000) {
                 enemy.setMode('choose');

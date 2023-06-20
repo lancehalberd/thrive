@@ -26,6 +26,7 @@ interface EnemyDefinition<EnemyParams=any> {
     statFactors: Partial<Vitals>
     initialParams: EnemyParams
     dropChance?: number
+    uniqueMultiplier?: number
     experienceFactor?: number
     solid?: boolean
     radius: number
