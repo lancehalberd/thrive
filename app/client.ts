@@ -189,7 +189,7 @@ function update(): void {
 
     // This shouldn't drop below 50% otherwise vision won't change even when you can be 1 shot.
     const healthThreshold = Math.max(0.5, 1 - 0.2 * state.hero.potionEffect);
-    // Ranges from 0.4 - 1 as health ranges from 0 to maxLife - 1 potion.
+    // Ranges from 0.5 - 1 as health ranges from 0 to maxLife - 1 potion.
     const sightPercentage = 0.5 + 0.5 * Math.min(1, state.hero.life / state.hero.maxLife / healthThreshold);
     const targetSightRadius = sightPercentage * SIGHT_RADIUS;
     if (state.sightRadius < targetSightRadius) {
