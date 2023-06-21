@@ -38,7 +38,10 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     dropLevel: number
     vx: number
     vy: number
+    flags: {[key in HeroFlag]?: boolean}
 }
+
+type HeroFlag = 'noShaveShrink'|'noShaveCharge'
 
 interface CoreHeroStats {
     level: number

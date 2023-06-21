@@ -1,6 +1,6 @@
 import { BASE_ENEMY_BULLET_DURATION, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_SPEED, BASE_WEAPON_DPS_PER_LEVEL, FRAME_LENGTH } from 'app/constants';
+import { updateCirclingBullet, updateSimpleBullet } from 'app/utils/bullet';
 import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
-import { updateSimpleBullet } from 'app/weapons';
 
 export function createEnemy<EnemyParams>(x: number, y: number, definition: EnemyDefinition<EnemyParams>, level: number, disc: Disc): Enemy<EnemyParams> {
     const heroBaseWeaponDamage = level * BASE_WEAPON_DPS_PER_LEVEL;
@@ -173,19 +173,6 @@ export function shootCirclingBullet(state: GameState, enemy: Enemy, theta: numbe
         warningTime: 0,
         ...stats,
     });
-}
-
-export function updateCirclingBullet(state: GameState, bullet: Bullet): void {
-    if (!bullet.source
-        || typeof(bullet.theta) !== 'number'
-        || typeof(bullet.vTheta) !== 'number'
-        || typeof(bullet.orbitRadius) !== 'number'
-    ) {
-        return;
-    }
-    bullet.theta += FRAME_LENGTH * bullet.vTheta / 1000;
-    bullet.x = bullet.source.x + bullet.orbitRadius * Math.cos(bullet.theta);
-    bullet.y = bullet.source.y + bullet.orbitRadius * Math.sin(bullet.theta);
 }
 
 export function shootBulletArc(state: GameState, enemy: Enemy, theta: number, angle: number, count: number, speed: number, stats: Partial<Bullet> = {}) {

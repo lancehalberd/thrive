@@ -167,7 +167,9 @@ export function getContextMenu(state: GameState): MenuOption[] {
                 return weaponTypes.map(weaponType => ({
                     label: weaponType,
                     onSelect() {
+                        const oldWeapon = state.hero.equipment.weapon;
                         state.hero.equipment.weapon = generateWeapon(weaponType, state.hero.level)!;
+                        state.hero.equipment.weapon.bonusEnchantmentSlots = oldWeapon.bonusEnchantmentSlots;
                         setDerivedHeroStats(state);
                     }
                 }));
@@ -179,7 +181,9 @@ export function getContextMenu(state: GameState): MenuOption[] {
                 return armorTypes.map(armorType => ({
                     label: armorType,
                     onSelect() {
+                        const oldArmor = state.hero.equipment.armor;
                         state.hero.equipment.armor = generateArmor(armorType, state.hero.level)!;
+                        state.hero.equipment.armor.bonusEnchantmentSlots = oldArmor.bonusEnchantmentSlots;
                         setDerivedHeroStats(state);
                     }
                 }));

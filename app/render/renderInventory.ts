@@ -47,7 +47,7 @@ export function renderSelectedInventorySlot(context: CanvasRenderingContext2D, s
 export function renderArmorLong(context: CanvasRenderingContext2D, x: number, y: number, armor: Armor): void {
     fillCircle(context, {x, y, radius: 12}, '#88F');
     renderItemSlots(context, x, y, armor);
-    const label = armor.name;
+    const label = getItemName(armor);
     embossText(context, label, x, y + 2, {size: 16, color: 'white', borderColor: 'black'});
 }
 export function renderArmorShort(context: CanvasRenderingContext2D, x: number, y: number, armor: Armor): void {
@@ -71,7 +71,7 @@ export function renderEnchantmentShort(context: CanvasRenderingContext2D, x: num
 export function renderWeaponLong(context: CanvasRenderingContext2D, x: number, y: number, weapon: Weapon): void {
     fillCircle(context, {x, y, radius: 12}, '#F88');
     renderItemSlots(context, x, y, weapon);
-    const label = weapon.name;
+    const label = getItemName(weapon);
     embossText(context, label, x, y + 2, {size: 16, color: 'white', borderColor: 'black'});
 }
 export function renderWeaponShort(context: CanvasRenderingContext2D, x: number, y: number, weapon: Weapon): void {
@@ -79,6 +79,17 @@ export function renderWeaponShort(context: CanvasRenderingContext2D, x: number, 
     renderItemSlots(context, x, y, weapon);
     const label = weapon.weaponType.charAt(0).toUpperCase() + weapon.level;
     embossText(context, label, x, y + 2, {size: 16, color: 'white', borderColor: 'black'});
+}
+
+export function getItemName(item: Equipment): string {
+    let name = item.type === 'weapon' ? weaponTypeLabels[item.weaponType] : armorTypeLabels[item.armorType];
+    for (const enchantment of item.bonusEnchantmentSlots) {
+        if (enchantment.enchantmentType === 'uniqueWeaponEnchantment' || enchantment.enchantmentType === 'uniqueArmorEnchantment') {
+            const definition = uniqueEnchantmentHash[enchantment.uniqueEnchantmentKey];
+            name = definition.name + ' ' + name;
+        }
+    }
+    return name;
 }
 
 function renderItemSlots(context: CanvasRenderingContext2D, x: number, y: number, item: Equipment): void {
@@ -141,7 +152,7 @@ function getItemTextLines(state: GameState, item: Item): string[] {
     }
     if (item.type === 'weapon') {
         return [
-            item.name,
+            getItemName(item),
             'Lv ' + item.level + ' ' + weaponTypeLabels[item.weaponType],
             //Math.round(item.damage * item.shots.length * item.attacksPerSecond) + ' DPS',
             item.damage + ' Damage',
@@ -151,7 +162,7 @@ function getItemTextLines(state: GameState, item: Item): string[] {
     }
     if (item.type === 'armor') {
         return [
-            item.name,
+            getItemName(item),
             'Lv ' + item.level + ' ' + armorTypeLabels[item.armorType],
             item.armor + ' Armor',
             '+' + item.life + ' Life',
@@ -166,7 +177,7 @@ function getItemComparisonTextLines(state: GameState, newItem: Equipment, equipp
         //const oldDps = Math.round(equippedItem.damage * equippedItem.shots.length * equippedItem.attacksPerSecond);
         //const newDps = Math.round(newItem.damage * newItem.shots.length * newItem.attacksPerSecond);
         return [
-            newItem.name,
+            getItemName(newItem),
             'Lv ' + newItem.level + ' ' + weaponTypeLabels[newItem.weaponType],
             //oldDps + ' → ' + newDps + ' DPS',
             equippedItem.damage +  ' → ' + newItem.damage + ' Damage',
@@ -180,7 +191,7 @@ function getItemComparisonTextLines(state: GameState, newItem: Equipment, equipp
     }
     if (newItem.type === 'armor' && equippedItem.type === 'armor') {
         return [
-            newItem.name,
+            getItemName(newItem),
             'Lv ' + newItem.level + ' ' + armorTypeLabels[newItem.armorType],
             equippedItem.armor + ' → ' + newItem.armor + ' Armor',
            '+' + equippedItem.life + ' → ' +'+' + newItem.life + ' Life',
@@ -247,6 +258,7 @@ function getBonusEnchantmentComparisonTextLines(state: GameState, newItem: Equip
     return lines;
 }
 
+
 function getEnchantmentText(state: GameState, enchantment?: ItemEnchantment): string[] {
     if (!enchantment) {
         return ['-- '];
@@ -256,10 +268,24 @@ function getEnchantmentText(state: GameState, enchantment?: ItemEnchantment): st
     }
     if (enchantment.enchantmentType === 'uniqueArmorEnchantment' || enchantment.enchantmentType === 'uniqueWeaponEnchantment') {
         const definition = uniqueEnchantmentHash[enchantment.uniqueEnchantmentKey];
-        return definition.getDescription?.(state, enchantment);
+        const lines = definition.getDescription?.(state, enchantment);
+        for (const flag of (definition.flags ?? [])) {
+            const line = getHeroFlagDescription(flag);
+            if (line) {
+                lines.push(line);
+            }
+        }
+        return lines;
     }
     if (!enchantment.value) {
         return [enchantment.enchantmentType];
     }
     return getEnchantmentBonusText(enchantment.enchantmentType, enchantment.value);
+}
+
+function getHeroFlagDescription(flag: HeroFlag): string|undefined {
+    switch (flag) {
+        case 'noShaveShrink': return 'Shave radius is unaffected by charge level.';
+        case 'noShaveCharge': return 'Shaving bullets does not increase charge level.';
+    }
 }

@@ -24,5 +24,10 @@ interface Bullet extends Circle {
     amplitude?: number
     frequency?: number
     warningTime: number
-    shaved?: boolean
+    // Set to true when a bullet enters the player's shave radius
+    shaveStarted?: boolean
+    // Set to true when a bullet exits the player's shave radius
+    shaveCompleted?: boolean
+    // Amount to slow bullets by each second.
+    friction?: number
 }

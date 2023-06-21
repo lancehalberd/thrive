@@ -2,6 +2,7 @@ import { guardian } from 'app/bosses/guardian';
 import { spider } from 'app/bosses/spider';
 import { giantClam } from 'app/enemies/clam';
 import { megaSlime } from 'app/enemies/slime';
+import { uniqueEnchantmentHash } from 'app/uniqueEnchantmentHash';
 import { BASE_MAX_POTIONS, BASE_XP, BULLET_SHAVE_RADIUS } from 'app/constants';
 import { applyEnchantmentsToStats } from 'app/enchantments';
 import { playSound } from 'app/utils/audio';
@@ -63,6 +64,7 @@ export function gainItemExperience(state: GameState, item: Item): void {
 
 export function setDerivedHeroStats(state: GameState): void {
     state.hero.uniqueEnchantments = [];
+    state.hero.flags = {};
 
     // This must be calculated before anything that uses weapon proficiency which is derived in part from these numbers.
     state.hero.weaponMastery = {};
@@ -127,6 +129,10 @@ export function setDerivedHeroStats(state: GameState): void {
     for (const enchantment of allSlots) {
         if (enchantment.enchantmentType === 'uniqueArmorEnchantment' || enchantment.enchantmentType === 'uniqueWeaponEnchantment') {
             state.hero.uniqueEnchantments.push(enchantment);
+            const definition = uniqueEnchantmentHash[enchantment.uniqueEnchantmentKey];
+            for (const flag of (definition.flags ?? [])) {
+                state.hero.flags[flag] = true;
+            }
         }
     }
 }
@@ -193,9 +199,12 @@ export function getMaxChargeLevel(state: GameState): number {
 }
 
 export function getHeroShaveRadius(state: GameState): number {
-    const p = (state.hero.attackChargeLevel > 1)
+    let p = (state.hero.attackChargeLevel > 1)
         ? 0
         : 1 - (state.hero.chargingLevel - 1) / (getMaxChargeLevel(state) - 1);
+    if (state.hero.flags.noShaveShrink) {
+        p = 1;
+    }
     if (state.hero.equipment.armor.armorType === 'lightArmor') {
         return p * 1.25 * BULLET_SHAVE_RADIUS;
     }

@@ -76,7 +76,11 @@ interface UniqueEnchantment {
     // Called when charge attack is activated. If this returns true, the default charge behavior will not apply.
     onActivateCharge?: (state: GameState, enchantment: UniqueEnchantmentInstance) => boolean|void
     // Called when the player is hit by a bullet.
-    onHit?: (state: GameState, enchantment: UniqueEnchantmentInstance) => void
+    onHit?: (state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet) => void
+    // Called when the player shaves a bullet.
+    onShave?: (state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet) => void
+    // Sets these flags on the player
+    flags?: HeroFlag[]
 }
 
 

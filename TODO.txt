@@ -36,15 +36,9 @@ Crafting Unique Enchantments:
     Unique enchantments sell for 1/3 of cost.
 
 Unique Weapon Enchantments
-    Bullets decelerate until stationary and persist a bit
-
     "Light saber" bullets: bullets pierce, 5x attackspeed, 20% range, 30% damage
 
     Burst fire: double shots in 0.5s, then 0.5s of no shots 60% damage
-
-    Boomerang: Double shot lifetime, shots return after 50% lifetime
-
-    Vacuum shots: shots spawn at max range and return to the player
 
     Slain enemies blow up into a nova of shots that deal 10% of their health as damage
 

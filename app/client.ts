@@ -99,6 +99,7 @@ function getInitialState(): GameState {
             vx: 0,
             vy: 0,
             uniqueEnchantments: [],
+            flags: {},
         },
         heroBullets: [],
         enemies: [],
@@ -578,6 +579,21 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
 }
 
 function updateEnemyBullets(state: GameState): void {
+    let shaved = false, onHit = false;
+    const shavebullet = (bullet: Bullet) => {
+        if (!state.hero.flags.noShaveCharge) {
+            gainAttackCharge(state, 1 / 10);
+        }
+        for (const enchantment of state.hero.uniqueEnchantments) {
+            const definition = uniqueEnchantmentHash[enchantment.uniqueEnchantmentKey];
+            definition.onShave?.(state, enchantment, bullet);
+        }
+        bullet.shaveCompleted = true;
+        if (!shaved) {
+            playSound(state, 'shaveBullet');
+            shaved = true;
+        }
+    }
     const activeBullets = [];
     for (const bullet of state.enemyBullets) {
         if (bullet.time < bullet.duration) {
@@ -586,10 +602,12 @@ function updateEnemyBullets(state: GameState): void {
             if (bullet.onDeath) {
                 bullet.onDeath(state, bullet);
             }
+            if (bullet.shaveStarted && !bullet.shaveCompleted) {
+                shavebullet(bullet);
+            }
         }
     }
     state.enemyBullets = [];
-    let shaved = false, onHit = false;
     const shaveRadius = getHeroShaveRadius(state);
     for (const bullet of activeBullets) {
         bullet.time += FRAME_LENGTH;
@@ -604,19 +622,20 @@ function updateEnemyBullets(state: GameState): void {
             if (!onHit) {
                 for (const enchantment of state.hero.uniqueEnchantments) {
                     const definition = uniqueEnchantmentHash[enchantment.uniqueEnchantmentKey];
-                    definition.onHit?.(state, enchantment);
+                    definition.onHit?.(state, enchantment, bullet);
                 }
                 onHit = true;
             }
             hitTarget = true;
             damageHero(state, bullet.damage);
-        } else if (!bullet.shaved && doCirclesIntersect({...state.hero, radius: state.hero.radius + shaveRadius}, bullet)) {
-            gainAttackCharge(state, 1 / 10);
-            bullet.shaved = true;
-            if (!shaved) {
+        } else if (!bullet.shaveStarted && doCirclesIntersect({...state.hero, radius: state.hero.radius + shaveRadius}, bullet)) {
+            bullet.shaveStarted = true;
+            /*if (!shaved) {
                 playSound(state, 'shaveBullet');
                 shaved = true;
-            }
+            }*/
+        } else if (bullet.shaveStarted && !bullet.shaveCompleted && !doCirclesIntersect({...state.hero, radius: state.hero.radius + shaveRadius}, bullet)) {
+            shavebullet(bullet);
         }
         if (!hitTarget) {
             state.enemyBullets.push(bullet);

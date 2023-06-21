@@ -1,6 +1,7 @@
 import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED, BOSS_MAX_LIFE_FACTOR, FRAME_LENGTH } from 'app/constants';
 import { getThiefEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
+import { updateReturnBullet } from 'app/utils/bullet';
 import {
     chaseHeroHeading,
     createEnemy,
@@ -10,7 +11,6 @@ import {
 } from 'app/utils/enemy';
 import { getTargetVector } from 'app/utils/geometry';
 import Random from 'app/utils/Random';
-import { updateReturnBullet } from 'app/weapons';
 
 const attackModes = <const>['novas','pinwheels','petals'];
 type AttackMode = (typeof attackModes[number])|'choose';

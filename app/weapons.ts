@@ -4,34 +4,10 @@ import {
     BASE_BULLET_SPEED,
     BASE_BULLET_RADIUS,
     BASE_BULLET_DURATION,
-    FRAME_LENGTH,
 } from 'app/constants';
+import { updateSimpleBullet } from 'app/utils/bullet';
 import { rollForCritDamage } from 'app/utils/combat';
 
-export function updateSimpleBullet(state: GameState, bullet: Bullet): void {
-    bullet.baseX += bullet.vx * FRAME_LENGTH / 1000;
-    bullet.baseY += bullet.vy * FRAME_LENGTH / 1000;
-    if (bullet.frequency && bullet.amplitude) {
-        const theta = Math.atan2(bullet.vy, bullet.vx) + Math.PI / 2;
-        const p = Math.min(1, bullet.time / 200);
-        const amplitude = p * bullet.amplitude * Math.sin(bullet.frequency * 2 * Math.PI * bullet.time / 1000);
-        bullet.x = bullet.baseX + amplitude * Math.cos(theta);
-        bullet.y = bullet.baseY + amplitude * Math.sin(theta);
-    } else {
-        bullet.x = bullet.baseX;
-        bullet.y = bullet.baseY;
-    }
-}
-
-export function updateReturnBullet(state: GameState, bullet: Bullet): void {
-    updateSimpleBullet(state, bullet);
-    // Reverse velocity at the bullet's half life.
-    const timeLeft = bullet.duration - bullet.time;
-    if (bullet.time >= timeLeft && bullet.time <= timeLeft + 20) {
-        bullet.vx = -bullet.vx;
-        bullet.vy = -bullet.vy;
-    }
-}
 
 function getArmorShred(state: GameState, chargeLevel: number): number {
     return state.hero.armorShredEffect * (0.01 + 0.02 * chargeLevel);
@@ -54,7 +30,7 @@ export function basicBullet(state: GameState, source: Hero, weapon: Weapon): Bul
         baseY: source.y,
         x: source.x,
         y: source.y,
-        radius: weapon.radius * source.attackChargeLevel,
+        radius: weapon.radius * (1.2 ** (source.attackChargeLevel - 1)),
         vx: weapon.speed * Math.cos(source.theta),
         vy: weapon.speed * Math.sin(source.theta),
         damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage),

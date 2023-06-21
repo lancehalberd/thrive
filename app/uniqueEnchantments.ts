@@ -2,6 +2,7 @@ import { BASE_BULLET_SPEED } from 'app/constants';
 import { getEnchantmentStrength } from 'app/enchantments';
 import { playerTurret } from 'app/enemies/playerTurret';
 import { addUniqueEnchantments } from 'app/uniqueEnchantmentHash';
+import { updateReturnBullet }  from 'app/utils/bullet';
 import { abbreviate } from 'app/utils/combat';
 import { createEnemy } from 'app/utils/enemy';
 import { rollWithMissBonus } from 'app/utils/rollWithMissBonus';
@@ -36,9 +37,9 @@ const tinkerer: UniqueEnchantment = {
     },
 };
 
-const waveBeam: UniqueEnchantment = {
-    key: 'waveBeam',
-    name: 'Wave Beam',
+const wave: UniqueEnchantment = {
+    key: 'wave',
+    name: 'Wave',
     enchantmentType: 'uniqueWeaponEnchantment',
     chance: COMMON_UNIQUE_RATE,
     getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
@@ -73,13 +74,13 @@ const helix: UniqueEnchantment = {
         //bullet.vx *= 0.9;
         //bullet.vy *= 0.9;
         //bullet.duration *= 1.1;
-        const doubleBullet = {...bullet};
+        const doubleBullet = {...bullet, hitTargets: new Set()};
         doubleBullet.amplitude = -amplitude;
         state.heroBullets.push(doubleBullet);
     },
 };
 
-const sharp: UniqueEnchantment = {
+const vicious: UniqueEnchantment = {
     key: 'vicious',
     name: 'Vicious',
     enchantmentType: 'uniqueWeaponEnchantment',
@@ -94,12 +95,70 @@ const sharp: UniqueEnchantment = {
     }
 };
 
+const kiting: UniqueEnchantment = {
+    key: 'kiting',
+    name: 'Kiting',
+    enchantmentType: 'uniqueWeaponEnchantment',
+    chance: UNCOMMON_UNIQUE_RATE,
+    getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
+        return [
+            'Shots last longer and slow to a stop.',
+        ];
+    },
+    modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
+        bullet.friction = 0.98;
+        bullet.duration += 1500;
+    },
+};
+
+const boomerang: UniqueEnchantment = {
+    key: 'boomerang',
+    name: 'Boomerang',
+    enchantmentType: 'uniqueWeaponEnchantment',
+    chance: UNCOMMON_UNIQUE_RATE,
+    getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
+        return [
+            'Shots last longer and reverse direction.',
+        ];
+    },
+    modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
+        bullet.update = updateReturnBullet;
+        bullet.duration *= 1.5;
+    },
+};
+
+const vacuum: UniqueEnchantment = {
+    key: 'vacuum',
+    name: 'Vacuum',
+    enchantmentType: 'uniqueWeaponEnchantment',
+    chance: UNCOMMON_UNIQUE_RATE,
+    getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
+        return [
+            'Shots spawn at range and move backwards.',
+        ];
+    },
+    modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
+        const multiplier = bullet.duration / 1000;
+        bullet.baseX = bullet.x = bullet.x + bullet.vx * multiplier;
+        bullet.baseY = bullet.y = bullet.y + bullet.vy * multiplier;
+        bullet.vx *= -1;
+        bullet.vy *= -1;
+        if (bullet.theta !== undefined && bullet.vTheta !== undefined) {
+            bullet.theta = bullet.theta + bullet.vTheta * multiplier;
+            bullet.vTheta *= -1;
+        }
+    },
+};
+
 
 const globalUniqueWeaponEnchantments = [
-    waveBeam,
-    sharp,
+    boomerang,
     helix,
+    kiting,
     tinkerer,
+    vacuum,
+    vicious,
+    wave,
 ];
 
 const reinforced: UniqueEnchantment = {
@@ -145,7 +204,6 @@ const thorny: UniqueEnchantment = {
         ];
     },
     onHit(state: GameState, enchantment: UniqueEnchantmentInstance): void {
-        console.log('onHit');
         const bullet = basicBullet(state, state.hero, state.hero.equipment.weapon);
         bullet.radius = 20;
         bullet.damage = getThornDamage(state, enchantment);
@@ -181,7 +239,6 @@ const spiky: UniqueEnchantment = {
         ];
     },
     onHit(state: GameState, enchantment: UniqueEnchantmentInstance): void {
-        console.log('onHit');
         const bullet = basicBullet(state, state.hero, state.hero.equipment.weapon);
         bullet.radius = 20;
         bullet.damage = getSpikeDamage(state, enchantment);
@@ -203,11 +260,46 @@ const spiky: UniqueEnchantment = {
     }
 };
 
+const paladin: UniqueEnchantment = {
+    key: 'paladin',
+    name: 'Paladin',
+    enchantmentType: 'uniqueArmorEnchantment',
+    chance: RARE_UNIQUE_RATE,
+    getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
+        return [
+            'Shaving bullets restores 2% of missing health',
+        ];
+    },
+    onShave(state: GameState, enchantment: UniqueEnchantmentInstance): void {
+        const missingHealth = state.hero.maxLife - state.hero.life;
+        state.hero.life = Math.min(state.hero.maxLife, Math.ceil(state.hero.life + missingHealth * 0.02));
+    },
+    flags: ['noShaveShrink', 'noShaveCharge'],
+};
+
+const voidEnchantment: UniqueEnchantment = {
+    key: 'void',
+    name: 'Void',
+    enchantmentType: 'uniqueArmorEnchantment',
+    chance: RARE_UNIQUE_RATE,
+    getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
+        return [
+            'Shaved bullets are destroyed',
+        ];
+    },
+    onShave(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
+        bullet.duration = 0;
+    },
+    flags: ['noShaveShrink', 'noShaveCharge'],
+};
+
 const globalUniqueArmorEnchantments = [
+    paladin,
     reinforced,
+    spiky,
     spongey,
     thorny,
-    spiky,
+    voidEnchantment,
 ];
 
 addUniqueEnchantments(globalUniqueArmorEnchantments);

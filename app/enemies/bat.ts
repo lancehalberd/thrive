@@ -1,8 +1,8 @@
 import { BASE_ENEMY_BULLET_SPEED } from 'app/constants';
 import { fillCircle } from 'app/render/renderGeometry';
+import { updateSimpleBullet } from 'app/utils/bullet';
 import { moveEnemyInDirection, shootBulletAtHero, shootEnemyBullet, turnTowardsTarget } from 'app/utils/enemy';
 import { getTargetVector } from 'app/utils/geometry';
-import { updateSimpleBullet } from 'app/weapons';
 
 function updateSonarBullet(state: GameState, bullet: Bullet): void {
     const amplitude = Math.min(50, bullet.time / 30);
