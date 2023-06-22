@@ -1,4 +1,5 @@
 import { FRAME_LENGTH } from 'app/constants';
+import { getClosestElement, turnTowardsAngle } from 'app/utils/geometry';
 
 export function updateCirclingBullet(state: GameState, bullet: Bullet): void {
     if (!bullet.source
@@ -40,8 +41,46 @@ export function updateSimpleBullet(state: GameState, bullet: Bullet): void {
 export function updateReturnBullet(state: GameState, bullet: Bullet): void {
     updateSimpleBullet(state, bullet);
     // Reverse velocity at the bullet's half life.
-    if (bullet.time >= bullet.duration / 2 && bullet.time < bullet.duration / 2 + 20) {
+    if (bullet.time >= bullet.duration / 2) {
         bullet.vx = -bullet.vx;
         bullet.vy = -bullet.vy;
+        bullet.update = updateSimpleBullet;
     }
+}
+
+export function updateBoomeringBullet(state: GameState, bullet: Bullet): void {
+    updateSimpleBullet(state, bullet);
+    if (bullet.time >= bullet.duration / 2) {
+        bullet.vx = -bullet.vx;
+        bullet.vy = -bullet.vy;
+        bullet.update = updateSourceSeekingBullet;
+    }
+}
+
+function turnBulletTowardsTarget(bullet: Bullet, rate: number = 0.1, target?: Circle): void {
+    if (!target) {
+        return;
+    }
+    const dx = target.x - bullet.baseX, dy = target.y - bullet.baseY;
+    const theta = turnTowardsAngle(Math.atan2(bullet.vy, bullet.vx), rate, Math.atan2(dy, dx));
+    const speed = Math.sqrt(bullet.vx * bullet.vx + bullet.vy * bullet.vy);
+    bullet.vx = speed * Math.cos(theta);
+    bullet.vy = speed * Math.sin(theta);
+
+}
+
+export function updateEnemySeekingBullet(state: GameState, bullet: Bullet): void {
+    const closestEnemy = getClosestElement(bullet, state.enemies.filter(e => !bullet.hitTargets.has(e)));
+    turnBulletTowardsTarget(bullet, 0.1, closestEnemy);
+    updateSimpleBullet(state, bullet);
+}
+
+export function updateHeroSeekingBullet(state: GameState, bullet: Bullet): void {
+    turnBulletTowardsTarget(bullet, 0.2, state.hero);
+    updateSimpleBullet(state, bullet);
+}
+
+export function updateSourceSeekingBullet(state: GameState, bullet: Bullet): void {
+    turnBulletTowardsTarget(bullet, 0.2, bullet.source);
+    updateSimpleBullet(state, bullet);
 }

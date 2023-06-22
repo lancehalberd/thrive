@@ -33,9 +33,9 @@ export const bat: EnemyDefinition = {
             turnTowardsTarget(state, enemy, state.hero);
             // Try to stay a certain distance from the player.
             if (distance2 <= 190 * 190) {
-                moveEnemyInDirection(state, enemy, Math.atan2(y, x));
-            } else if (distance2 >= 210 * 210){
                 moveEnemyInDirection(state, enemy, Math.atan2(y, x) + Math.PI);
+            } else if (distance2 >= 210 * 210){
+                moveEnemyInDirection(state, enemy, Math.atan2(y, x));
             }
         } else {
             if (enemy.mode === 'choose') {

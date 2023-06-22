@@ -218,7 +218,7 @@ export const babySpiderBomber: EnemyDefinition = {
     initialParams: {},
     radius: 24,
     onDeath(state: GameState, enemy: Enemy): void {
-        for (let r = 50; r < 150; r += 30) {
+        for (let r = 50; r < 200; r += 40) {
             const theta = Math.random() * 2 * Math.PI;
             createBombBullet(state, enemy, enemy.x + r * Math.cos(theta), enemy.y + r * Math.sin(theta));
         }
@@ -233,7 +233,9 @@ export const babySpiderBomber: EnemyDefinition = {
 
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED);
+            shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED, {
+                duration: 2000,
+            });
         }
 
         const bombSpacing = 500;
@@ -275,7 +277,7 @@ export const babySpiderNova: EnemyDefinition<BabySpiderNovaParams> = {
             }
         }
         if (enemy.mode === 'attack') {
-            const spacing = 600;
+            const spacing =  20 * Math.ceil(1000 / enemy.attacksPerSecond / 20);
             if (enemy.modeTime % spacing === 0) {
                 const count = 7;
                 const parity = [0, 2, 1, 3][(enemy.modeTime / spacing) % 4];
@@ -325,7 +327,7 @@ export const overworldSpiderNova: EnemyDefinition<BabySpiderNovaParams> = {
                 shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED);
             }
             // Periodic novas.
-            const spacing = 600;
+            const spacing =  20 * Math.ceil(1000 / enemy.attacksPerSecond / 20);
             if (enemy.modeTime % spacing === 0) {
                 const count = 7;
                 const parity = [0, 2, 1, 3][(enemy.modeTime / spacing) % 4];

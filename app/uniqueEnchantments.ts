@@ -2,7 +2,7 @@ import { BASE_BULLET_SPEED } from 'app/constants';
 import { getEnchantmentStrength } from 'app/enchantments';
 import { playerTurret } from 'app/enemies/playerTurret';
 import { addUniqueEnchantments } from 'app/uniqueEnchantmentHash';
-import { updateReturnBullet }  from 'app/utils/bullet';
+import { updateBoomeringBullet, updateEnemySeekingBullet, updateReturnBullet }  from 'app/utils/bullet';
 import { abbreviate } from 'app/utils/combat';
 import { createEnemy } from 'app/utils/enemy';
 import { rollWithMissBonus } from 'app/utils/rollWithMissBonus';
@@ -122,6 +122,21 @@ const boomerang: UniqueEnchantment = {
         ];
     },
     modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
+        bullet.update = updateBoomeringBullet;
+        bullet.duration *= 1.5;
+    },
+};
+const reversing: UniqueEnchantment = {
+    key: 'reversing',
+    name: 'Reversing',
+    enchantmentType: 'uniqueWeaponEnchantment',
+    chance: UNCOMMON_UNIQUE_RATE,
+    getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
+        return [
+            'Shots last longer and reverse direction.',
+        ];
+    },
+    modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
         bullet.update = updateReturnBullet;
         bullet.duration *= 1.5;
     },
@@ -149,12 +164,30 @@ const vacuum: UniqueEnchantment = {
         }
     },
 };
+const seeking: UniqueEnchantment = {
+    key: 'seeking',
+    name: 'Seeking',
+    enchantmentType: 'uniqueWeaponEnchantment',
+    chance: RARE_UNIQUE_RATE,
+    getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
+        return [
+            'Shots seek the nearest enemy.',
+        ];
+    },
+    modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
+        bullet.update = updateEnemySeekingBullet;
+    },
+};
+
+
 
 
 const globalUniqueWeaponEnchantments = [
     boomerang,
     helix,
     kiting,
+    reversing,
+    seeking,
     tinkerer,
     vacuum,
     vicious,

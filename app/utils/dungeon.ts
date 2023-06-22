@@ -1,15 +1,11 @@
 import { guardian } from 'app/bosses/guardian';
 import { spider } from 'app/bosses/spider';
 import { bat } from 'app/enemies/bat';
-import { chaser } from 'app/enemies/chaser';
 import { chest } from 'app/enemies/chest';
-import { circler } from 'app/enemies/circler';
 import { clam, giantClam } from 'app/enemies/clam';
 import { crab } from 'app/enemies/crab';
-import { lord } from 'app/enemies/lord';
 import { greatSlime, megaSlime } from 'app/enemies/slime';
 import { squid} from 'app/enemies/squid';
-import { turret } from 'app/enemies/turret';
 import { urchin } from 'app/enemies/urchin';
 import { saveGame } from 'app/saveGame';
 import { createDisc, linkDiscs, projectDiscToClosestDisc, projectDiscToDisc } from 'app/utils/disc';
@@ -18,6 +14,7 @@ import { refillAllPotions } from 'app/utils/hero';
 import { addOverworldPortalToDisc, updateActiveCells } from 'app/utils/overworld';
 import SRandom from 'app/utils/SRandom';
 import { createSpiderDenDungeon } from 'app/dungeons/spiderDen';
+import { createTreeDungeon } from 'app/dungeons/tree';
 
 const platformSizes = [200, 350, 500];
 
@@ -57,74 +54,6 @@ export function createDungeon(type: DungeonType, level: number, seed = Math.rand
     if (type === 'spiderDen') return createSpiderDenDungeon(seed, level);
     return createTreeDungeon(seed, radius, level);
 }
-
-
-
-export function createTreeDungeon(seed: number, radius: number, level: number): Dungeon {
-    const name = 'Tree';
-    const discs: Disc[] = [];
-    const entrance: Entrance = {x: 0, y: 0, radius: 16};
-    const dungeonRandomizer = SRandom.seed(seed);
-    const startingPlatform: Disc = createDisc({
-        level,
-        name,
-        x: entrance.x,
-        y: entrance.y,
-        radius: 400,
-    });
-    addOverworldPortalToDisc(entrance, startingPlatform);
-    discs.push(startingPlatform);
-    let finished = false;
-    for (let i = 0; i < 100 && (!finished || i < 20); i++) {
-        dungeonRandomizer.nextSeed();
-        const theta = 2 * Math.PI * dungeonRandomizer.generateAndMutate();
-        const newDisc: Disc = createDisc({
-            level,
-            name,
-            x: radius * Math.cos(theta),
-            y: radius * Math.sin(theta),
-            radius: dungeonRandomizer.element(platformSizes),
-        });
-        projectDiscToClosestDisc(discs, newDisc, dungeonRandomizer.range(16, 128));
-        if (newDisc.x * newDisc.x + newDisc.y * newDisc.y >= radius * radius) {
-            // Only one disc is allowed to spawn outside of the radius.
-            if (!finished) {
-                finished = true;
-                newDisc.radius = 400;
-                projectDiscToClosestDisc(discs, newDisc, dungeonRandomizer.range(16, 128));
-                newDisc.boss = createEnemy(newDisc.x, newDisc.y, guardian, level + 2, newDisc);
-                newDisc.boss.isBoss = true;
-                discs.push(newDisc);
-            }
-            continue;
-        }
-        discs.push(newDisc);
-        // TODO: Add different enemy generators and apply them at random.
-        if (dungeonRandomizer.generateAndMutate() < 0.3) {
-            createEnemy(newDisc.x, newDisc.y, turret, level, newDisc);
-        } else if (dungeonRandomizer.generateAndMutate() < 0.3) {
-            createEnemy(newDisc.x, newDisc.y, lord, level, newDisc);
-        } else if (dungeonRandomizer.generateAndMutate() < 0.3) {
-            createEnemy(newDisc.x, newDisc.y, chest, level + 1, newDisc);
-        }
-        if (dungeonRandomizer.generateAndMutate() < 0.5) {
-            createEnemy(newDisc.x + 50, newDisc.y, chaser, level, newDisc);
-            createEnemy(newDisc.x - 50, newDisc.y, chaser, level, newDisc);
-        }
-        if (dungeonRandomizer.generateAndMutate() < 0.5) {
-            createEnemy(newDisc.x, newDisc.y + 50, circler, level, newDisc);
-            createEnemy(newDisc.x, newDisc.y - 50, circler, level, newDisc);
-        }
-    }
-    linkDiscs(discs);
-    return {
-        name,
-        level,
-        discs,
-        entrance,
-    };
-}
-
 
 const reefBiome: Biome = {
     name: 'Reef',
@@ -356,6 +285,3 @@ export function startDungeon(state: GameState, dungeon: Dungeon): void {
     refillAllPotions(state);
     saveGame(state);
 }
-
-
-
