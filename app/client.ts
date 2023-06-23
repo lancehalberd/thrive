@@ -14,7 +14,7 @@ import {
 } from 'app/utils/dungeon';
 import { doCirclesIntersect, getClosestElement, getTargetVector } from 'app/utils/geometry';
 import {
-    damageHero, gainExperience, gainWeaponExperience, getHeroShaveRadius, getMaxChargeLevel, getWeaponMastery, getWeaponProficiency,
+    damageHero, damageHeroOverTime, gainExperience, gainWeaponExperience, getHeroShaveRadius, getMaxChargeLevel, getWeaponMastery, getWeaponProficiency,
     refillAllPotions, setDerivedHeroStats, weaponMasteryMap,
 } from 'app/utils/hero';
 import { getMousePosition, isMouseDown, isMiddleMouseDown, isRightMouseDown } from 'app/utils/mouse';
@@ -452,19 +452,29 @@ function updateEnemies(state: GameState): void {
 }
 
 function updateHeroBullets(state: GameState): void {
-    const activeBullets = state.heroBullets.filter(b => b.time < b.duration);
+    const activeBullets = [];
+    for (const bullet of state.heroBullets) {
+        if (bullet.time < bullet.duration) {
+            activeBullets.push(bullet);
+        } else {
+            bullet.onDeath?.(state, bullet);
+            bullet.onHitOrDeath?.(state, bullet);
+        }
+    }
     state.heroBullets = [];
     const boss = state.hero.disc?.boss;
     let playedSound = false;
     for (const bullet of activeBullets) {
         bullet.time += FRAME_LENGTH;
-        bullet.update(state, bullet);
         if (bullet.warningTime > 0) {
             bullet.warningTime -= FRAME_LENGTH;
+        }
+        bullet.update(state, bullet);
+        if (bullet.warningTime > 0) {
             state.heroBullets.push(bullet);
             continue;
         }
-        let bulletAbsorbed = false;
+        let bulletAbsorbed = false, bulletHit = false;
         for (const enemy of state.enemies) {
             if (enemy.isInvulnerable) {
                 continue;
@@ -484,39 +494,51 @@ function updateHeroBullets(state: GameState): void {
                 continue;
             }
             if (doCirclesIntersect(enemy, bullet)) {
-                bullet.hitTargets.add(enemy);
-                if (!playedSound) {
-                    playSound(state, 'dealDamage');
-                    playedSound = true;
+                if (bullet.damageOverTime) {
+                    enemy.life -= bullet.damageOverTime * FRAME_LENGTH / 1000;
+                } else {
+                    bulletHit = true;
+                    bullet.hitTargets.add(enemy);
+                    if (!playedSound) {
+                        playSound(state, 'dealDamage');
+                        playedSound = true;
+                    }
+                    const damage = applyArmorToDamage(state, bullet.damage, enemy.armor);
+                    if (bullet.chargeGain) {
+                        gainAttackCharge(state, bullet.chargeGain);
+                        // A bullet grants less charge for each additional enemy it hits.
+                        bullet.chargeGain /= 2;
+                    }
+                    enemy.life -= damage;
+                    let armorShred = bullet.armorShred;
+                    if (enemy.armor <= enemy.baseArmor / 2) {
+                        armorShred /= 2;
+                    }
+                    if (enemy.armor <= enemy.baseArmor / 4) {
+                        armorShred /= 2;
+                    }
+                    enemy.armor = Math.max(enemy.baseArmor / 10, enemy.armor * (1 - armorShred));
+                    addDamageNumber(state, enemy, damage, bullet.isCrit);
+                    if (enemy.life > 0) {
+                        // Shots are not absorbed by defeated enemies.
+                        bulletAbsorbed = !bullet.isEnemyPiercing;
+                        enemy.definition.onHit?.(state, enemy, bullet);
+                    }
                 }
-                const damage = applyArmorToDamage(state, bullet.damage, enemy.armor);
-                if (bullet.chargeGain) {
-                    gainAttackCharge(state, bullet.chargeGain);
-                    // A bullet grants less charge for each additional enemy it hits.
-                    bullet.chargeGain /= 2;
-                }
-                enemy.life -= damage;
-                let armorShred = bullet.armorShred;
-                if (enemy.armor <= enemy.baseArmor / 2) {
-                    armorShred /= 2;
-                }
-                if (enemy.armor <= enemy.baseArmor / 4) {
-                    armorShred /= 2;
-                }
-                enemy.armor = Math.max(enemy.baseArmor / 10, enemy.armor * (1 - armorShred));
-                addDamageNumber(state, enemy, damage, bullet.isCrit);
                 if (enemy.life <= 0) {
                     playSound(state, 'defeatEnemy');
                     defeatEnemy(state, enemy);
-                } else {
-                    // Shots are not absorbed by defeated enemies.
-                    bulletAbsorbed = !bullet.isEnemyPiercing;
-                    enemy.definition.onHit?.(state, enemy, bullet);
                 }
             }
         }
+        if (bulletHit) {
+            bullet.onHit?.(state, bullet);
+            bullet.onHitOrDeath?.(state, bullet);
+        }
         if (!bulletAbsorbed) {
             state.heroBullets.push(bullet);
+        } else {
+            bullet.onDeath?.(state, bullet);
         }
     }
 }
@@ -611,30 +633,36 @@ function updateEnemyBullets(state: GameState): void {
     const shaveRadius = getHeroShaveRadius(state);
     for (const bullet of activeBullets) {
         bullet.time += FRAME_LENGTH;
-        bullet.update(state, bullet);
         if (bullet.warningTime > 0) {
             bullet.warningTime -= FRAME_LENGTH;
+        }
+        bullet.update(state, bullet);
+        if (bullet.warningTime > 0) {
             state.enemyBullets.push(bullet);
             continue;
         }
         let hitTarget = false;
         if (doCirclesIntersect(state.hero, bullet)) {
-            if (!onHit) {
-                for (const enchantment of state.hero.uniqueEnchantments) {
-                    const definition = uniqueEnchantmentHash[enchantment.uniqueEnchantmentKey];
-                    definition.onHit?.(state, enchantment, bullet);
+            if (bullet.damageOverTime) {
+                damageHeroOverTime(state, bullet.damageOverTime * FRAME_LENGTH / 1000);
+            } else {
+                if (!onHit) {
+                    for (const enchantment of state.hero.uniqueEnchantments) {
+                        const definition = uniqueEnchantmentHash[enchantment.uniqueEnchantmentKey];
+                        definition.onHit?.(state, enchantment, bullet);
+                    }
+                    onHit = true;
                 }
-                onHit = true;
+                hitTarget = true;
+                damageHero(state, bullet.damage);
             }
-            hitTarget = true;
-            damageHero(state, bullet.damage);
-        } else if (!bullet.shaveStarted && doCirclesIntersect({...state.hero, radius: state.hero.radius + shaveRadius}, bullet)) {
+        } else if (!bullet.shaveStarted && doCirclesIntersect(bullet, {...state.hero, radius: state.hero.radius + shaveRadius})) {
             bullet.shaveStarted = true;
             /*if (!shaved) {
                 playSound(state, 'shaveBullet');
                 shaved = true;
             }*/
-        } else if (bullet.shaveStarted && !bullet.shaveCompleted && !doCirclesIntersect({...state.hero, radius: state.hero.radius + shaveRadius}, bullet)) {
+        } else if (bullet.shaveStarted && !bullet.shaveCompleted && !doCirclesIntersect(bullet, {...state.hero, radius: state.hero.radius + shaveRadius})) {
             shavebullet(bullet);
         }
         if (!hitTarget) {

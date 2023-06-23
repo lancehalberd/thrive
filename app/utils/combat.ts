@@ -6,7 +6,7 @@ export function addDamageNumber(state: GameState, target: Geometry, damage: numb
         y: target.y - 10,
         vx: 2 * Math.random() - 1,
         vy: -1,
-        text: abbreviate(damage),
+        text: abbreviate(Math.round(damage)),
         color: isCrit ? 'yellow' : 'red',
         borderColor: 'black',
         expirationTime: state.fieldTime + 500,
@@ -15,7 +15,7 @@ export function addDamageNumber(state: GameState, target: Geometry, damage: numb
 }
 
 export function applyArmorToDamage(state: GameState, damage: number, armor: number): number {
-    return Math.max(Math.ceil(damage / 10), Math.round(damage - armor));
+    return Math.max(Math.ceil(damage / 10), damage - armor);
 }
 
 export function fixedDigits(number: number, digits: number = 1): number {

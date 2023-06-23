@@ -37,3 +37,12 @@ export function renderBar(
     context.fillStyle = fillColor;
     context.fillRect(x, y, w * Math.max(0, Math.min(1,p)), h);
 }
+
+export function parametricCurve(context: CanvasRenderingContext2D, range: number[], steps: number, getPoint: (v: number) => Point): void {
+    const p = getPoint(range[0]);
+    context.moveTo(p.x, p.y);
+    for (let i = 1; i <= steps; i++) {
+        const p = getPoint(range[0] + i * (range[1] - range[0]) / steps);
+        context.lineTo(p.x, p.y);
+    }
+}

@@ -143,7 +143,7 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
     context.textBaseline = 'middle';
     context.textAlign = 'left';
     context.font = '16px sans-serif';
-    context.fillText(state.hero.life + ' / ' + state.hero.maxLife, lifeRect.x + 2, lifeRect.y + lifeRect.h / 2 + 2);
+    context.fillText(Math.ceil(state.hero.life) + ' / ' + state.hero.maxLife, lifeRect.x + 2, lifeRect.y + lifeRect.h / 2 + 2);
 
     const experienceRect: Rect = {x: 5, y: lifeRect.y + lifeRect.h + 5, h: 10, w: 200};
     const requiredExperience = getExperienceForNextLevel(state.hero.level);

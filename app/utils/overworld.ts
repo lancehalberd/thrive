@@ -8,6 +8,7 @@ import { crab } from 'app/enemies/crab';
 import { ent } from 'app/enemies/ent';
 import { lord } from 'app/enemies/lord';
 import { slime } from 'app/enemies/slime';
+import { snake } from 'app/enemies/snake';
 import { sniper } from 'app/enemies/sniper';
 import { squid} from 'app/enemies/squid';
 import { turret } from 'app/enemies/turret';
@@ -308,8 +309,8 @@ function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void
         if (randomizer.generateAndMutate() < 0.3) {
             createEnemy(disc.x, disc.y + 100, overworldSpiderNova, disc.level, disc);
         }
-        if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(disc.x + 100, disc.y, sniper, disc.level, disc);
+        if (randomizer.generateAndMutate() < 1) {
+            createEnemy(disc.x + 100, disc.y, snake, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
             createEnemy(disc.x - 100, disc.y, sniper, disc.level, disc);

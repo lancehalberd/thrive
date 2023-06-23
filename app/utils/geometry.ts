@@ -9,6 +9,12 @@ export function doCirclesIntersect(circleA: Circle, circleB: Circle): boolean {
     return dx * dx + dy * dy < radius * radius;
 }
 
+export function isCircleInCircle(circleA: Circle, circleB: Circle): boolean {
+    const radius = circleB.radius - circleA.radius;
+    const dx = circleB.x - circleA.x, dy = circleB.y - circleA.y;
+    return dx * dx + dy * dy < radius * radius;
+}
+
 export function getClosestElement<T extends Geometry>({x, y}: {x: number, y: number}, elements: T[]): T {
     let closestDistance2 = Number.MAX_SAFE_INTEGER, closestElement = elements[0];
     for (const element of elements) {

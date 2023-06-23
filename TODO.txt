@@ -1,11 +1,6 @@
 Add Staff + Morning Star
 
 Add forest enemies
-    Snake - Shoots long ranged shots with slight oscillation.
-        Shoots "venom" shot at short range that decays to speed 0 and expands to ~30px radius
-        Moves forward until it hits a wall, then changes direction to random direction within 30 degrees of the disc center
-        Pauses briefly before/after shooting
-
     Spinning Faye - Shoots boomerang bullets out quickly, switching angles by 45 degrees each shot
         - Switches between slowly chasing a player, pausing and dashing towards where the player is going.
 
@@ -57,6 +52,9 @@ Unique Weapon Enchantments
     GMP/Volley
 
     Beam: 2x charge rate, can only perform charged attacks, shoot all bullets instantly as beams with 1.5x range.
+
+    Bouncing bullets: bullets gain pierce but bounce whenever they hit
+        Velocity component directly towards the target is reversed, velocity component normal to this is unchanged.
 
 Generate SFX using AudioDriver.
     Gain Level SFX

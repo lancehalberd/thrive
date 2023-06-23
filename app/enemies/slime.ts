@@ -1,6 +1,7 @@
 import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED, BOSS_MAX_LIFE_FACTOR, FRAME_LENGTH } from 'app/constants';
 import { getInsightEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
+import { updateSimpleBullet } from 'app/utils/bullet';
 import { createEnemy, shootBulletAtHero, shootBulletCircle } from 'app/utils/enemy';
 
 
@@ -127,7 +128,20 @@ export const megaSlime: EnemyDefinition = {
     update(state: GameState, enemy: Enemy): void {
         updateSlimeMovement(state, enemy);
         if (enemy.mode === 'dash' && enemy.modeTime === 0) {
-            shootBulletAtHero(state, enemy, 1.5 * BASE_ENEMY_BULLET_SPEED, {damage: 1.5 * enemy.damage, radius: 2 * BASE_ENEMY_BULLET_RADIUS});
+            shootBulletAtHero(state, enemy, 2 * BASE_ENEMY_BULLET_SPEED, {
+                warningTime: 800,
+                duration: 3000,
+                friction: 0.5,
+                damageOverTime: 3 * enemy.damage,
+                update: (state: GameState, bullet: Bullet) => {
+                    updateSimpleBullet(state, bullet);
+                    if (bullet.warningTime <= 0) {
+                        bullet.vx = bullet.vy = 0;
+                        bullet.radius++;
+                    }
+                },
+            });
+            //shootBulletAtHero(state, enemy, 1.5 * BASE_ENEMY_BULLET_SPEED, {damage: 1.5 * enemy.damage, radius: 2 * BASE_ENEMY_BULLET_RADIUS});
         }
         if (enemy.mode === 'choose' && enemy.modeTime === 0) {
             shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 12, 1.2 * BASE_ENEMY_BULLET_SPEED, {duration: 2000});
@@ -145,9 +159,9 @@ export const megaSlime: EnemyDefinition = {
     onHit(state: GameState, enemy: Enemy): void {
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 3; i++) {
                 const speed = 0.3 * BASE_ENEMY_BULLET_SPEED + i * 0.3 * BASE_ENEMY_BULLET_SPEED;
-                shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 10, speed, {duration: 2000});
+                shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 6, speed, {duration: 2000});
             }
         }
     },

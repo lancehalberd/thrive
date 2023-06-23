@@ -179,11 +179,83 @@ const seeking: UniqueEnchantment = {
     },
 };
 
+const acid: UniqueEnchantment = {
+    key: 'acid',
+    name: 'Acid',
+    enchantmentType: 'uniqueWeaponEnchantment',
+    chance: RARE_UNIQUE_RATE,
+    getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
+        return [
+            'Shots deal 50% damage.',
+            'Shots create a damaging pool.',
+        ];
+    },
+    modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
+        /*bullet.warningTime = 2 * bullet.duration / 3;
+        bullet.duration = bullet.warningTime + 1000;
+        bullet.damageOverTime = bullet.damage;
+        bullet.update = updateAcidBullet;*/
+        bullet.damage /= 2;
+        bullet.onHitOrDeath = (state: GameState, bullet: Bullet) => {
+            const explosion = {
+                ...bullet,
+                time: 0,
+                damageOverTime: 3 * bullet.damage,
+                radius: 10,
+                duration: 1000,
+                vx: 0,
+                vy: 0,
+                hitTargets: new Set(),
+                onHitOrDeath: undefined,
+                update(state: GameState, bullet: Bullet) {
+                    bullet.radius += 2;
+                },
+            };
+            state.heroBullets.push(explosion);
+        };
+    },
+};
 
+const explosive: UniqueEnchantment = {
+    key: 'explosive',
+    name: 'Explosive',
+    enchantmentType: 'uniqueWeaponEnchantment',
+    chance: RARE_UNIQUE_RATE,
+    getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
+        return [
+            'Shots explode dealing 50% of damage as AOE damage.',
+            'Shots deal 50% less damage for each enemy hit.',
+        ];
+    },
+    modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
+        // bullet.warningTime = bullet.duration - 5 * FRAME_LENGTH;
+        // bullet.update = updateExplosiveBullet;
+        bullet.onHitOrDeath = (state: GameState, bullet: Bullet) => {
+            bullet.damage /= 2;
+            const explosion = {
+                ...bullet,
+                time: 0,
+                radius: 10,
+                duration: 100,
+                isEnemyPiercing: true,
+                vx: 0,
+                vy: 0,
+                hitTargets: new Set(),
+                onHitOrDeath: undefined,
+                update(state: GameState, bullet: Bullet) {
+                    bullet.radius *= 1.5;
+                },
+            };
+            state.heroBullets.push(explosion);
+        };
+    },
+};
 
 
 const globalUniqueWeaponEnchantments = [
+    acid,
     boomerang,
+    explosive,
     helix,
     kiting,
     reversing,

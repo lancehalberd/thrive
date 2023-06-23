@@ -165,8 +165,9 @@ function renderEnemyLifebar(context: CanvasRenderingContext2D, enemy: Enemy): vo
     }
 }
 function renderEnemyBullet(context: CanvasRenderingContext2D, bullet: Bullet): void {
+    const baseColor = bullet.damageOverTime ? '#CF4' : 'red';
     if (bullet.warningTime > 0) {
-        context.fillStyle = 'red';
+        context.fillStyle = baseColor;
         context.beginPath();
         context.arc(bullet.x, bullet.y, bullet.radius, 0, 2 * Math.PI);
         context.arc(bullet.x, bullet.y, bullet.radius - 2, 0, 2 * Math.PI, true);
@@ -174,16 +175,32 @@ function renderEnemyBullet(context: CanvasRenderingContext2D, bullet: Bullet): v
     } else {
         if (bullet.radius > 15) {
             context.save();
-                context.globalAlpha *= 0.5;
-                fillCircle(context, bullet, 'red');
+                context.globalAlpha *= Math.max(0.2, 0.5 - (bullet.radius) - 15 / 35);
+                fillCircle(context, bullet, baseColor);
             context.restore();
         } else {
-            fillCircle(context, bullet, 'red');
+            fillCircle(context, bullet, baseColor);
         }
     }
 }
 function renderHeroBullet(context: CanvasRenderingContext2D, bullet: Bullet): void {
-    fillCircle(context, bullet, 'green');
+    const baseColor = bullet.damageOverTime ? '#4FC' : 'green';
+    if (bullet.warningTime > 0) {
+        context.fillStyle = baseColor;
+        context.beginPath();
+        context.arc(bullet.x, bullet.y, bullet.radius, 0, 2 * Math.PI);
+        context.arc(bullet.x, bullet.y, bullet.radius - 2, 0, 2 * Math.PI, true);
+        context.fill();
+    } else {
+        if (bullet.radius > 15) {
+            context.save();
+                context.globalAlpha *= Math.max(0.2, 0.5 - (bullet.radius) - 15 / 35);
+                fillCircle(context, bullet, baseColor);
+            context.restore();
+        } else {
+            fillCircle(context, bullet, baseColor);
+        }
+    }
     context.beginPath();
     context.lineWidth = 1;
     context.strokeStyle = 'white';

@@ -3,6 +3,7 @@ import { babySpiderBomber, babySpiderNova } from 'app/bosses/spider';
 import { chest } from 'app/enemies/chest';
 import { ent } from 'app/enemies/ent';
 import { lord } from 'app/enemies/lord';
+import { snake } from 'app/enemies/snake';
 import { sniper } from 'app/enemies/sniper';
 import { turret } from 'app/enemies/turret';
 
@@ -67,14 +68,14 @@ export function createTreeDungeon(seed: number, radius: number, level: number): 
             createEnemy(newDisc.x, newDisc.y, turret, newDisc.level, newDisc);
         } else if (dungeonRandomizer.generateAndMutate() < 0.3) {
             createEnemy(newDisc.x, newDisc.y, lord, newDisc.level, newDisc);
-        }  else if (dungeonRandomizer.generateAndMutate() < 0.1) {
+        } else if (dungeonRandomizer.generateAndMutate() < 0.1) {
             createEnemy(newDisc.x, newDisc.y, chest, newDisc.level + 1, newDisc);
         }
         if (dungeonRandomizer.generateAndMutate() < 0.3) {
             createEnemy(newDisc.x + 80, newDisc.y, babySpiderBomber, level, newDisc);
         }
         if (dungeonRandomizer.generateAndMutate() < 0.3) {
-            createEnemy(newDisc.x - 80, newDisc.y, sniper, level, newDisc);
+            createEnemy(newDisc.x - 80, newDisc.y, snake, level, newDisc);
         }
         if (dungeonRandomizer.generateAndMutate() < 0.3) {
             createEnemy(newDisc.x, newDisc.y + 80, sniper, level, newDisc);

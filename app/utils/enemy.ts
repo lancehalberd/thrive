@@ -1,5 +1,6 @@
 import { BASE_ENEMY_BULLET_DURATION, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_SPEED, BASE_WEAPON_DPS_PER_LEVEL, FRAME_LENGTH } from 'app/constants';
 import { updateCirclingBullet, updateSimpleBullet } from 'app/utils/bullet';
+import { findClosestDisc} from 'app/utils/disc';
 import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 
 export function createEnemy<EnemyParams>(x: number, y: number, definition: EnemyDefinition<EnemyParams>, level: number, disc: Disc): Enemy<EnemyParams> {
@@ -202,11 +203,35 @@ export function isEnemyOffDisc(state: GameState, enemy: Enemy): boolean {
     return false;
 }
 
+// Indicates that the enemy is off the edge of the closest valid disc or inside a pit/wall.
+export function isEnemyPositionInvalid(state: GameState, enemy: Enemy): boolean {
+    const disc = enemy.disc.boss ? enemy.disc : findClosestDisc(enemy, state.activeDiscs);
+    if (getTargetVector(enemy, disc).distance2 >= disc.radius * disc.radius) {
+        return true;
+    }
+    for (const hole of state.holes) {
+        if (getTargetVector(enemy, hole).distance2 < hole.radius * hole.radius) {
+            return true;
+        }
+    }
+    return false;
+}
+
 export function shootBulletAtHero(state: GameState, enemy: Enemy, speed: number, stats: Partial<Bullet> = {}) {
     const {x, y} = getTargetVector(enemy, state.hero);
     const theta = Math.atan2(y, x);
     shootEnemyBullet(state, enemy, speed * Math.cos(theta), speed * Math.sin(theta), stats);
 }
+
+export function shootBulletAtHeroHeading(state: GameState, enemy: Enemy, speed: number, leadTime: number, stats: Partial<Bullet> = {}) {
+    const {x, y} = getTargetVector(enemy, {
+        x: state.hero.x + state.hero.vx * leadTime / 1000,
+        y: state.hero.y + state.hero.vy * leadTime / 1000,
+    });
+    const theta = Math.atan2(y, x);
+    shootEnemyBullet(state, enemy, speed * Math.cos(theta), speed * Math.sin(theta), stats);
+}
+
 
 export function moveEnemyInCurrentDirection(state: GameState, enemy: Enemy, speed = enemy.speed): void {
     enemy.x += speed * Math.cos(enemy.theta) * FRAME_LENGTH / 1000;

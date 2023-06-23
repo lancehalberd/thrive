@@ -193,6 +193,21 @@ export function damageHero(state: GameState, damage: number): void {
     addDamageNumber(state, state.hero, damageTaken);
 }
 
+export function damageHeroOverTime(state: GameState, damage: number): void {
+    // Incoming damage over time is limited only by player health.
+    const damageCap = Math.floor(state.hero.maxLife / 2);
+    const damageTaken = Math.max(0, Math.min(damage, damageCap - state.hero.recentDamageTaken));
+    if (damageTaken <= 0) {
+        return;
+    }
+    state.hero.life -= damageTaken;
+    if (state.hero.life < 0) {
+        state.hero.life = 0;
+    }
+    state.hero.damageHistory[0] += damageTaken;
+    state.hero.recentDamageTaken += damageTaken;
+}
+
 export function getMaxChargeLevel(state: GameState): number {
     const proficiency = getTotalWeaponProficiency(state);
     return state.hero.equipment.weapon.chargeLevel + Math.floor(proficiency / 25);
