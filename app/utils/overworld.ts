@@ -5,8 +5,11 @@ import { chaser } from 'app/enemies/chaser';
 import { chest } from 'app/enemies/chest';
 import { clam } from 'app/enemies/clam';
 import { crab } from 'app/enemies/crab';
+import { ent } from 'app/enemies/ent';
 import { lord } from 'app/enemies/lord';
 import { slime } from 'app/enemies/slime';
+import { snake } from 'app/enemies/snake';
+import { sniper } from 'app/enemies/sniper';
 import { squid} from 'app/enemies/squid';
 import { turret } from 'app/enemies/turret';
 import { urchin } from 'app/enemies/urchin';
@@ -190,11 +193,19 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
     if (cellY <= 7) {
         return {
             name: 'Swamp',
+            color: '#682',
+            centerColor: '#8A4',
+            topEdgeColor: '#350',
+            bottomEdgeColor: '#230',
         };
     }
     if (cellY <= 9) { // Level 30
         return {
             name: 'Foothills',
+            color: '#6FA',
+            centerColor: '#AFC',
+            topEdgeColor: '#862',
+            bottomEdgeColor: '#542',
         };
     }
     if (cellY <= 11) {
@@ -285,8 +296,10 @@ function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void
             createEnemy(disc.x - 100, disc.y, slime, disc.level, disc);
         }
     } else if (disc.name === 'Forest') {
-        if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(disc.x, disc.y, urchin, disc.level, disc);
+        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.6) {
+            createEnemy(disc.x, disc.y, ent, disc.level, disc);
+        } else if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(disc.x, disc.y, turret, disc.level, disc);
         } else if (randomizer.generateAndMutate() < 0.1) {
             createEnemy(disc.x, disc.y, chest, disc.level + 1, disc);
         }
@@ -296,11 +309,11 @@ function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void
         if (randomizer.generateAndMutate() < 0.3) {
             createEnemy(disc.x, disc.y + 100, overworldSpiderNova, disc.level, disc);
         }
-        if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(disc.x + 100, disc.y, chaser, disc.level, disc);
+        if (randomizer.generateAndMutate() < 1) {
+            createEnemy(disc.x + 100, disc.y, snake, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(disc.x - 100, disc.y, chaser, disc.level, disc);
+            createEnemy(disc.x - 100, disc.y, sniper, disc.level, disc);
         }
     }  else {
         // For undefined biomes, just include a variety of enemies that can drop dungeons.

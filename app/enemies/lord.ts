@@ -14,6 +14,7 @@ export const lord: EnemyDefinition = {
     },
     initialParams: {},
     dropChance: 2 * BASE_DROP_CHANCE,
+    uniqueMultiplier: 2,
     experienceFactor: 5,
     radius: 28,
     portalChance: 0.2,

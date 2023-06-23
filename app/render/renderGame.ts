@@ -3,6 +3,7 @@ import { fillCircle, renderBar } from 'app/render/renderGeometry';
 import { renderHUD } from 'app/render/renderHUD';
 import { getRightAnalogDeltas } from 'app/utils/userInput'
 import { doCirclesIntersect } from 'app/utils/geometry';
+import { getHeroShaveRadius } from 'app/utils/hero';
 
 
 export function render(context: CanvasRenderingContext2D, state: GameState): void {
@@ -103,7 +104,7 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
     context.restore();
     context.beginPath();
     context.rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    context.arc(FIELD_CENTER.x, FIELD_CENTER.y, SIGHT_RADIUS, 0, 2 * Math.PI, true);
+    context.arc(FIELD_CENTER.x, FIELD_CENTER.y, state.sightRadius, 0, 2 * Math.PI, true);
     context.fillStyle = '#000';
     context.fill();
 
@@ -164,8 +165,9 @@ function renderEnemyLifebar(context: CanvasRenderingContext2D, enemy: Enemy): vo
     }
 }
 function renderEnemyBullet(context: CanvasRenderingContext2D, bullet: Bullet): void {
+    const baseColor = bullet.damageOverTime ? '#CF4' : 'red';
     if (bullet.warningTime > 0) {
-        context.fillStyle = 'red';
+        context.fillStyle = baseColor;
         context.beginPath();
         context.arc(bullet.x, bullet.y, bullet.radius, 0, 2 * Math.PI);
         context.arc(bullet.x, bullet.y, bullet.radius - 2, 0, 2 * Math.PI, true);
@@ -173,16 +175,32 @@ function renderEnemyBullet(context: CanvasRenderingContext2D, bullet: Bullet): v
     } else {
         if (bullet.radius > 15) {
             context.save();
-                context.globalAlpha *= 0.5;
-                fillCircle(context, bullet, 'red');
+                context.globalAlpha *= Math.max(0.2, 0.5 - (bullet.radius) - 15 / 35);
+                fillCircle(context, bullet, baseColor);
             context.restore();
         } else {
-            fillCircle(context, bullet, 'red');
+            fillCircle(context, bullet, baseColor);
         }
     }
 }
 function renderHeroBullet(context: CanvasRenderingContext2D, bullet: Bullet): void {
-    fillCircle(context, bullet, 'green');
+    const baseColor = bullet.damageOverTime ? '#4FC' : 'green';
+    if (bullet.warningTime > 0) {
+        context.fillStyle = baseColor;
+        context.beginPath();
+        context.arc(bullet.x, bullet.y, bullet.radius, 0, 2 * Math.PI);
+        context.arc(bullet.x, bullet.y, bullet.radius - 2, 0, 2 * Math.PI, true);
+        context.fill();
+    } else {
+        if (bullet.radius > 15) {
+            context.save();
+                context.globalAlpha *= Math.max(0.2, 0.5 - (bullet.radius) - 15 / 35);
+                fillCircle(context, bullet, baseColor);
+            context.restore();
+        } else {
+            fillCircle(context, bullet, baseColor);
+        }
+    }
     context.beginPath();
     context.lineWidth = 1;
     context.strokeStyle = 'white';
@@ -238,12 +256,17 @@ function renderHero(context: CanvasRenderingContext2D, state: GameState, hero: H
         }
     context.restore();
 
-    // Debug code to render charge level on hero
-    /*context.fillStyle = 'white';
-    context.textBaseline = 'middle';
-    context.textAlign = 'center';
-    context.font = '16px sans-serif';
-    context.fillText(state.hero.chargingLevel.toFixed(2), hero.x, hero.y);*/
+    const shaveRadius = getHeroShaveRadius(state);
+    if (shaveRadius > 0) {
+        context.save();
+            context.beginPath();
+            context.lineWidth = 0;
+            context.setLineDash([5, 10]);
+            context.strokeStyle = 'blue';
+            context.arc(hero.x, hero.y, hero.radius + shaveRadius, 0, 2 * Math.PI);
+            context.stroke();
+        context.restore();
+    }
 }
 
 function renderFieldText(context: CanvasRenderingContext2D, fieldText: FieldText): void {

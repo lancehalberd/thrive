@@ -1,6 +1,7 @@
 import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED, BOSS_MAX_LIFE_FACTOR, FRAME_LENGTH } from 'app/constants';
 import { getInsightEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
+import { updateSimpleBullet } from 'app/utils/bullet';
 import { createEnemy, shootBulletAtHero, shootBulletCircle } from 'app/utils/enemy';
 
 
@@ -13,6 +14,7 @@ export const slime: EnemyDefinition = {
     },
     initialParams: {},
     dropChance: BASE_DROP_CHANCE,
+    uniqueMultiplier: 20,
     experienceFactor: 2,
     radius: 24,
     portalChance: 0.1,
@@ -84,6 +86,7 @@ export const greatSlime: EnemyDefinition = {
     },
     initialParams: {},
     dropChance: 2 * BASE_DROP_CHANCE,
+    uniqueMultiplier: 2,
     portalChance: 0,
     experienceFactor: 2,
     radius: 32,
@@ -120,15 +123,28 @@ export const megaSlime: EnemyDefinition = {
     experienceFactor: 5,
     radius: 40,
     getEnchantment(state: GameState, enemy: Enemy) {
-        return getInsightEnchantment(enemy.level);
+        return getInsightEnchantment(state, enemy.level);
     },
     update(state: GameState, enemy: Enemy): void {
         updateSlimeMovement(state, enemy);
         if (enemy.mode === 'dash' && enemy.modeTime === 0) {
-            shootBulletAtHero(state, enemy, 1.5 * BASE_ENEMY_BULLET_SPEED, {damage: 1.5 * enemy.damage, radius: 2 * BASE_ENEMY_BULLET_RADIUS});
+            shootBulletAtHero(state, enemy, 2 * BASE_ENEMY_BULLET_SPEED, {
+                warningTime: 800,
+                duration: 3000,
+                friction: 0.5,
+                damageOverTime: 3 * enemy.damage,
+                update: (state: GameState, bullet: Bullet) => {
+                    updateSimpleBullet(state, bullet);
+                    if (bullet.warningTime <= 0) {
+                        bullet.vx = bullet.vy = 0;
+                        bullet.radius++;
+                    }
+                },
+            });
+            //shootBulletAtHero(state, enemy, 1.5 * BASE_ENEMY_BULLET_SPEED, {damage: 1.5 * enemy.damage, radius: 2 * BASE_ENEMY_BULLET_RADIUS});
         }
         if (enemy.mode === 'choose' && enemy.modeTime === 0) {
-            shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 12, 1.2 * BASE_ENEMY_BULLET_SPEED, {expirationTime: state.fieldTime + 2000});
+            shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 12, 1.2 * BASE_ENEMY_BULLET_SPEED, {duration: 2000});
         }
     },
     onDeath(state: GameState, enemy: Enemy): void {
@@ -143,9 +159,9 @@ export const megaSlime: EnemyDefinition = {
     onHit(state: GameState, enemy: Enemy): void {
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 3; i++) {
                 const speed = 0.3 * BASE_ENEMY_BULLET_SPEED + i * 0.3 * BASE_ENEMY_BULLET_SPEED;
-                shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 10, speed, {expirationTime: state.fieldTime + 2000});
+                shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 6, speed, {duration: 2000});
             }
         }
     },

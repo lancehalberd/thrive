@@ -1,9 +1,15 @@
 
-export function fillCircle(context: CanvasRenderingContext2D, circle: Circle, color: string) {
-    context.fillStyle = color;
+export function fillCircle(context: CanvasRenderingContext2D, circle: Circle, color?: string, strokeColor?: string) {
     context.beginPath();
     context.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI);
-    context.fill();
+    if (color) {
+        context.fillStyle = color;
+        context.fill();
+    }
+    if (strokeColor) {
+        context.strokeStyle = strokeColor;
+        context.stroke();
+    }
 }
 
 export function drawRect(context: CanvasRenderingContext2D, {x, y, w, h}: Rect, reverse = false): void {
@@ -22,10 +28,21 @@ export function renderBar(
     {x, y, w, h}: Rect,
     p: number,
     fillColor: string,
-    backColor = 'black'
+    backColor?: string
 ): void {
-    context.fillStyle = backColor;
-    context.fillRect(x, y, w, h);
+    if (backColor) {
+        context.fillStyle = backColor;
+        context.fillRect(x, y, w, h);
+    }
     context.fillStyle = fillColor;
     context.fillRect(x, y, w * Math.max(0, Math.min(1,p)), h);
+}
+
+export function parametricCurve(context: CanvasRenderingContext2D, range: number[], steps: number, getPoint: (v: number) => Point): void {
+    const p = getPoint(range[0]);
+    context.moveTo(p.x, p.y);
+    for (let i = 1; i <= steps; i++) {
+        const p = getPoint(range[0] + i * (range[1] - range[0]) / steps);
+        context.lineTo(p.x, p.y);
+    }
 }

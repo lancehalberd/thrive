@@ -1,6 +1,7 @@
 import { BASE_ENEMY_BULLET_DURATION, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_SPEED, BASE_WEAPON_DPS_PER_LEVEL, FRAME_LENGTH } from 'app/constants';
+import { updateCirclingBullet, updateSimpleBullet } from 'app/utils/bullet';
+import { findClosestDisc} from 'app/utils/disc';
 import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
-import { updateSimpleBullet } from 'app/weapons';
 
 export function createEnemy<EnemyParams>(x: number, y: number, definition: EnemyDefinition<EnemyParams>, level: number, disc: Disc): Enemy<EnemyParams> {
     const heroBaseWeaponDamage = level * BASE_WEAPON_DPS_PER_LEVEL;
@@ -15,7 +16,7 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
     const dps = heroAttacksPerSecond * heroDamage;
     const targetDuration = 1 + level * 10 / 100;
     const maxLife = Math.ceil((dps * targetDuration) * (definition.statFactors.maxLife ?? 1));
-    const baseArmor = 2 * level * (definition.statFactors.armor ?? 1);
+    const baseArmor = heroDamage / 20 * (definition.statFactors.armor ?? 1);
 
     const enemy = {
         definition,
@@ -44,13 +45,16 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
         attackChargeLevel: 1,
         mode: 'choose',
         modeTime: 0,
+        time: 0,
         isInvulnerable: definition.isInvulnerable,
         setMode(this: Enemy, mode: string): void {
             this.mode = mode;
             this.modeTime = 0;
         }
     };
-    disc.enemies.push(enemy);
+    if (disc) {
+        disc.enemies.push(enemy);
+    }
     return enemy;
 }
 
@@ -105,7 +109,7 @@ export function getBaseEnemyBullet(state: GameState, enemy: Enemy): Bullet {
         radius: BASE_ENEMY_BULLET_RADIUS,
         vx: 0,
         vy: 0,
-        expirationTime: state.fieldTime + BASE_ENEMY_BULLET_DURATION,
+        duration: BASE_ENEMY_BULLET_DURATION,
         update: updateSimpleBullet,
         hitTargets: new Set(),
         // Armor shred is not functional against the player, although maybe it could be added
@@ -123,7 +127,7 @@ export function createBombBullet(state: GameState, enemy: Enemy, x: number, y: n
         radius: 3 * BASE_ENEMY_BULLET_RADIUS,
         x, y,
         warningTime: 800,
-        expirationTime: state.fieldTime + BASE_ENEMY_BULLET_DURATION,
+        duration: BASE_ENEMY_BULLET_DURATION,
         ...stats,
     }
     //const mag = Math.sqrt(vx * vx + vy * vy);
@@ -161,7 +165,7 @@ export function shootCirclingBullet(state: GameState, enemy: Enemy, theta: numbe
         orbitRadius: radius,
         theta,
         vTheta: 2 * Math.PI,
-        expirationTime: state.fieldTime + BASE_ENEMY_BULLET_DURATION,
+        duration: BASE_ENEMY_BULLET_DURATION,
         update: updateCirclingBullet,
         hitTargets: new Set(),
         // Armor shred is not functional against the player, although maybe it could be added
@@ -170,19 +174,6 @@ export function shootCirclingBullet(state: GameState, enemy: Enemy, theta: numbe
         warningTime: 0,
         ...stats,
     });
-}
-
-export function updateCirclingBullet(state: GameState, bullet: Bullet): void {
-    if (!bullet.source
-        || typeof(bullet.theta) !== 'number'
-        || typeof(bullet.vTheta) !== 'number'
-        || typeof(bullet.orbitRadius) !== 'number'
-    ) {
-        return;
-    }
-    bullet.theta += FRAME_LENGTH * bullet.vTheta / 1000;
-    bullet.x = bullet.source.x + bullet.orbitRadius * Math.cos(bullet.theta);
-    bullet.y = bullet.source.y + bullet.orbitRadius * Math.sin(bullet.theta);
 }
 
 export function shootBulletArc(state: GameState, enemy: Enemy, theta: number, angle: number, count: number, speed: number, stats: Partial<Bullet> = {}) {
@@ -212,11 +203,35 @@ export function isEnemyOffDisc(state: GameState, enemy: Enemy): boolean {
     return false;
 }
 
+// Indicates that the enemy is off the edge of the closest valid disc or inside a pit/wall.
+export function isEnemyPositionInvalid(state: GameState, enemy: Enemy): boolean {
+    const disc = enemy.disc.boss ? enemy.disc : findClosestDisc(enemy, state.activeDiscs);
+    if (getTargetVector(enemy, disc).distance2 >= disc.radius * disc.radius) {
+        return true;
+    }
+    for (const hole of state.holes) {
+        if (getTargetVector(enemy, hole).distance2 < hole.radius * hole.radius) {
+            return true;
+        }
+    }
+    return false;
+}
+
 export function shootBulletAtHero(state: GameState, enemy: Enemy, speed: number, stats: Partial<Bullet> = {}) {
     const {x, y} = getTargetVector(enemy, state.hero);
     const theta = Math.atan2(y, x);
     shootEnemyBullet(state, enemy, speed * Math.cos(theta), speed * Math.sin(theta), stats);
 }
+
+export function shootBulletAtHeroHeading(state: GameState, enemy: Enemy, speed: number, leadTime: number, stats: Partial<Bullet> = {}) {
+    const {x, y} = getTargetVector(enemy, {
+        x: state.hero.x + state.hero.vx * leadTime / 1000,
+        y: state.hero.y + state.hero.vy * leadTime / 1000,
+    });
+    const theta = Math.atan2(y, x);
+    shootEnemyBullet(state, enemy, speed * Math.cos(theta), speed * Math.sin(theta), stats);
+}
+
 
 export function moveEnemyInCurrentDirection(state: GameState, enemy: Enemy, speed = enemy.speed): void {
     enemy.x += speed * Math.cos(enemy.theta) * FRAME_LENGTH / 1000;
@@ -265,7 +280,7 @@ export function renderNormalizedEnemy(renderEnemy: RenderEnemy) {
         context.save();
             context.translate(enemy.x, enemy.y);
             context.rotate(enemy.theta);
-            context.scale(enemy.radius, enemy.radius);
+            context.scale(enemy.radius / 100, enemy.radius / 100);
             renderEnemy(context, state, enemy);
         context.restore();
     };

@@ -376,6 +376,20 @@ async function registerAndUseAudioWorklets(): Promise<void> {
             };
         }
     });
+    sounds.set('shaveBullet', {
+        play() {
+            const gainNode = audioContext.createGain();
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.1);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.2);
+            pinkNoiseNode.connect(gainNode);
+            gainNode.connect(masterVolumeNode);
+            setTimeout(() => {
+                pinkNoiseNode.disconnect(gainNode);
+                gainNode.disconnect(masterVolumeNode);
+            }, 400);
+        }
+    });
     sounds.set('defeatEnemy', {
         play() {
             const gainNode = audioContext.createGain();

@@ -1,8 +1,8 @@
 import { BASE_ENEMY_BULLET_SPEED } from 'app/constants';
 import { fillCircle } from 'app/render/renderGeometry';
+import { updateSimpleBullet } from 'app/utils/bullet';
 import { moveEnemyInDirection, shootBulletAtHero, shootEnemyBullet, turnTowardsTarget } from 'app/utils/enemy';
 import { getTargetVector } from 'app/utils/geometry';
-import { updateSimpleBullet } from 'app/weapons';
 
 function updateSonarBullet(state: GameState, bullet: Bullet): void {
     const amplitude = Math.min(50, bullet.time / 30);
@@ -33,9 +33,9 @@ export const bat: EnemyDefinition = {
             turnTowardsTarget(state, enemy, state.hero);
             // Try to stay a certain distance from the player.
             if (distance2 <= 190 * 190) {
-                moveEnemyInDirection(state, enemy, Math.atan2(y, x));
-            } else if (distance2 >= 210 * 210){
                 moveEnemyInDirection(state, enemy, Math.atan2(y, x) + Math.PI);
+            } else if (distance2 >= 210 * 210){
+                moveEnemyInDirection(state, enemy, Math.atan2(y, x));
             }
         } else {
             if (enemy.mode === 'choose') {
@@ -54,11 +54,11 @@ export const bat: EnemyDefinition = {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             if (isAggro) {
                 shootEnemyBullet(state, enemy, 0.6 * BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta), 0.6 * BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta), {
-                    expirationTime: state.fieldTime + 2000, amplitude: 10, frequency: 6,
+                    duration: 2000, amplitude: 10, frequency: 6,
                     update: updateSonarBullet,
                 });
                 shootEnemyBullet(state, enemy, 0.6 * BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta), 0.6 * BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta), {
-                    expirationTime: state.fieldTime + 2000, amplitude: -10, frequency: 6,
+                    duration: 2000, amplitude: -10, frequency: 6,
                     update: updateSonarBullet,
                 });
             } else {

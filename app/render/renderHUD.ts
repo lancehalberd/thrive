@@ -97,7 +97,7 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
             '',
             'Use WASD to move.',
             'Move mouse to aim.',
-            'hold left click to shoot.',
+            'Hold left click to shoot.',
             '',
             'Press SPACE to use a life potion.',
             'Potions and life refill on level up.',
@@ -106,20 +106,21 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
             'Pess X to sell an item for XP.',
             '',
             'Inventory items:',
-            'Left click an item equip it.',
-            'Press X on an item to sell it for XP.',
-            'Left click an enchantment',
-            'then click an armor or weapon.',
+            '  Left click an item equip it.',
+            '  Press X on an item to sell it for XP.',
+            '  Left click an enchantment',
+            '  then click an armor or weapon.',
             '',
             'Gain charge as you hit enemies.',
             'Right click to use charge.',
+            '',
             'Enemies can drop portals.',
             'Press F to enter a portal.',
             'Middle click to escape a dungeon.',
             '',
             'On entering/leaving a dungeon:',
-            'Progress is saved',
-            'Life and potions are restored.',
+            '  Progress is saved',
+            '  Life and potions are restored.',
             '',
             'Go North for harder monsters.',
         ];
@@ -142,7 +143,7 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
     context.textBaseline = 'middle';
     context.textAlign = 'left';
     context.font = '16px sans-serif';
-    context.fillText(state.hero.life + ' / ' + state.hero.maxLife, lifeRect.x + 2, lifeRect.y + lifeRect.h / 2 + 2);
+    context.fillText(Math.ceil(state.hero.life) + ' / ' + state.hero.maxLife, lifeRect.x + 2, lifeRect.y + lifeRect.h / 2 + 2);
 
     const experienceRect: Rect = {x: 5, y: lifeRect.y + lifeRect.h + 5, h: 10, w: 200};
     const requiredExperience = getExperienceForNextLevel(state.hero.level);
@@ -213,6 +214,23 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
         context.strokeRect(5 + i * 15, experienceRect.y + experienceRect.h + 5, 10, 15);
     }
 
+
+    const chargeRect: Rect = {x: 25, y: experienceRect.y + experienceRect.h + 30, h: 8, w: 140};
+    context.fillStyle = 'white';
+    if (state.hero.attackChargeLevel > 1) {
+        context.fillText('' + ((state.hero.attackChargeLevel | 0) - 1), 5, chargeRect.y + chargeRect.h / 2 + 1);
+        renderBar(context, chargeRect, state.hero.attackChargeDuration / state.hero.totalChargeDuration, 'red', 'white');
+    } else {
+        context.fillText('' + ((state.hero.chargingLevel | 0) - 1), 5, chargeRect.y + chargeRect.h / 2 + 1);
+        //const isFull = state.hero.chargingLevel >= getMaxChargeLevel(state);
+        if ((state.hero.chargingLevel | 0) > 1) {
+            renderBar(context, chargeRect, 1, 'red', 'white');
+            renderBar(context, chargeRect,  state.hero.chargingLevel % 1, 'purple');
+        } else {
+            renderBar(context, chargeRect,  state.hero.chargingLevel % 1, 'purple', 'white');
+        }
+    }
+
     const boss = state.hero.disc?.boss;
     if (!state.paused && boss) {
         const lifeRect: Rect = {x: 210, y: CANVAS_HEIGHT - 60, h: 24, w: CANVAS_WIDTH - 420};
@@ -252,10 +270,10 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
         if (state.isUsingXbox) {
             const slot = getSelectedInventorySlot(state);
             if (slot) {
-                renderItemDetails(context, hoverItem, slot, equippedItem);
+                renderItemDetails(context, state, hoverItem, slot, equippedItem);
             }
         } else {
-            renderItemDetails(context, hoverItem, state.mouse, equippedItem);
+            renderItemDetails(context, state, hoverItem, state.mouse, equippedItem);
         }
     }
     if (hoveredProficiencyType) {

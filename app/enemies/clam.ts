@@ -13,6 +13,7 @@ export const clam: EnemyDefinition = {
     },
     initialParams: {},
     dropChance: 2 * BASE_DROP_CHANCE,
+    uniqueMultiplier: 2,
     experienceFactor: 2,
     radius: 32,
     portalChance: 0.2,
@@ -70,6 +71,7 @@ export const giantClam: EnemyDefinition = {
         armor: 5,
     },
     dropChance: 1,
+    uniqueMultiplier: 20,
     experienceFactor: 20,
     radius: 50,
     portalChance: 0,
@@ -79,7 +81,7 @@ export const giantClam: EnemyDefinition = {
             const healthPercentage = (enemy.maxLife - enemy.life) / enemy.maxLife;
             shootCirclingBullet(state, enemy, 0, enemy.radius + 5 * Math.floor(healthPercentage * 10));
             //const even = (state.fieldTime % 1000) === 0;
-            //shootBulletCircle(state, enemy, even ? 0 : Math.PI / 20, 20, 40, {expirationTime: state.fieldTime + 600});
+            //shootBulletCircle(state, enemy, even ? 0 : Math.PI / 20, 20, 40, {duration: 600});
         }
         if (enemy.mode === 'closed' || enemy.mode === 'choose') {
             turnTowardsTarget(state, enemy, state.hero);
@@ -114,65 +116,86 @@ export const giantClam: EnemyDefinition = {
         }
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletArc(state, enemy, enemy.theta, Math.PI, 7, BASE_ENEMY_BULLET_SPEED, {expirationTime: state.fieldTime + 2000});
+            shootBulletArc(state, enemy, enemy.theta, Math.PI, 7, BASE_ENEMY_BULLET_SPEED, {duration: 2000});
         }
         if (enemy.modeTime >= 2000) {
             enemy.setMode('closing');
         }
     },
     getEnchantment(state: GameState, enemy: Enemy): Enchantment {
-        return getPowerEnchantment(enemy.level);
+        return getPowerEnchantment(state, enemy.level);
     },
 };
+
+function renderClamArc(context: CanvasRenderingContext2D, r: number, p: number): void {
+    context.beginPath();
+    context.strokeStyle = 'black';
+    context.moveTo(0, r);
+    if (p === 0.5) {
+        context.lineTo(0, -r);
+        context.stroke();
+        return;
+    }
+    let sign = 1;
+    if (p > 0.5) {
+        p = (p - 0.5) * 2;
+    } else {
+        p = (0.5 - p) * 2;
+        sign = -1;
+    }
+    const steps = 10;
+    for (let i = 1; i <= steps; i++) {
+        const y = r * Math.cos(Math.PI * i / steps); //r - 2 * r * i / steps;
+        const x = Math.sqrt(r * r - y * y) * p * sign;
+        context.lineTo(x, y);
+    }
+    context.stroke();
+}
 
 function renderClam(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
     fillCircle(context, enemy, 'black');
     fillCircle(context, {...enemy, radius: 5}, enemy.baseColor);
+
     context.save();
         context.translate(enemy.x, enemy.y);
         context.rotate(enemy.theta);
         context.fillStyle = enemy.baseColor;
+        context.lineWidth = 1;
+        context.strokeStyle = 'black';
         if (enemy.mode === 'opening' || enemy.mode === 'closing') {
             context.fillStyle = enemy.baseColor;
             context.beginPath();
             context.arc(0, 0, enemy.radius, Math.PI / 2,  3 * Math.PI / 2);
             if ((enemy.modeTime >= 200 && enemy.mode === 'closing') || (enemy.modeTime <= 200 && enemy.mode === 'opening')) {
+                // 3/4 closed
                 context.arc(-enemy.radius, 0, Math.sqrt(2) * enemy.radius, 5 * Math.PI / 3,  1 * Math.PI / 3, false);
+                context.fill();
+                for (let i = 1; i < 6; i++) {
+                    renderClamArc(context, enemy.radius, 2 * i / 6 / 3);
+                }
             } else {
+                // 1/2 closed
                 context.lineTo(0, -enemy.radius);
+                context.fill();
+                for (let i = 1; i < 6; i++) {
+                    renderClamArc(context, enemy.radius, i / 6 / 2);
+                }
             }
-            context.fill();
         } else if (enemy.mode === 'open') {
             context.fillStyle = enemy.baseColor;
             context.beginPath();
             context.arc(0, 0, enemy.radius, Math.PI / 2,  3 * Math.PI / 2);
             context.arc(enemy.radius, 0, Math.sqrt(2) * enemy.radius, 4 * Math.PI / 3,  2 * Math.PI / 3, true);
             context.fill();
+            for (let i = 1; i < 6; i++) {
+                renderClamArc(context, enemy.radius, i / 6 / 3);
+            }
         } else {
             fillCircle(context, {...enemy, x: 0, y: 0}, enemy.baseColor);
-        }
-        /*let p = 1
-        if (enemy.mode === 'opening') {
-            p = Math.max(0.2, 1 - enemy.modeTime / 1000);
-        } else if (enemy.mode === 'closing') {
-            p = Math.min(1, 0.2 + enemy.modeTime / 1000);
-        } else if (enemy.mode === 'open') {
-            p = 0.2;
-        }
-        const drawArc = (p: number) => {
-            if (p === 0.5) {
-                context.lineTo(0, -enemy.radius);
-            } else if (p < 0.5) {
-                const x =
+            for (let i = 1; i < 6; i++) {
+                renderClamArc(context, enemy.radius, i / 6);
             }
         }
-        // Fill in the shell cover
-        context.fillStyle = enemy.baseColor;
-        context.beginPath();
-        context.arc(0, 0, enemy.radius, Math.PI / 2,  3 * Math.PI / 2);
-        drawArc(p);
-        context.fill();
-        // Draw lines across the shell
-        */
+        fillCircle(context, {x: 0, y: 0, radius: enemy.radius}, undefined, 'black');
     context.restore();
 }

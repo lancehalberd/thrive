@@ -1,6 +1,9 @@
-import { armorTypes, armorsByType } from 'app/armor';
+import { armorTypes } from 'app/armor';
 import { BASE_DROP_CHANCE } from 'app/constants';
+import { checkToAddGlobalUniqueEnchantments } from 'app/uniqueEnchantments';
 import { gainItemExperience } from 'app/utils/hero';
+import { addEnchantmentSlot, applyUniqueItemEnchantments, generateArmor, generateWeapon} from 'app/utils/item';
+import { rollWithMissBonus } from 'app/utils/rollWithMissBonus';
 import {
     renderArmorShort,
     renderArmorLong,
@@ -9,23 +12,56 @@ import {
     renderWeaponShort,
     renderWeaponLong,
 } from 'app/render/renderInventory';
-import { weaponTypes, weaponsByType } from 'app/weapons';
+import { weaponTypes } from 'app/weapons';
 import Random  from 'app/utils/Random';
 
 
+function rollEnchantmentSlots(state: GameState, item: Armor|Weapon): void {
+    item.enchantmentSlots = [];
+    item.bonusEnchantmentSlots = [];
+    addEnchantmentSlot(item);
+    if (item.level >= 5 && rollWithMissBonus(state, 'twoSockets', 0.1)) {
+        addEnchantmentSlot(item);
+        if (item.level >= 20 && rollWithMissBonus(state, 'threeSockets', 0.1)) {
+            addEnchantmentSlot(item);
+            if (item.level >= 50 && rollWithMissBonus(state, 'fourSockets', 0.1)) {
+                addEnchantmentSlot(item);
+            }
+        }
+    }
+}
+// Rolls for a randomly generated armor item given type+level.
+export function rollArmor(state: GameState, armorType: ArmorType, level: number, uniqueMultiplier: number): Armor {
+    const armor = generateArmor(armorType, level);
+    rollEnchantmentSlots(state, armor);
+    checkToAddGlobalUniqueEnchantments(state, armor, uniqueMultiplier);
+    applyUniqueItemEnchantments(armor);
+    return armor;
+}
+// Rolls for a randomly generated armor item given type+level.
+export function rollWeapon(state: GameState, weaponType: WeaponType, level: number, uniqueMultiplier: number): Weapon {
+    const weapon = generateWeapon(weaponType, level);
+    rollEnchantmentSlots(state, weapon);
+    checkToAddGlobalUniqueEnchantments(state, weapon, uniqueMultiplier);
+    applyUniqueItemEnchantments(weapon);
+    return weapon;
+}
+
 export function checkToDropBasicLoot(state: GameState, source: Enemy): void {
-    if (Math.random() < (source.definition.dropChance ?? BASE_DROP_CHANCE) + state.hero.dropChance) {
+    if (rollWithMissBonus(state, 'dropItem', (source.definition.dropChance ?? BASE_DROP_CHANCE) + state.hero.dropChance)) {
         let targetLevel = source.level;
         let bonusLevelChance = state.hero.dropChance;
-        while (Math.random() < bonusLevelChance) {
-            targetLevel++;
-            bonusLevelChance--;
+        if (bonusLevelChance > 0) {
+            while (rollWithMissBonus(state, 'playerBonusItemLevel', bonusLevelChance)) {
+                targetLevel++;
+                bonusLevelChance--;
+            }
         }
-        while (Math.random() < 0.1) {
+        while (rollWithMissBonus(state, 'defaultBonusItemLevel', 0.1)) {
             targetLevel++;
         }
         targetLevel = Math.min(100, targetLevel);
-        if (Math.random() < 0.25) {
+        if (rollWithMissBonus(state, 'dropArmor', 0.25)) {
             dropArmorLoot(state, source, targetLevel);
         } else {
             dropWeaponLoot(state, source, targetLevel);
@@ -33,50 +69,13 @@ export function checkToDropBasicLoot(state: GameState, source: Enemy): void {
     }
 }
 
-function addEnchantmentSlot(item: Armor|Weapon): void {
-    item.enchantmentSlots.push({enchantmentType: 'empty', value: 0})
-}
-function addEnchantmentSlots(item: Armor|Weapon): void {
-    item.enchantmentSlots = [];
-    addEnchantmentSlot(item);
-    if (item.level >= 5 && Math.random() < 0.1) {
-        addEnchantmentSlot(item);
-    }
-    if (item.level >= 20 && Math.random() < 0.1) {
-        addEnchantmentSlot(item);
-    }
-    if (item.level >= 50 && Math.random() < 0.1) {
-        addEnchantmentSlot(item);
-    }
-}
-
-
-export function generateArmor(armorType: ArmorType, level: number): Armor {
-    const armorArray = armorsByType[armorType];
-    let armorIndex = 0;
-    for (;armorIndex < armorArray.length - 1; armorIndex++) {
-        if (armorArray[armorIndex + 1].level > level) {
-            break;
-        }
-    }
-
-    const armor = {...armorArray[armorIndex]};
-    for (let i = 0; i < 5 && armor.level < level; i++) {
-        armor.level++;
-        armor.name = armor.name + '+';
-        armor.armor = Math.ceil(armor.armor * 1.1);
-        armor.life = Math.ceil(armor.life * 1.1);
-    }
-    addEnchantmentSlots(armor);
-    return armor;
-}
 
 export function dropArmorLoot(state: GameState, source: Enemy, level: number): void {
     if (!source.disc) {
         return;
     }
     const armorType = Random.element(armorTypes);
-    const armor = generateArmor(armorType, level);
+    const armor = rollArmor(state, armorType, level, source.definition.uniqueMultiplier ?? 1);
     if (!armor) {
         return;
     }
@@ -104,34 +103,13 @@ export function dropArmorLoot(state: GameState, source: Enemy, level: number): v
     });
 }
 
-export function generateWeapon(weaponType: WeaponType, level: number): Weapon {
-    let weaponArray = weaponsByType[weaponType];
-    if (!weaponArray.length) {
-        weaponArray = weaponsByType.sword;
-    }
-    let weaponIndex = 0;
-    for (;weaponIndex < weaponArray.length - 1; weaponIndex++) {
-        if (weaponArray[weaponIndex + 1].level > level) {
-            break;
-        }
-    }
-
-    const weapon = {...weaponArray[weaponIndex]};
-    for (let i = 0; i < 5 && weapon.level < level; i++) {
-        weapon.level++;
-        weapon.name = weapon.name + '+';
-        weapon.damage = Math.ceil(weapon.damage * 1.1);
-    }
-    addEnchantmentSlots(weapon);
-    return weapon;
-}
 
 export function dropWeaponLoot(state: GameState, source: Enemy, level: number): void {
     if (!source.disc) {
         return;
     }
     const weaponType = Random.element(weaponTypes);
-    const weapon = generateWeapon(weaponType, level);
+    const weapon = rollWeapon(state, weaponType, level, source.definition.uniqueMultiplier ?? 1);
     if (!weapon) {
         return;
     }

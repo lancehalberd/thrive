@@ -23,6 +23,8 @@ interface GameState {
         y: number
         isDown: boolean
         wasPressed: boolean
+        isRightDown: boolean
+        wasRightPressed: boolean
     }
     keyboard: {
         gameKeyValues: number[]
@@ -45,6 +47,8 @@ interface GameState {
     audio: {
         playingTracks: any[]
     }
+    missedRolls: {[key: string]: number}
+    sightRadius: number
 }
 
 interface MenuOption {

@@ -4,33 +4,10 @@ import {
     BASE_BULLET_SPEED,
     BASE_BULLET_RADIUS,
     BASE_BULLET_DURATION,
-    FRAME_LENGTH,
 } from 'app/constants';
+import { updateSimpleBullet } from 'app/utils/bullet';
 import { rollForCritDamage } from 'app/utils/combat';
 
-export function updateSimpleBullet(state: GameState, bullet: Bullet): void {
-    bullet.baseX += bullet.vx * FRAME_LENGTH / 1000;
-    bullet.baseY += bullet.vy * FRAME_LENGTH / 1000;
-    if (bullet.frequency && bullet.amplitude) {
-        const theta = Math.atan2(bullet.vy, bullet.vx) + Math.PI / 2;
-        const amplitude = bullet.amplitude * Math.sin(bullet.frequency * 2 * Math.PI * bullet.time / 1000);
-        bullet.x = bullet.baseX + amplitude * Math.cos(theta);
-        bullet.y = bullet.baseY + amplitude * Math.sin(theta);
-    } else {
-        bullet.x = bullet.baseX;
-        bullet.y = bullet.baseY;
-    }
-}
-
-export function updateReturnBullet(state: GameState, bullet: Bullet): void {
-    updateSimpleBullet(state, bullet);
-    // Reverse velocity at the bullet's half life.
-    const timeLeft = bullet.expirationTime - state.fieldTime;
-    if (bullet.time >= timeLeft && bullet.time <= timeLeft + 20) {
-        bullet.vx = -bullet.vx;
-        bullet.vy = -bullet.vy;
-    }
-}
 
 function getArmorShred(state: GameState, chargeLevel: number): number {
     return state.hero.armorShredEffect * (0.01 + 0.02 * chargeLevel);
@@ -44,7 +21,7 @@ function getChargeDamage(state: GameState, chargeLevel: number): number {
     return chargeLevel + state.hero.chargeDamage;
 }
 
-function basicBullet(state: GameState, source: Hero, weapon: Weapon): Bullet {
+export function basicBullet(state: GameState, source: Hero, weapon: Weapon): Bullet {
     const critDamage = rollForCritDamage(state);
     const range = 350;
     return {
@@ -53,7 +30,7 @@ function basicBullet(state: GameState, source: Hero, weapon: Weapon): Bullet {
         baseY: source.y,
         x: source.x,
         y: source.y,
-        radius: weapon.radius * source.attackChargeLevel,
+        radius: weapon.radius * (1.2 ** (source.attackChargeLevel - 1)),
         vx: weapon.speed * Math.cos(source.theta),
         vy: weapon.speed * Math.sin(source.theta),
         damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage),
@@ -61,7 +38,7 @@ function basicBullet(state: GameState, source: Hero, weapon: Weapon): Bullet {
         isCrit: critDamage > 1,
         isEnemyPiercing: (source.attackChargeLevel >= 2),
         source,
-        expirationTime: state.fieldTime + 1000 * range / weapon.speed,
+        duration: 1000 * range / weapon.speed,
         update: updateSimpleBullet,
         hitTargets: new Set(),
         armorShred: getArmorShred(state, source.attackChargeLevel),
@@ -95,7 +72,7 @@ const bowShots: Shot[] = [
             const range = 400 + 50 * (source.attackChargeLevel - 1);
             return {
                 ...basicBullet(state, source, weapon),
-                expirationTime: state.fieldTime + 1000 * range / speed,
+                duration: 1000 * range / speed,
                 radius: weapon.radius + (source.attackChargeLevel - 1),
                 vx: speed * Math.cos(source.theta),
                 vy: speed * Math.sin(source.theta),
@@ -126,6 +103,7 @@ function createBow(level: number, name: string): Weapon {
         radius: BASE_BULLET_RADIUS,
         duration: BASE_BULLET_DURATION,
         enchantmentSlots: [],
+        bonusEnchantmentSlots: [],
     };
 }
 
@@ -172,6 +150,7 @@ function createSword(level: number, name: string): Weapon {
         radius: Math.ceil(1.2 * BASE_BULLET_RADIUS),
         duration: BASE_BULLET_DURATION,
         enchantmentSlots: [],
+        bonusEnchantmentSlots: [],
     };
 }
 
@@ -206,7 +185,7 @@ function generateDaggerShot(timingOffset: number, thetaOffset: number): Shot {
                 chargeGain: 0.02,
                 isCrit: critDamage > 1,
                 radius: weapon.radius + (source.attackChargeLevel - 1),
-                expirationTime: state.fieldTime + 1000 * range / weapon.speed,
+                duration: 1000 * range / weapon.speed,
             };
         },
     }
@@ -237,6 +216,7 @@ function createDagger(level: number, name: string): Weapon {
         radius: BASE_BULLET_RADIUS,
         duration: BASE_BULLET_DURATION,
         enchantmentSlots: [],
+        bonusEnchantmentSlots: [],
     };
 }
 
@@ -279,7 +259,7 @@ function generateKatanaShot(timingOffset: number, offset: number): Shot {
                 isCrit: critDamage > 1,
                 isEnemyPiercing: true,
                 radius: weapon.radius + (source.attackChargeLevel - 1),
-                expirationTime: state.fieldTime + 1000 * range / speed,
+                duration: 1000 * range / speed,
             };
         },
     }
@@ -305,6 +285,7 @@ function createKatana(level: number, name: string): Weapon {
         radius: BASE_BULLET_RADIUS,
         duration: BASE_BULLET_DURATION,
         enchantmentSlots: [],
+        bonusEnchantmentSlots: [],
     };
 }
 

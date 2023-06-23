@@ -35,6 +35,8 @@ export const CELL_SIZE = 3000;
 export const BASE_DROP_CHANCE = 0.15;
 
 export const HERO_DAMAGE_FRAME_COUNT = 20;
+// This is added to the player's base radius.
+export const BULLET_SHAVE_RADIUS = 20;
 export const BASE_MAX_POTIONS = 5;
 export const BASE_XP = 10;
 export const BASE_ATTACKS_PER_SECOND = 2;
@@ -47,4 +49,4 @@ export const BASE_ENEMY_SPEED = 200;
 export const BASE_ENEMY_BULLET_SPEED = 250;
 export const BASE_ENEMY_BULLET_RADIUS = 10;
 export const BASE_ENEMY_BULLET_DURATION = 1000;
-export const BOSS_MAX_LIFE_FACTOR = 10;
+export const BOSS_MAX_LIFE_FACTOR = 20;

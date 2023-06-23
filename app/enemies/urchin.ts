@@ -12,6 +12,7 @@ export const urchin: EnemyDefinition = {
     },
     initialParams: {},
     dropChance: 1.5 * BASE_DROP_CHANCE,
+    uniqueMultiplier: 2,
     experienceFactor: 2,
     radius: 24,
     portalChance: 0.2,
@@ -25,7 +26,7 @@ export const urchin: EnemyDefinition = {
             return;
         }
         if (enemy.modeTime % 100 === 0) {
-            shootBulletCircle(state, enemy, enemy.theta, 3, BASE_ENEMY_BULLET_SPEED, {expirationTime: state.fieldTime + 1500});
+            shootBulletCircle(state, enemy, enemy.theta, 3, BASE_ENEMY_BULLET_SPEED, {duration: 1500});
         }
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
