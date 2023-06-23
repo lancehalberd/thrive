@@ -530,7 +530,7 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
 }
 
 function updateEnemyBullets(state: GameState): void {
-    const activeBullets = []:
+    const activeBullets = [];
     for (const bullet of state.enemyBullets) {
         if (bullet.expirationTime >= state.fieldTime) {
             activeBullets.push(bullet);
