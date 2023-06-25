@@ -208,7 +208,7 @@ const guardianTurret: EnemyDefinition = {
         const {x, y} = getTargetVector(enemy, enemy.disc);
         enemy.theta = turnTowardsAngle(enemy.theta, 0.1, Math.atan2(y, x));
         if (enemy.modeTime > 1000 && enemy.modeTime % 400 === 0) {
-            shootBulletArc(state, enemy, enemy.theta, 2 * Math.PI / 3, 2, 150);
+            shootBulletArc(state, enemy, enemy.theta, 2 * Math.PI / 3, 2, BASE_ENEMY_BULLET_SPEED * 1.5);
         }
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {

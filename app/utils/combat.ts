@@ -41,6 +41,22 @@ export function abbreviate(number: number, digits?: number): string {
     return `${number}`;
 }
 
+export function abbreviateHealth(number: number, digits?: number): string {
+    if (typeof(digits) === 'number') {
+        number = fixedDigits(number, digits);
+    }
+    if (number >= 1000000000000) {
+        return (number / 1000000000 + '').slice(0, 4) + 'B';
+    }
+    if (number >= 1000000000) {
+        return (number / 1000000 + '').slice(0, 4) + 'M';
+    }
+    if (number >= 1000000) {
+        return (number / 1000 + '').slice(0, 4) + 'K';
+    }
+    return `${number}`;
+}
+
 export function rollForCritDamage(state: GameState, additionalCritchance: number = 0): number {
     const weapon = state.hero.equipment.weapon;
     const isCrit = Math.random() < additionalCritchance + state.hero.critChance + weapon.critChance;

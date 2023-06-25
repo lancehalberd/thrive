@@ -75,6 +75,8 @@ interface UniqueEnchantment {
     modifyArmor?: (enchantment: UniqueEnchantmentInstance, armor: Armor) => void
     // Called when charge attack is activated. If this returns true, the default charge behavior will not apply.
     onActivateCharge?: (state: GameState, enchantment: UniqueEnchantmentInstance) => boolean|void
+    // Called when guard skill is activated. If this returns true, the default behavior will not apply.
+    onActivateGuardSkill?: (state: GameState, enchantment: UniqueEnchantmentInstance) => boolean|void
     // Called when the player is hit by a bullet.
     onHit?: (state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet) => void
     // Called when the player shaves a bullet.

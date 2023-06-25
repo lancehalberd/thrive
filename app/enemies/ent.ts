@@ -1,6 +1,7 @@
 import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED } from 'app/constants';
 import { fillCircle } from 'app/render/renderGeometry';
 import { renderNormalizedEnemy, shootBulletAtHero, shootBulletCircle, shootCirclingBullet } from 'app/utils/enemy';
+import { getTargetVector } from 'app/utils/geometry';
 
 
 export const ent: EnemyDefinition = {
@@ -29,6 +30,12 @@ export const ent: EnemyDefinition = {
                 warningTime: 500,
                 duration: 2500
             });
+        }
+
+        const aggroRadius = 600;
+        const {distance2} = getTargetVector(enemy, state.hero);
+        if (distance2 > aggroRadius * aggroRadius) {
+            return;
         }
 
         if (enemy.attackCooldown <= state.fieldTime) {

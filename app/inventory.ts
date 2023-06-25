@@ -111,6 +111,10 @@ function removeEnchantment(state: GameState, enchantment: Enchantment): boolean 
 }
 
 function activateItem(state: GameState, item: Item): void {
+    // Cannot use items while in the middle of a skill.
+    if (state.hero.roll || state.hero.guardSkill.duration || state.hero.attackChargeLevel > 1) {
+        return;
+    }
     const activeEnchantment = state.hero.activeEnchantment;
     delete state.hero.activeEnchantment;
     if (activeEnchantment) {
@@ -125,6 +129,10 @@ function activateItem(state: GameState, item: Item): void {
     if (item.type === 'weapon') {
         const index = state.hero.weapons.indexOf(item);
         if (index >= 0) {
+            // Reset charge on changing weapons.
+            state.hero.chargingLevel = 1;
+            state.hero.attackChargeLevel = 1;
+            state.hero.attackChargeDuration = 0;
             state.hero.weapons[index] = state.hero.equipment.weapon;
             state.hero.equipment.weapon = item;
             setDerivedHeroStats(state);
@@ -138,6 +146,11 @@ function activateItem(state: GameState, item: Item): void {
                 state.hero.armors.splice(index, 1);
             }
             state.hero.equipment.armor = item;
+            state.hero.guardSkill = {
+                cooldownTime: 0,
+                charges: 0,
+                time: 0,
+            };
             setDerivedHeroStats(state);
         }
     } else if (item.type === 'enchantment') {

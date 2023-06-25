@@ -3,6 +3,7 @@ import { fillCircle, renderBar } from 'app/render/renderGeometry';
 import { renderHUD } from 'app/render/renderHUD';
 import { getRightAnalogDeltas } from 'app/utils/userInput'
 import { doCirclesIntersect } from 'app/utils/geometry';
+import { getDispersionCircle } from 'app/utils/guardSkill';
 import { getHeroShaveRadius } from 'app/utils/hero';
 
 
@@ -175,7 +176,7 @@ function renderEnemyBullet(context: CanvasRenderingContext2D, bullet: Bullet): v
     } else {
         if (bullet.radius > 15) {
             context.save();
-                context.globalAlpha *= Math.max(0.2, 0.5 - (bullet.radius) - 15 / 35);
+                context.globalAlpha *= Math.max(0.2, 0.9 - (bullet.radius) - 15 / 45);
                 fillCircle(context, bullet, baseColor);
             context.restore();
         } else {
@@ -194,7 +195,7 @@ function renderHeroBullet(context: CanvasRenderingContext2D, bullet: Bullet): vo
     } else {
         if (bullet.radius > 15) {
             context.save();
-                context.globalAlpha *= Math.max(0.2, 0.5 - (bullet.radius) - 15 / 35);
+                context.globalAlpha *= Math.max(0.2, 0.9 - (bullet.radius) - 15 / 45);
                 fillCircle(context, bullet, baseColor);
             context.restore();
         } else {
@@ -231,7 +232,14 @@ function renderHero(context: CanvasRenderingContext2D, state: GameState, hero: H
             //context.globalAlpha *= (1 - fadeAmount / 2 + fadeAmount * Math.sin(state.fieldTime / 80));
             context.globalAlpha *= (1 - fadeAmount);
         }
-        fillCircle(context, hero, 'blue');
+        let heroColor = 'blue';
+        if (hero.guardSkill.duration && hero.equipment.armor.armorType === 'heavyArmor') {
+            heroColor = 'lightBlue';
+        }
+        if (hero.roll) {
+            context.globalAlpha *= 0.5;
+        }
+        fillCircle(context, hero, heroColor);
         context.beginPath();
         context.strokeStyle = 'lightblue';
         context.lineWidth = 3;
@@ -253,6 +261,10 @@ function renderHero(context: CanvasRenderingContext2D, state: GameState, hero: H
             context.arc(bullet.x, bullet.y, bullet.radius, 0, 2 * Math.PI);
             context.stroke();
             //fillCircle(context, bullet, 'black');
+        }
+        if (hero.guardSkill.duration && hero.equipment.armor.armorType === 'mediumArmor') {
+            context.globalAlpha *= 0.5;
+            fillCircle(context, getDispersionCircle(state), 'orange');
         }
     context.restore();
 

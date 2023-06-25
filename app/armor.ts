@@ -6,7 +6,7 @@ function createLightArmor(level: number, name: string): Armor {
         name,
         life: level * 10,
         armor: level,
-        speedFactor: 1.2,
+        speedFactor: 1.1,
         enchantmentSlots: [],
         bonusEnchantmentSlots: [],
     };
@@ -66,7 +66,7 @@ function createHeavyArmor(level: number, name: string): Armor {
         name,
         life: level * 20,
         armor: Math.ceil(level * 2),
-        speedFactor: 0.8,
+        speedFactor: 0.9,
         enchantmentSlots: [],
         bonusEnchantmentSlots: [],
     };
@@ -100,6 +100,6 @@ export const allArmors: Armor[][] = Object.values(armorsByType);
 
 export const armorTypeLabels: {[key in ArmorType]: string} = {
     lightArmor: 'Light Armor',
-    mediumArmor: 'Armor',
+    mediumArmor: 'Medium Armor',
     heavyArmor: 'Heavy Armor',
 }

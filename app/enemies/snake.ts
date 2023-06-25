@@ -42,7 +42,7 @@ export const snake: EnemyDefinition<SnakeParams> = {
                         warningTime: 500,
                         duration: 2000,
                         friction: 0.95,
-                        damageOverTime: 2 * enemy.damage,
+                        damageOverTime: enemy.damage,
                         update: (state: GameState, bullet: Bullet) => {
                             updateSimpleBullet(state, bullet);
                             if (bullet.warningTime <= 0) {

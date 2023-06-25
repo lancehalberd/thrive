@@ -7,8 +7,8 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     theta: number
     damageHistory: number[]
     recentDamageTaken: number
-    weaponProficiency: {[key in WeaponType]?: WeaponProficiency}
-    weaponMastery: WeaponMasteryMap
+    proficiency: {[key in ArmorType|WeaponType]?: Proficiency}
+    mastery: MasteryMap
     bossRecords: {[key in string]: number}
     equipment: {
         weapon: Weapon
@@ -36,9 +36,22 @@ interface Hero extends CoreHeroStats, Vitals, Geometry {
     potionEffect: number
     dropChance: number
     dropLevel: number
+    lastTimeDamaged: number
     vx: number
     vy: number
     flags: {[key in HeroFlag]?: boolean}
+    roll?: {
+        start: Point
+        goal: Point
+        time: number
+        duration: number
+    }
+    guardSkill: {
+        cooldownTime: number
+        charges: number
+        time: number
+        duration?: number
+    }
 }
 
 type HeroFlag = 'noShaveShrink'|'noShaveCharge'
@@ -47,7 +60,7 @@ interface CoreHeroStats {
     level: number
     experience: number
 }
-interface WeaponProficiency {
+interface Proficiency {
     level: number
     experience: number
 }
@@ -64,4 +77,4 @@ interface Vitals {
     attackCooldown: number
 }
 
-type WeaponMasteryMap = {[key in WeaponType]?: number}
+type MasteryMap = {[key in ArmorType|WeaponType]?: number}

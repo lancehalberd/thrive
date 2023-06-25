@@ -1,4 +1,4 @@
-import { getWeaponProficiency } from 'app/utils/hero';
+import { getProficiency } from 'app/utils/hero';
 import { applyUniqueItemEnchantments, generateArmor, generateWeapon } from 'app/utils/item';
 
 interface SaveGameData {
@@ -10,7 +10,7 @@ interface SaveGameData {
     y: number
     weapon: SavedWeapon
     armor: SavedArmor
-    weaponProficiency: {[key in WeaponType]: WeaponProficiency}
+    proficiency: {[key in ArmorType|WeaponType]: Proficiency}
     weapons: SavedWeapon[]
     armors: SavedArmor[]
     enchantments: Enchantment[]
@@ -43,13 +43,16 @@ function getSaveData(state: GameState): SaveGameData {
         x, y,
         weapon: saveWeapon(weapon),
         armor: saveArmor(armor),
-        weaponProficiency: {
-            bow: getWeaponProficiency(state, 'bow'),
-            dagger: getWeaponProficiency(state, 'dagger'),
-            katana: getWeaponProficiency(state, 'katana'),
-            morningStar: getWeaponProficiency(state, 'morningStar'),
-            staff: getWeaponProficiency(state, 'staff'),
-            sword: getWeaponProficiency(state, 'sword'),
+        proficiency: {
+            bow: getProficiency(state, 'bow'),
+            dagger: getProficiency(state, 'dagger'),
+            katana: getProficiency(state, 'katana'),
+            morningStar: getProficiency(state, 'morningStar'),
+            staff: getProficiency(state, 'staff'),
+            sword: getProficiency(state, 'sword'),
+            lightArmor: getProficiency(state, 'lightArmor'),
+            mediumArmor: getProficiency(state, 'mediumArmor'),
+            heavyArmor: getProficiency(state, 'heavyArmor'),
         },
         weapons: state.hero.weapons.map(saveWeapon),
         armors: state.hero.armors.map(saveArmor),
@@ -125,13 +128,13 @@ export function loadGame(state: GameState) {
         state.hero.overworldY = state.hero.y = data.y;
         state.hero.equipment.weapon = loadWeapon(data.weapon);
         state.hero.equipment.armor = loadArmor(data.armor);
-        state.hero.weaponProficiency = data.weaponProficiency;
         state.hero.weapons = data.weapons.map(loadWeapon);
         state.hero.armors = data.armors.map(loadArmor);
         state.hero.enchantments = data.enchantments;
         // Data below this point might not exist on old save files.
         state.hero.bossRecords = data.bossRecords || {};
         state.missedRolls = data.missedRolls || {};
+        state.hero.proficiency = data.proficiency || {};
     } catch (e) {
         console.error(e);
         debugger;

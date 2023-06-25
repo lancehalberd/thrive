@@ -6,17 +6,21 @@ import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 export function createEnemy<EnemyParams>(x: number, y: number, definition: EnemyDefinition<EnemyParams>, level: number, disc: Disc): Enemy<EnemyParams> {
     const heroBaseWeaponDamage = level * BASE_WEAPON_DPS_PER_LEVEL;
     const heroLevelDamageFactor = Math.pow(1.05, level);
-    const heroWeaponProficiencyDamageFactor = Math.pow(1.05, level);
+    const heroProficiencyDamageFactor = Math.pow(1.05, level);
     const heroDamage = Math.ceil(
-        heroBaseWeaponDamage * heroLevelDamageFactor * heroWeaponProficiencyDamageFactor
+        heroBaseWeaponDamage * heroLevelDamageFactor * heroProficiencyDamageFactor
     );
     // This includes attack speed gain from both level and weapon proficiency
     const heroAttacksPerSecond = 1 + 0.02 * level;
-    const heroMaxLife = 20 * (level + 1);
+    const halfMediumArmorLifeBonus = (1 + level / 100 / 2);
+    const heroMaxLife = 20 * (level + 1) * halfMediumArmorLifeBonus;
     const dps = heroAttacksPerSecond * heroDamage;
     const targetDuration = 1 + level * 10 / 100;
     const maxLife = Math.ceil((dps * targetDuration) * (definition.statFactors.maxLife ?? 1));
     const baseArmor = heroDamage / 20 * (definition.statFactors.armor ?? 1);
+
+
+    const halfHeavyArmorBonus = (1 + level / 100 / 2);
 
     const enemy = {
         definition,
@@ -34,7 +38,7 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
         baseArmor,
         armor: baseArmor,
         damage: Math.floor(
-            (heroMaxLife / 10 + heroMaxLife / 10 * level / 100 + 1.5 * level) * (definition.statFactors.damage ?? 1)
+            (heroMaxLife / 10 + heroMaxLife / 10 * level / 100 + 1.5 * level * halfHeavyArmorBonus) * (definition.statFactors.damage ?? 1)
         ),
         attacksPerSecond: (1 + 0.03 * level) * (definition.statFactors.attacksPerSecond ?? 1),
         attackCooldown: 0,
@@ -112,9 +116,7 @@ export function getBaseEnemyBullet(state: GameState, enemy: Enemy): Bullet {
         duration: BASE_ENEMY_BULLET_DURATION,
         update: updateSimpleBullet,
         hitTargets: new Set(),
-        // Armor shred is not functional against the player, although maybe it could be added
-        // with player recovering armor over time.
-        armorShred: 0,
+        armorShred: 0.05,
         warningTime: 0,
     };
 }
@@ -170,7 +172,7 @@ export function shootCirclingBullet(state: GameState, enemy: Enemy, theta: numbe
         hitTargets: new Set(),
         // Armor shred is not functional against the player, although maybe it could be added
         // with player recovering armor over time.
-        armorShred: 0,
+        armorShred: 0.05,
         warningTime: 0,
         ...stats,
     });
