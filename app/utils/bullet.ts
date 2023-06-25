@@ -70,7 +70,7 @@ function turnBulletTowardsTarget(bullet: Bullet, rate: number = 0.1, target?: Ci
 }
 
 export function updateEnemySeekingBullet(state: GameState, bullet: Bullet): void {
-    const closestEnemy = getClosestElement(bullet, state.enemies.filter(e => !bullet.hitTargets.has(e)));
+    const closestEnemy = getClosestElement(bullet, state.enemies.filter(e => !bullet.hitTargets.has(e) && !e.isInvulnerable));
     turnBulletTowardsTarget(bullet, 0.1, closestEnemy);
     updateSimpleBullet(state, bullet);
 }

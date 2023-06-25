@@ -132,7 +132,7 @@ export const megaSlime: EnemyDefinition = {
                 warningTime: 800,
                 duration: 3000,
                 friction: 0.5,
-                damageOverTime: 3 * enemy.damage,
+                damageOverTime: 1.5 * enemy.damage,
                 update: (state: GameState, bullet: Bullet) => {
                     updateSimpleBullet(state, bullet);
                     if (bullet.warningTime <= 0) {

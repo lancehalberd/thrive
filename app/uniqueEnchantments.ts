@@ -48,9 +48,9 @@ const wave: UniqueEnchantment = {
         ];
     },
     modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
-        const amplitude = 45;
+        const amplitude = 20;
         bullet.amplitude = amplitude;
-        bullet.frequency = 2;
+        bullet.frequency = 4;
         /*bullet.vx *= 0.9;
         bullet.vy *= 0.9;
         bullet.duration *= 1.1;*/
@@ -428,7 +428,8 @@ export function checkToAddGlobalUniqueEnchantments(state: GameState, item: Equip
 
 export function checkToAddSpecifiedUniqueEnchantments(state: GameState, item: Equipment, enchantments: UniqueEnchantment[], chanceMultiplier = 1): void {
     const enchantment  = Random.element(enchantments);
-    if (rollWithMissBonus(state, enchantment.key, enchantment.chance * chanceMultiplier)) {
+    const levelMultiplier = 10 - 9 * item.level / 100;
+    if (rollWithMissBonus(state, enchantment.key, enchantment.chance * chanceMultiplier * levelMultiplier)) {
         addUniqueEnchantmentToItem(item, enchantment);
         return;
     }

@@ -7,7 +7,7 @@ import { createDungeon, dungeonTypes, startDungeon } from 'app/utils/dungeon';
 import { KEY, isKeyboardKeyDown } from 'app/utils/userInput';
 import { mainCanvas } from 'app/utils/canvas';
 import { getElementRect, tagElement } from 'app/utils/dom';
-import { getWeaponProficiency, refillAllPotions, setDerivedHeroStats } from 'app/utils/hero';
+import { getProficiency, refillAllPotions, setDerivedHeroStats } from 'app/utils/hero';
 import { clearNearbyEnemies, updateActiveCells} from 'app/utils/overworld';
 import { getMousePosition } from 'app/utils/mouse';
 import { weaponTypes } from 'app/weapons';
@@ -122,8 +122,8 @@ export function getContextMenu(state: GameState): MenuOption[] {
                         state.hero.equipment.weapon = generateWeapon(state.hero.equipment.weapon.weaponType, level)!;
                         state.hero.equipment.armor = generateArmor(state.hero.equipment.armor.armorType, level)!;
                         state.hero.bossRecords = {};
-                        for (const weaponType of weaponTypes) {
-                            const proficiency = getWeaponProficiency(state, weaponType);
+                        for (const equipmentType of [...armorTypes, ...weaponTypes]) {
+                            const proficiency = getProficiency(state, equipmentType);
                             proficiency.level = level - 1;
                             proficiency.experience = 0;
                         }
@@ -144,7 +144,9 @@ export function getContextMenu(state: GameState): MenuOption[] {
                         state.hero.enchantments = [];
                         setDerivedHeroStats(state);
                         updateActiveCells(state);
-                        clearNearbyEnemies(state);
+                        if (!state.dungeon) {
+                            clearNearbyEnemies(state);
+                        }
                     }
                 }));
             },

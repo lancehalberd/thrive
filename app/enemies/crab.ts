@@ -68,7 +68,7 @@ export const crab: EnemyDefinition = {
                 enemy.setMode('choose');
             }
         }
-        if (enemy.modeTime % 500 === 0) {
+        if (enemy.modeTime % 1500 === 0) {
             const duration = 500;
             shootBulletArc(state, enemy, 0, Math.PI / 8, 3, enemy.mode === 'moveRight' ? 1.5 * BASE_ENEMY_BULLET_SPEED : BASE_ENEMY_BULLET_SPEED, {duration});
             shootBulletArc(state, enemy, Math.PI, Math.PI / 8, 3, enemy.mode === 'moveLeft' ? 1.5 * BASE_ENEMY_BULLET_SPEED : BASE_ENEMY_BULLET_SPEED, {duration});

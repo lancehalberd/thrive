@@ -309,7 +309,7 @@ function addOverworldEnemiesToDisc(randomizer: typeof SRandom, disc: Disc): void
         if (randomizer.generateAndMutate() < 0.3) {
             createEnemy(disc.x, disc.y + 100, overworldSpiderNova, disc.level, disc);
         }
-        if (randomizer.generateAndMutate() < 1) {
+        if (randomizer.generateAndMutate() < 0.3) {
             createEnemy(disc.x + 100, disc.y, snake, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {

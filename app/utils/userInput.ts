@@ -53,6 +53,7 @@ const KEYBOARD_MAPPINGS = {
     [GAME_KEY.SELL]: [KEY.X],
     [GAME_KEY.POTION]: [KEY.SPACE],
     [GAME_KEY.MUTE]: [KEY.M],
+    [GAME_KEY.GUARD_SKILL]: [KEY.SHIFT, KEY.C, KEY.V, KEY.B],
 }
 
 // Under this threshold, the analog buttons are considered "released" for the sake of

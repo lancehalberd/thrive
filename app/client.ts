@@ -13,13 +13,14 @@ import {
     startDungeon,
 } from 'app/utils/dungeon';
 import { doCirclesIntersect, getClosestElement, getTargetVector } from 'app/utils/geometry';
+import { updateGuardSkill } from 'app/utils/guardSkill';
 import {
-    damageHero, damageHeroOverTime, gainExperience, gainWeaponExperience, getHeroShaveRadius, getMaxChargeLevel, getWeaponMastery, getWeaponProficiency,
-    refillAllPotions, setDerivedHeroStats, weaponMasteryMap,
+    damageHero, damageHeroOverTime, gainExperience, gainEquipmentExperience, getHeroShaveRadius, getMaxChargeLevel, getMastery, getProficiency,
+    refillAllPotions, setDerivedHeroStats, masteryMap,
 } from 'app/utils/hero';
 import { getMousePosition, isMouseDown, isMiddleMouseDown, isRightMouseDown } from 'app/utils/mouse';
 import { addOverworldPortalToDisc, clearNearbyEnemies, returnToOverworld, updateActiveCells } from 'app/utils/overworld';
-import { getRightAnalogDeltas, isGameKeyDown, isKeyboardKeyDown, updateKeyboardState, wasGameKeyPressed, KEY } from 'app/utils/userInput';
+import { getMovementDeltas, getRightAnalogDeltas, isGameKeyDown, isKeyboardKeyDown, updateKeyboardState, wasGameKeyPressed, KEY } from 'app/utils/userInput';
 import Random from 'app/utils/Random';
 import { rollWithMissBonus } from 'app/utils/rollWithMissBonus';
 import { mediumArmors } from 'app/armor';
@@ -63,13 +64,14 @@ function getInitialState(): GameState {
             theta: 0,
             damageHistory: [],
             recentDamageTaken: 0,
+            lastTimeDamaged: 0,
             equipment: {
                 weapon: Random.element(allWeapons.filter(arr => arr.length))[0],
                 armor: mediumArmors[0],
             },
             weapons: [],
-            weaponProficiency: {},
-            weaponMastery: {},
+            proficiency: {},
+            mastery: {},
             bossRecords: {},
             armors: [],
             enchantments: [],
@@ -100,6 +102,11 @@ function getInitialState(): GameState {
             vy: 0,
             uniqueEnchantments: [],
             flags: {},
+            guardSkill: {
+                cooldownTime: 0,
+                charges: 0,
+                time: 0,
+            },
         },
         heroBullets: [],
         enemies: [],
@@ -164,6 +171,7 @@ function update(): void {
         loadGame(state);
         addContextMenuListeners(state);
         setDerivedHeroStats(state);
+        refillAllPotions(state);
         clearNearbyEnemies(state);
         // Set testDungeon/testBoss here to load the game in a dungeon and boss room.
         const testDungeon: DungeonType|'' = '';
@@ -308,19 +316,7 @@ function updateHero(state: GameState): void {
     }
 
     // Hero movement
-    let dx = 0, dy = 0;
-    if (isGameKeyDown(state, GAME_KEY.UP)) {
-        dy--;
-    }
-    if (isGameKeyDown(state, GAME_KEY.DOWN)) {
-        dy++;
-    }
-    if (isGameKeyDown(state, GAME_KEY.LEFT)) {
-        dx--;
-    }
-    if (isGameKeyDown(state, GAME_KEY.RIGHT)) {
-        dx++;
-    }
+    let [dx, dy] = getMovementDeltas(state);
     const m = Math.sqrt(dx * dx + dy * dy);
     if (m > 1) {
         dx /= m;
@@ -343,12 +339,19 @@ function updateHero(state: GameState): void {
     // Default charge speed is 1 charge per 20 seconds.
     gainAttackCharge(state, FRAME_LENGTH / 20000);
 
+
+    updateGuardSkill(state);
+    if (hero.lastTimeDamaged <= (state.fieldTime - 1000) && hero.armor < hero.baseArmor) {
+        hero.armor = Math.min(hero.baseArmor, hero.armor * 1.005);
+    }
+    const isRolling = !!state.hero.roll;
+
     if (state.hero.attackChargeLevel > 1) {
         state.hero.attackChargeDuration -= FRAME_LENGTH;
         if (state.hero.attackChargeDuration <= 0) {
             state.hero.attackChargeLevel = 1;
         }
-    } else if (state.hero.chargingLevel >= 2 &&
+    } else if (state.hero.chargingLevel >= 2 && !isRolling &&
         (wasGameKeyPressed(state, GAME_KEY.SPECIAL_ATTACK)
             || (state.isUsingKeyboard && state.mouse.wasRightPressed)
         )
@@ -369,7 +372,7 @@ function updateHero(state: GameState): void {
             hero.attackCooldown = state.fieldTime;
         }
     }
-    if (state.hero.isShooting) {
+    if (state.hero.isShooting && !isRolling) {
         const attackCooldownDuration = 1000 / attacksPerSecond;
         if (hero.attackCooldown <= state.fieldTime) {
             hero.attackCooldown = state.fieldTime + attackCooldownDuration;
@@ -549,13 +552,18 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
     const experiencePenalty = Math.min(1, Math.max(0, (state.hero.level - enemy.level) * 0.1));
     const experience = BASE_XP * Math.pow(1.2, enemy.level - 1) * (enemy.definition.experienceFactor ?? 1);
     gainExperience(state, Math.ceil(experience * (1 - experiencePenalty)));
-    const weapon = state.hero.equipment.weapon;
+    const {armor, weapon} = state.hero.equipment;
     // Gain more weapon experience when using higher level weapons.
     let weaponXpFactor = 1;
-    if (weapon.level > getWeaponProficiency(state, weapon.weaponType).level) {
+    if (weapon.level > getProficiency(state, weapon.weaponType).level) {
         weaponXpFactor = 2;
     }
-    gainWeaponExperience(state, state.hero.equipment.weapon.weaponType, enemy.level, weaponXpFactor * experience);
+    gainEquipmentExperience(state, weapon.weaponType, enemy.level, weaponXpFactor * experience);
+    let armorXpFactor = 1;
+    if (armor.level > getProficiency(state, armor.armorType).level) {
+        armorXpFactor = 2;
+    }
+    gainEquipmentExperience(state, armor.armorType, enemy.level, armorXpFactor * experience);
     checkToDropBasicLoot(state, enemy);
     if (enemy.disc && enemy.definition.portalDungeonType
         && rollWithMissBonus(state, enemy.definition.portalDungeonType + 'Portal', (enemy.definition.portalChance ?? 0))
@@ -578,11 +586,11 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
             }, enchantment)
         }
         const name = enemy.definition.name;
-        const weaponType = weaponMasteryMap[name];
-        const oldMasteryLevel = getWeaponMastery(state, weaponType);
+        const weaponType = masteryMap[name];
+        const oldMasteryLevel = getMastery(state, weaponType);
         state.hero.bossRecords[name] = Math.max(state.hero.bossRecords[name] || 0, enemy.level);
         setDerivedHeroStats(state);
-        const newMasteryLevel = getWeaponMastery(state, weaponType);
+        const newMasteryLevel = getMastery(state, weaponType);
         if (newMasteryLevel > oldMasteryLevel) {
             state.fieldText.push({
                 x: state.hero.x,
@@ -601,6 +609,7 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
 }
 
 function updateEnemyBullets(state: GameState): void {
+    const hero = state.hero;
     let shaved = false, onHit = false;
     const shavebullet = (bullet: Bullet) => {
         if (!state.hero.flags.noShaveCharge) {
@@ -642,7 +651,7 @@ function updateEnemyBullets(state: GameState): void {
             continue;
         }
         let hitTarget = false;
-        if (doCirclesIntersect(state.hero, bullet)) {
+        if (!hero.roll && doCirclesIntersect(state.hero, bullet)) {
             if (bullet.damageOverTime) {
                 damageHeroOverTime(state, bullet.damageOverTime * FRAME_LENGTH / 1000);
             } else {
@@ -654,6 +663,15 @@ function updateEnemyBullets(state: GameState): void {
                     onHit = true;
                 }
                 hitTarget = true;
+                let armorShred = bullet.armorShred;
+                if (hero.armor <= hero.baseArmor / 2) {
+                    armorShred /= 2;
+                }
+                if (hero.armor <= hero.baseArmor / 4) {
+                    armorShred /= 2;
+                }
+                hero.armor = Math.max(hero.baseArmor / 10, hero.armor * (1 - armorShred));
+                hero.lastTimeDamaged = state.fieldTime;
                 damageHero(state, bullet.damage);
             }
         } else if (!bullet.shaveStarted && doCirclesIntersect(bullet, {...state.hero, radius: state.hero.radius + shaveRadius})) {

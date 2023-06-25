@@ -28,6 +28,7 @@ export const GAME_KEY = {
     SHOOT: 13,
     SPECIAL_ATTACK: 14,
     MUTE: 15,
+    GUARD_SKILL: 16,
 };
 
 export const CELL_SIZE = 3000;

@@ -4,12 +4,14 @@ import { fillCircle, renderBar } from 'app/render/renderGeometry';
 import { renderInventorySlot, renderItemDetails, renderSelectedInventorySlot } from 'app/render/renderInventory';
 import { createCanvasAndContext } from 'app/utils/canvas';
 import { isPointInRect } from 'app/utils/geometry';
+import { getGuardSkillCooldownTime } from 'app/utils/guardSkill'
+import { armorTypeLabels, armorTypes } from 'app/armor';
 import { weaponTypeLabels, weaponTypes } from 'app/weapons';
 import {
     getExperienceForNextLevel,
-    getExperienceForNextWeaponLevel,
-    getWeaponMastery,
-    getWeaponProficiency,
+    getExperienceForNextEquipmentLevel,
+    getMastery,
+    getProficiency,
 } from 'app/utils/hero';
 
 
@@ -46,6 +48,13 @@ export function renderMinimap(state: GameState): void {
             mapContext.strokeRect(cell.x * CELL_SIZE, (cell.y + 1) * -CELL_SIZE, CELL_SIZE, CELL_SIZE);
         }*/
     mapContext.restore();
+}
+
+export function getEquipmentTypeLabel(type: ArmorType|WeaponType): string {
+    if (type === 'lightArmor' || type === 'mediumArmor' || type === 'heavyArmor') {
+        return armorTypeLabels[type];
+    }
+    return weaponTypeLabels[type];
 }
 
 export function renderHUD(context: CanvasRenderingContext2D, state: GameState): void {
@@ -137,6 +146,14 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
     context.font = '16px sans-serif';
     context.fillText('Level ' + state.hero.level, 5, 5);
 
+    context.fillText('Armor ', 100, 5);
+    if (state.hero.armor < state.hero.baseArmor) {
+        context.fillStyle = '#AAA';
+    } else if (state.hero.armor > state.hero.baseArmor) {
+        context.fillStyle = '#AFA';
+    }
+    context.fillText('' + (state.hero.armor | 0), 100 + context.measureText('Armor ').width, 5);
+
     const lifeRect: Rect = {x: 5, y: 30, h: 20, w: 200};
     renderBar(context, lifeRect, state.hero.life / state.hero.maxLife, 'green', '#888');
     context.fillStyle = 'white';
@@ -150,60 +167,74 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
     renderBar(context, experienceRect, state.hero.experience / requiredExperience, 'orange', '#888');
 
 
-    let hoveredProficiencyType: WeaponType|undefined;
+    let hoveredProficiencyType: ArmorType|WeaponType|undefined;
 
     let y = CANVAS_HEIGHT - 25;
     let x = SLOT_SIZE + 2 * SLOT_PADDING;
-    const weapon = state.hero.equipment.weapon;
+    const {armor, weapon} = state.hero.equipment;
     const weaponXpRect: Rect = {x, y, h: 10, w: 160};
-    const weaponProficiency = getWeaponProficiency(state, weapon.weaponType);
-    const weaponMastery = getWeaponMastery(state, weapon.weaponType);
-    const requiredWeaponXp = getExperienceForNextWeaponLevel(weaponProficiency.level);
+    const weaponProficiency = getProficiency(state, weapon.weaponType);
+    const weaponMastery = getMastery(state, weapon.weaponType);
+    const requiredWeaponXp = getExperienceForNextEquipmentLevel(weaponProficiency.level);
     renderBar(context, weaponXpRect, weaponProficiency.experience / requiredWeaponXp, 'orange', '#888');
     context.fillStyle = 'white';
     context.textBaseline = 'middle';
     context.textAlign = 'left';
     context.font = '16px sans-serif';
-    let proficiencyLabel = weaponTypeLabels[weapon.weaponType] + ' skill ' + weaponProficiency.level;
+    let weaponProficiencyLabel = weaponTypeLabels[weapon.weaponType] + ' skill ' + weaponProficiency.level;
     if (weaponMastery) {
-        proficiencyLabel += ' (+' + weaponMastery + ')';
+        weaponProficiencyLabel += ' (+' + weaponMastery + ')';
     }
-    context.fillText(proficiencyLabel, x, y - 8);
+    context.fillText(weaponProficiencyLabel, x, y - 8);
     if (isPointInRect({x, y: CANVAS_HEIGHT - 40, h: 30, w: 160}, state.mouse)) {
         hoveredProficiencyType = weapon.weaponType
     }
 
     if (state.paused) {
         let y = 200;
-        for (const weaponType of weaponTypes) {
-            const weaponXpRect: Rect = {x: 5, y, h: 10, w: 160};
-            const weaponProficiency = getWeaponProficiency(state, weaponType);
-            const weaponMastery = getWeaponMastery(state, weaponType);
-            const requiredWeaponXp = getExperienceForNextWeaponLevel(weaponProficiency.level);
-            renderBar(context, weaponXpRect, weaponProficiency.experience / requiredWeaponXp, 'orange', '#888');
+        for (const type of [...armorTypes, ...weaponTypes]) {
+            const xpRect: Rect = {x: 5, y, h: 10, w: 160};
+            const proficiency = getProficiency(state, type);
+            const mastery = getMastery(state, type);
+            const requiredWeaponXp = getExperienceForNextEquipmentLevel(proficiency.level);
+            renderBar(context, xpRect, proficiency.experience / requiredWeaponXp, 'orange', '#888');
             context.fillStyle = 'white';
             context.textBaseline = 'middle';
             context.textAlign = 'left';
             context.font = '16px sans-serif';
-            let proficiencyLabel = weaponTypeLabels[weaponType] + ' skill ' + weaponProficiency.level;
-            if (weaponMastery) {
-                proficiencyLabel += ' (+' + weaponMastery + ')';
+            let proficiencyLabel = getEquipmentTypeLabel(type);
+            proficiencyLabel += ' skill ' + proficiency.level;
+            if (mastery) {
+                proficiencyLabel += ' (+' + mastery + ')';
             }
             context.fillText(proficiencyLabel, 10, y - 8);
-            if (isPointInRect({x: weaponXpRect.x, y: y - 20, h: 30, w: 160}, state.mouse)) {
-                hoveredProficiencyType = weaponType;
+            if (isPointInRect({x: xpRect.x, y: y - 20, h: 30, w: 160}, state.mouse)) {
+                hoveredProficiencyType = type;
             }
             y += 35
         }
     }
 
     y -= (SLOT_SIZE + SLOT_PADDING);
+
+
+    const armorXpRect: Rect = {x, y, h: 10, w: 160};
+    const armorProficiency = getProficiency(state, armor.armorType);
+    const armorMastery = getMastery(state, armor.armorType);
+    const requireArmorXp = getExperienceForNextEquipmentLevel(armorProficiency.level);
+    renderBar(context, armorXpRect, armorProficiency.experience / requireArmorXp, 'orange', '#888');
     context.fillStyle = 'white';
     context.textBaseline = 'middle';
     context.textAlign = 'left';
     context.font = '16px sans-serif';
-    context.fillText('Armor ' + state.hero.armor, x, y - 8);
-
+    let armorProficiencyLabel = armorTypeLabels[armor.armorType] + ' skill ' + weaponProficiency.level;
+    if (armorMastery) {
+        armorProficiencyLabel += ' (+' + armorMastery + ')';
+    }
+    context.fillText(armorProficiencyLabel, x, y - 8);
+    if (isPointInRect({x, y: CANVAS_HEIGHT - 40 - (SLOT_SIZE + SLOT_PADDING), h: 30, w: 160}, state.mouse)) {
+        hoveredProficiencyType = armor.armorType
+    }
 
     context.strokeStyle = 'red';
     context.fillStyle = 'red';
@@ -230,6 +261,15 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
             renderBar(context, chargeRect,  state.hero.chargingLevel % 1, 'purple', 'white');
         }
     }
+    const guardChargeRect: Rect = {x: chargeRect.x, y: chargeRect.y + 20, h: 8, w: 140};
+    context.fillStyle = 'white';
+    context.fillText('' + state.hero.guardSkill.charges, 5, guardChargeRect.y + guardChargeRect.h / 2 + 1);
+    if (state.hero.guardSkill.charges >= 1) {
+        renderBar(context, guardChargeRect, 1, 'lightblue', 'white');
+        renderBar(context, guardChargeRect,  state.hero.guardSkill.cooldownTime / getGuardSkillCooldownTime(state), 'blue');
+    } else {
+        renderBar(context, guardChargeRect,  state.hero.guardSkill.cooldownTime / getGuardSkillCooldownTime(state), 'blue', 'white');
+    }
 
     const boss = state.hero.disc?.boss;
     if (!state.paused && boss) {
@@ -245,7 +285,7 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
         context.textBaseline = 'middle';
         context.textAlign = 'left';
         context.font = '20px sans-serif';
-        context.fillText(boss.definition.name + ' ' + boss.life + ' / ' + boss.maxLife, lifeRect.x + 2, lifeRect.y + lifeRect.h / 2 + 2);
+        context.fillText(boss.definition.name + ' ' + Math.ceil(boss.life) + ' / ' + boss.maxLife, lifeRect.x + 2, lifeRect.y + lifeRect.h / 2 + 2);
     }
 
     let hoverItem: Item|undefined = undefined;
@@ -284,33 +324,65 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
 const minDetailsWidth = 200;
 const minDetailsHeight = 50;
 
-export function renderProficiencyDetails(context: CanvasRenderingContext2D, state: GameState, weaponType: WeaponType, {x, y}: Point): void {
-    const weaponProficiency = getWeaponProficiency(state, weaponType).level;
-    const weaponMastery = getWeaponMastery(state, weaponType);
-    const totalProficiency = weaponProficiency + weaponMastery;
+export function renderProficiencyDetails(context: CanvasRenderingContext2D, state: GameState, type: ArmorType|WeaponType, {x, y}: Point): void {
+    const proficiency = getProficiency(state, type).level;
+    const mastery = getMastery(state, type);
+    const totalProficiency = proficiency + mastery;
     let w = minDetailsWidth, h = minDetailsHeight;
-    const damageIncrease = (100 * Math.pow(1.05, totalProficiency) - 100).toFixed(0);
-    const textLines: string[] = [
-        `${weaponTypeLabels[weaponType]} Proficiency Bonuses:`,
+    let textLines: string[] = [
+        `${getEquipmentTypeLabel(type)} Proficiency Bonuses:`,
         '',
-        `For ${weaponTypeLabels[weaponType].toLowerCase()}s:`,
-        `    ${damageIncrease}% increased damage`,
-        `    ${totalProficiency}% increased attack speed`,
-        '',
-        `For all weapons:`,
     ];
-    if (weaponType === 'bow') {
+    if (type === 'lightArmor') {
+        textLines = [
+            `For ${getEquipmentTypeLabel(type).toLowerCase()}s:`,
+            `    ${totalProficiency}% increased cooldown speed for dash`,
+            '',
+            `For any armor:`,
+        ];
+    } else if (type === 'mediumArmor') {
+        textLines = [
+            `For ${getEquipmentTypeLabel(type).toLowerCase()}s:`,
+            `    ${totalProficiency}% increased radius of bullet dispersion`,
+            '',
+            `For any armor:`,
+        ];
+    } else if (type === 'heavyArmor') {
+        textLines = [
+            `For ${getEquipmentTypeLabel(type).toLowerCase()}s:`,
+            `    ${totalProficiency}% increased duration of shield`,
+            '',
+            `For any armor:`,
+        ];
+    } else{
+        const damageIncrease = (100 * Math.pow(1.05, totalProficiency) - 100).toFixed(0);
+        textLines = [
+            ...textLines,
+            `For ${getEquipmentTypeLabel(type).toLowerCase()}s:`,
+            `    ${damageIncrease}% increased damage`,
+            `    ${totalProficiency}% increased attack speed`,
+            '',
+            `For all weapons:`,
+        ]
+    }
+    if (type === 'bow') {
         textLines.push(`    ${(totalProficiency / 10).toFixed(1)}% additional critical strike chance`);
-    } else if (weaponType === 'dagger') {
+    } else if (type === 'dagger') {
         textLines.push(`    ${totalProficiency}% increased attack speed`);
-    } else if (weaponType === 'katana') {
+    } else if (type === 'katana') {
         textLines.push(`    ${totalProficiency}% increased critical damage`);
-    } else if (weaponType === 'morningStar') {
+    } else if (type === 'morningStar') {
         textLines.push(`    ${totalProficiency}% increased effect of armor shred`);
-    } else if (weaponType === 'staff') {
+    } else if (type === 'staff') {
         textLines.push(`    ${totalProficiency}% increased charge attack damage`);
-    } else if (weaponType === 'sword') {
+    } else if (type === 'sword') {
         textLines.push(`    ${totalProficiency}% increased damage`);
+    } else if (type === 'lightArmor') {
+        textLines.push(`    ${totalProficiency}% increased bullet shave radius`);
+    } else if (type === 'mediumArmor') {
+        textLines.push(`    ${totalProficiency}% increased life`);
+    } else if (type === 'heavyArmor') {
+        textLines.push(`    ${totalProficiency}% increased armor`);
     }
 
     const lineWidths: number[] = [];
