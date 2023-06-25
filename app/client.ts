@@ -638,6 +638,7 @@ function updateEnemyBullets(state: GameState): void {
             }
         }
     }
+
     state.enemyBullets = [];
     const shaveRadius = getHeroShaveRadius(state);
     for (const bullet of activeBullets) {

@@ -1,4 +1,5 @@
 import { guardian } from 'app/bosses/guardian';
+import { skissue } from 'app/bosses/skissue';
 import { spider } from 'app/bosses/spider';
 import { bat } from 'app/enemies/bat';
 import { chest } from 'app/enemies/chest';
@@ -206,7 +207,7 @@ export function createArenaDungeon(seed: number, radius: number, level: number):
     });
     addOverworldPortalToDisc(entrance, startingPlatform);
     discs.push(startingPlatform);
-    const bosses = dungeonRandomizer.shuffle([megaSlime, guardian, giantClam, spider]);
+    const bosses = dungeonRandomizer.shuffle([megaSlime, guardian, giantClam, spider, skissue]);
     const count = bosses.length;
     console.log(bosses);
     for (let i = 0; i < count; i++) {
