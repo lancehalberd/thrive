@@ -209,7 +209,6 @@ export function createArenaDungeon(seed: number, radius: number, level: number):
     discs.push(startingPlatform);
     const bosses = dungeonRandomizer.shuffle([megaSlime, guardian, giantClam, spider, skissue]);
     const count = bosses.length;
-    console.log(bosses);
     for (let i = 0; i < count; i++) {
         const theta = 2 * Math.PI * i / count;
         let previousDisc = startingPlatform;

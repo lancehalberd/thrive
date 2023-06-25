@@ -6,9 +6,7 @@ import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 
 
 
-interface SpiderParams {
-}
-export const skissue: EnemyDefinition<SpiderParams> = {
+export const skissue: EnemyDefinition = {
     name: 'Skissue',
     statFactors: {
         maxLife: 10,
@@ -18,7 +16,7 @@ export const skissue: EnemyDefinition<SpiderParams> = {
     dropChance: 1,
     experienceFactor: 20,
     radius: 48,
-    update(state: GameState, enemy: Enemy<SpiderParams>): void {
+    update(state: GameState, enemy: Enemy): void {
 
         if (enemy.life >= enemy.maxLife * 3 / 4) {
             if (enemy.mode !== 'sakura') {
@@ -48,14 +46,6 @@ export const skissue: EnemyDefinition<SpiderParams> = {
             }
         }
         
-
-        /*if (enemy.mode === 'choose') {
-            if (enemy.modeTime >= 400) {
-                enemy.setMode(Random.element(['sakura', 'hanabi']));
-                //enemy.setMode(Random.element(['moveToCenter']));
-            }
-            return;
-        }*/
         if (enemy.mode === 'sakura') {
             if (enemy.minions.filter(E => E.definition === skillPortal).length === 0) {
                 //spawn minions
@@ -71,15 +61,8 @@ export const skissue: EnemyDefinition<SpiderParams> = {
             }
             if (enemy.modeTime % 100 === 0) {
                 const theta1 = Math.PI * 2 / 40000 * enemy.modeTime
-                shootBulletCircle(state, enemy, theta1, 5, BASE_ENEMY_BULLET_SPEED, {expirationTime: state.fieldTime + 2000});
+                shootBulletCircle(state, enemy, theta1, 5, BASE_ENEMY_BULLET_SPEED, {duration: 2000});
             }
-            /*if (enemy.modeTime >= 10000) {
-                enemy.setMode('choose');
-                for (const minion of enemy.minions) {
-                    minion.life = 0;
-                }
-                enemy.minions = [];
-            }*/
         }
         if (enemy.mode === 'hanabi') {
             //delete portals
@@ -93,7 +76,7 @@ export const skissue: EnemyDefinition<SpiderParams> = {
                 shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED / 2, {
                     damage: 5 * enemy.damage,
                     radius: BASE_ENEMY_BULLET_RADIUS * 2,
-                    expirationTime: state.fieldTime + 2000,
+                    duration: 2000,
                     onDeath(state: GameState, bullet: Bullet) {
                         for (let i = 0; i < 5; i++) {
                             const bulletTheta = 2 * Math.PI * i / 5;
@@ -102,7 +85,7 @@ export const skissue: EnemyDefinition<SpiderParams> = {
                                 y: bullet.y,
                                 baseX: bullet.x,
                                 baseY: bullet.y,
-                                expirationTime: state.fieldTime + 250,
+                                duration: 250,
                                 onDeath(state: GameState, bullet: Bullet) {
                                     for (let i = 0; i < 5; i++) {
                                         const bulletTheta = 2 * Math.PI * i / 5;
@@ -111,16 +94,16 @@ export const skissue: EnemyDefinition<SpiderParams> = {
                                             y: bullet.y,
                                             baseX: bullet.x,
                                             baseY: bullet.y,
-                                            expirationTime: state.fieldTime + 500,
+                                            duration: 500,
                                             onDeath(state: GameState, bullet: Bullet) {
                                                 for (let i = 0; i < 5; i++) {
                                                     const bulletTheta = 2 * Math.PI * i / 5;
                                                     shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(bulletTheta), BASE_ENEMY_BULLET_SPEED * Math.sin(bulletTheta), {                        
-                                                    x: bullet.x,
-                                                    y: bullet.y,
-                                                    baseX: bullet.x,
-                                                    baseY: bullet.y,
-                                                    expirationTime: state.fieldTime + 2000,
+                                                        x: bullet.x,
+                                                        y: bullet.y,
+                                                        baseX: bullet.x,
+                                                        baseY: bullet.y,
+                                                        duration: 2000,
                                                     });
                                                 }
                                             }
@@ -165,7 +148,7 @@ export const skissue: EnemyDefinition<SpiderParams> = {
         context.restore();
     },
     getEnchantment(state: GameState, enemy: Enemy): Enchantment {
-        return getVigorEnchantment(enemy.level);
+        return getVigorEnchantment(state, enemy.level);
     },
 };
 
@@ -182,8 +165,7 @@ const skillPortal: EnemyDefinition = {
     experienceFactor: 2,
     radius: 20,
     isInvulnerable: true,
-    update(state: GameState, enemy: Enemy<SpiderParams>): void {
-        
+    update(state: GameState, enemy: Enemy): void {
         if (enemy.life >= enemy.maxLife / 2) {
             const theta = enemy.theta + Math.PI + Math.PI / 250;
             enemy.x = enemy.disc.x + enemy.disc.radius * Math.cos(theta);
@@ -191,10 +173,12 @@ const skillPortal: EnemyDefinition = {
             enemy.theta = theta - Math.PI;
 
             if (enemy.modeTime % 100 === 0 && enemy.modeTime % 2000 < 1500) {
-                shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED / 2 * Math.cos(enemy.theta), BASE_ENEMY_BULLET_SPEED / 2 * Math.sin(enemy.theta),{expirationTime: state.fieldTime + 3000});
+                shootEnemyBullet(state, enemy,
+                    BASE_ENEMY_BULLET_SPEED / 2 * Math.cos(enemy.theta),
+                    BASE_ENEMY_BULLET_SPEED / 2 * Math.sin(enemy.theta),
+                    {duration: 3000}
+                );
             }
-        } else {
-            return;
         }
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
@@ -238,7 +222,7 @@ const blob: EnemyDefinition = {
     dropChance: 0,
     experienceFactor: 0,
     radius: 30,
-    update(state: GameState, enemy: Enemy<SpiderParams>): void {
+    update(state: GameState, enemy: Enemy): void {
 
         if (enemy.mode === 'choose') {
             const {x, y, distance2} = getTargetVector(enemy, state.hero);
@@ -258,7 +242,7 @@ const blob: EnemyDefinition = {
         }
     },
     onDeath(state: GameState, enemy: Enemy): void {
-        shootBulletCircle(state, enemy, 0, 30, BASE_ENEMY_BULLET_SPEED * 3, {expirationTime: state.fieldTime + 200});
+        shootBulletCircle(state, enemy, 0, 30, BASE_ENEMY_BULLET_SPEED * 3, {duration: + 200});
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
         fillCircle(context, enemy, 'black');
