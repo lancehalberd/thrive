@@ -2,7 +2,7 @@ import { BASE_BULLET_SPEED } from 'app/constants';
 import { getEnchantmentStrength } from 'app/enchantments';
 import { playerTurret } from 'app/enemies/playerTurret';
 import { addUniqueEnchantments } from 'app/uniqueEnchantmentHash';
-import { updateBoomeringBullet, updateEnemySeekingBullet, updateReturnBullet }  from 'app/utils/bullet';
+import { updateBoomeringBullet, updateEnemySeekingBullet, updateSourceSeekingBullet, updateReturnBullet }  from 'app/utils/bullet';
 import { abbreviate } from 'app/utils/combat';
 import { createEnemy } from 'app/utils/enemy';
 import { rollWithMissBonus } from 'app/utils/rollWithMissBonus';
@@ -156,11 +156,13 @@ const vacuum: UniqueEnchantment = {
         const multiplier = bullet.duration / 1000;
         bullet.baseX = bullet.x = bullet.x + bullet.vx * multiplier;
         bullet.baseY = bullet.y = bullet.y + bullet.vy * multiplier;
-        bullet.vx *= -1;
-        bullet.vy *= -1;
+        bullet.vx *= -1.5;
+        bullet.vy *= -1.5;
         if (bullet.theta !== undefined && bullet.vTheta !== undefined) {
             bullet.theta = bullet.theta + bullet.vTheta * multiplier;
-            bullet.vTheta *= -1;
+            bullet.vTheta *= -1.5;
+        } else {
+            bullet.update = updateSourceSeekingBullet;
         }
     },
 };
@@ -220,7 +222,7 @@ const explosive: UniqueEnchantment = {
     key: 'explosive',
     name: 'Explosive',
     enchantmentType: 'uniqueWeaponEnchantment',
-    chance: RARE_UNIQUE_RATE,
+    chance: UNCOMMON_UNIQUE_RATE,
     getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
         return [
             'Shots explode dealing 50% of damage as AOE damage.',
@@ -251,6 +253,25 @@ const explosive: UniqueEnchantment = {
     },
 };
 
+const laser: UniqueEnchantment = {
+    key: 'laser',
+    name: 'Laser',
+    enchantmentType: 'uniqueWeaponEnchantment',
+    chance: RARE_UNIQUE_RATE,
+    getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
+        return [
+            'Attacks are very rapid but have reduced range and damage.',
+        ];
+    },
+    modifyWeapon(enchantment: UniqueEnchantmentInstance, weapon: Weapon): void {
+        weapon.attacksPerSecond *= 5;
+        weapon.damage /= 3;
+    },
+    modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
+        bullet.isEnemyPiercing = true;
+        bullet.duration /= 3;
+    },
+};
 
 const globalUniqueWeaponEnchantments = [
     acid,
@@ -258,6 +279,7 @@ const globalUniqueWeaponEnchantments = [
     explosive,
     helix,
     kiting,
+    laser,
     reversing,
     seeking,
     tinkerer,

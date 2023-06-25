@@ -3,6 +3,7 @@ import { getInventorySlots, getSelectedInventorySlot, getSelectedItem } from 'ap
 import { fillCircle, renderBar } from 'app/render/renderGeometry';
 import { renderInventorySlot, renderItemDetails, renderSelectedInventorySlot } from 'app/render/renderInventory';
 import { createCanvasAndContext } from 'app/utils/canvas';
+import { abbreviateHealth } from 'app/utils/combat';
 import { isPointInRect } from 'app/utils/geometry';
 import { getGuardSkillCooldownTime } from 'app/utils/guardSkill'
 import { armorTypeLabels, armorTypes } from 'app/armor';
@@ -285,7 +286,8 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
         context.textBaseline = 'middle';
         context.textAlign = 'left';
         context.font = '20px sans-serif';
-        context.fillText(boss.definition.name + ' ' + Math.ceil(boss.life) + ' / ' + boss.maxLife, lifeRect.x + 2, lifeRect.y + lifeRect.h / 2 + 2);
+        context.fillText(boss.definition.name +
+            ' ' + abbreviateHealth(Math.ceil(boss.life)) + ' / ' + abbreviateHealth(boss.maxLife), lifeRect.x + 2, lifeRect.y + lifeRect.h / 2 + 2);
     }
 
     let hoverItem: Item|undefined = undefined;

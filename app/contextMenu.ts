@@ -172,6 +172,7 @@ export function getContextMenu(state: GameState): MenuOption[] {
                         const oldWeapon = state.hero.equipment.weapon;
                         state.hero.equipment.weapon = generateWeapon(weaponType, state.hero.level)!;
                         state.hero.equipment.weapon.bonusEnchantmentSlots = oldWeapon.bonusEnchantmentSlots;
+                        applyUniqueItemEnchantments(state.hero.equipment.weapon);
                         setDerivedHeroStats(state);
                     }
                 }));
@@ -186,6 +187,7 @@ export function getContextMenu(state: GameState): MenuOption[] {
                         const oldArmor = state.hero.equipment.armor;
                         state.hero.equipment.armor = generateArmor(armorType, state.hero.level)!;
                         state.hero.equipment.armor.bonusEnchantmentSlots = oldArmor.bonusEnchantmentSlots;
+                        applyUniqueItemEnchantments(state.hero.equipment.armor);
                         setDerivedHeroStats(state);
                     }
                 }));
