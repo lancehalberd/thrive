@@ -375,7 +375,7 @@ export function renderProficiencyDetails(context: CanvasRenderingContext2D, stat
         textLines.push(`    ${totalProficiency}% increased critical damage`);
     } else if (type === 'morningStar') {
         textLines.push(`    ${totalProficiency}% increased effect of armor shred`);
-    } else if (type === 'staff') {
+    } else if (type === 'wand') {
         textLines.push(`    ${totalProficiency}% increased charge attack damage`);
     } else if (type === 'sword') {
         textLines.push(`    ${totalProficiency}% increased damage`);

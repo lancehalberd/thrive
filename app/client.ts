@@ -176,7 +176,7 @@ function update(): void {
         // Set testDungeon/testBoss here to load the game in a dungeon and boss room.
         const testDungeon: DungeonType|'' = '';
         if (testDungeon) {
-            const dungeon = createDungeon(testDungeon, state.hero.level);
+            const dungeon = createDungeon(state, testDungeon, state.hero.level);
             startDungeon(state, dungeon);
             updateActiveCells(state);
             const testBoss = '';
@@ -189,6 +189,9 @@ function update(): void {
                 }
             }
         }
+        assignToDisc(state.hero, state.activeDiscs);
+        state.hero.x = state.hero.disc.x;
+        state.hero.y = state.hero.disc.y;
         state.paused = true;
     }
     if (!state.audio.playingTracks.length) {
@@ -268,6 +271,18 @@ function update(): void {
 
     updateInventory(state);
     if (state.paused) {
+        if (isKeyboardKeyDown(KEY.SHIFT)) {
+            let [dx, dy] = getMovementDeltas(state);
+            const m = Math.sqrt(dx * dx + dy * dy);
+            if (m > 1) {
+                dx /= m;
+                dy /= m;
+            }
+            const speed = 5000;
+            state.hero.x += dx * speed * FRAME_LENGTH / 1000;
+            state.hero.y += dy * speed * FRAME_LENGTH / 1000;
+            updateActiveCells(state);
+        }
         return;
     }
     state.fieldTime += FRAME_LENGTH;
@@ -332,7 +347,7 @@ function updateHero(state: GameState): void {
 
     // Hero attack
     const weapon = hero.equipment.weapon;
-    const attacksPerSecond = weapon.attacksPerSecond * hero.attacksPerSecond;
+    const attacksPerSecond = weapon.getAttacksPerSecond(state, weapon) * hero.attacksPerSecond;
 
 
     // chargingLevel increases as long as the hero
@@ -378,15 +393,22 @@ function updateHero(state: GameState): void {
             hero.attackCooldown = state.fieldTime + attackCooldownDuration;
         }
         const attackTime = attackCooldownDuration - (hero.attackCooldown - state.fieldTime);
-        for (const shot of weapon.shots) {
+        for (const shot of weapon.getShots(state, weapon)) {
             const shotTime = attackCooldownDuration * (shot.timingOffset ?? 0);
             if (shotTime >= attackTime - FRAME_LENGTH / 2 && shotTime < attackTime + FRAME_LENGTH / 2) {
-                const bullet = shot.generateBullet(state, hero, weapon);
-                for (const enchantment of hero.uniqueEnchantments) {
-                    const definition = uniqueEnchantmentHash[enchantment.uniqueEnchantmentKey];
-                    definition.modifyBullet?.(state, enchantment, bullet);
+                // TODO: use right analog stick deltas if playing with game pad instead of state.mouse for target.
+                const target = {
+                    x: state.hero.x + state.mouse.x - FIELD_CENTER.x,
+                    y: state.hero.y + state.mouse.y - FIELD_CENTER.y,
                 }
-                state.heroBullets.push(bullet);
+                const bullet = shot.generateBullet(state, hero, weapon, target);
+                if (bullet) {
+                    for (const enchantment of hero.uniqueEnchantments) {
+                        const definition = uniqueEnchantmentHash[enchantment.uniqueEnchantmentKey];
+                        definition.modifyBullet?.(state, enchantment, bullet);
+                    }
+                    state.heroBullets.push(bullet);
+                }
             }
         }
     }
@@ -442,6 +464,10 @@ function updateEnemies(state: GameState): void {
         if (!boss && enemy.disc?.boss === enemy) {
             continue;
         }
+        if (enemy.warningTime && enemy.warningTime > 0) {
+            enemy.warningTime -= FRAME_LENGTH;
+            continue;
+        }
         enemy.modeTime += FRAME_LENGTH;
         enemy.time += FRAME_LENGTH;
         enemy.definition.update(state, enemy);
@@ -479,7 +505,7 @@ function updateHeroBullets(state: GameState): void {
         }
         let bulletAbsorbed = false, bulletHit = false;
         for (const enemy of state.enemies) {
-            if (enemy.isInvulnerable) {
+            if (enemy.isInvulnerable || (enemy.warningTime && enemy.warningTime > 0)) {
                 continue;
             }
             if (enemy.life <= 0) {
@@ -499,14 +525,18 @@ function updateHeroBullets(state: GameState): void {
             if (doCirclesIntersect(enemy, bullet)) {
                 if (bullet.damageOverTime) {
                     enemy.life -= bullet.damageOverTime * FRAME_LENGTH / 1000;
+                    if (enemy.life > 0) {
+                        enemy.definition.onDamage?.(state, enemy, bullet);
+                    }
                 } else {
                     bulletHit = true;
                     bullet.hitTargets.add(enemy);
-                    if (!playedSound) {
+                    const damage = applyArmorToDamage(state, bullet.damage, enemy.armor);
+                    if (damage > 0 && !playedSound) {
                         playSound(state, 'dealDamage');
                         playedSound = true;
+                        addDamageNumber(state, enemy, damage, bullet.isCrit);
                     }
-                    const damage = applyArmorToDamage(state, bullet.damage, enemy.armor);
                     if (bullet.chargeGain) {
                         gainAttackCharge(state, bullet.chargeGain);
                         // A bullet grants less charge for each additional enemy it hits.
@@ -521,11 +551,11 @@ function updateHeroBullets(state: GameState): void {
                         armorShred /= 2;
                     }
                     enemy.armor = Math.max(enemy.baseArmor / 10, enemy.armor * (1 - armorShred));
-                    addDamageNumber(state, enemy, damage, bullet.isCrit);
                     if (enemy.life > 0) {
                         // Shots are not absorbed by defeated enemies.
                         bulletAbsorbed = !bullet.isEnemyPiercing;
                         enemy.definition.onHit?.(state, enemy, bullet);
+                        enemy.definition.onDamage?.(state, enemy, bullet);
                     }
                 }
                 if (enemy.life <= 0) {
@@ -568,7 +598,7 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
     if (enemy.disc && enemy.definition.portalDungeonType
         && rollWithMissBonus(state, enemy.definition.portalDungeonType + 'Portal', (enemy.definition.portalChance ?? 0))
     ) {
-         addDungeonPortalToDisc(enemy, enemy.definition.portalDungeonType, enemy.level, Math.random(), enemy.disc);
+         addDungeonPortalToDisc(state, enemy, enemy.definition.portalDungeonType, enemy.level, Math.random(), enemy.disc);
     }
     if (enemy.disc?.boss === enemy) {
         delete enemy.disc.boss;

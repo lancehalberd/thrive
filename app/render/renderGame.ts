@@ -38,7 +38,7 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
         for (const hole of state.holes) {
             fillCircle(context, hole, 'black');
             let theta = Math.atan2(discDepth / 4, Math.sqrt(hole.radius**2 - discDepth ** 2 / 16));
-            context.fillStyle = '#BBB'; //disc.topEdgeColor ?? '#BBB';
+            context.fillStyle = hole.topEdgeColor ?? '#BBB';
             context.beginPath();
             context.arc(hole.x, hole.y - 2, hole.radius, 0, -Math.PI, true);
             //context.lineTo(hole.x - hole.radius, hole.y + discDepth / 2);
@@ -50,7 +50,7 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
             context.fill();
 
             context.beginPath();
-            context.fillStyle = '#888'; // disc.bottomEdgeColor ?? '#888';
+            context.fillStyle = hole.bottomEdgeColor ?? '#888';
             context.arc(hole.x, hole.y + discDepth / 2 - 2, hole.radius, -theta, -Math.PI + theta, true);
             theta = Math.atan2(discDepth / 2, Math.sqrt(hole.radius**2 - discDepth ** 2 / 4));
             //context.lineTo(hole.x - hole.radius, hole.y + discDepth);
@@ -167,6 +167,12 @@ function renderEnemyLifebar(context: CanvasRenderingContext2D, enemy: Enemy): vo
 }
 function renderEnemyBullet(context: CanvasRenderingContext2D, bullet: Bullet): void {
     const baseColor = bullet.damageOverTime ? '#CF4' : 'red';
+    let fill: string|CanvasGradient = baseColor;
+    if (bullet.damageOverTime) {
+        fill = context.createRadialGradient(bullet.x, bullet.y, 0, bullet.x, bullet.y, bullet.radius);
+        fill.addColorStop(0, '#CF4');
+        fill.addColorStop(0.8, 'red');
+    }
     if (bullet.warningTime > 0) {
         context.fillStyle = baseColor;
         context.beginPath();
@@ -176,11 +182,17 @@ function renderEnemyBullet(context: CanvasRenderingContext2D, bullet: Bullet): v
     } else {
         if (bullet.radius > 15) {
             context.save();
-                context.globalAlpha *= Math.max(0.2, 0.9 - (bullet.radius) - 15 / 45);
-                fillCircle(context, bullet, baseColor);
+                context.globalAlpha *= Math.max(0.3, 0.8 - (bullet.radius - 15) / 45);
+                fillCircle(context, bullet, fill);
             context.restore();
         } else {
-            fillCircle(context, bullet, baseColor);
+            fillCircle(context, bullet, fill);
+        }
+        if (bullet.damageOverTime) {
+            context.lineWidth = 1;
+            context.arc(bullet.x, bullet.y, bullet.radius, 0, 2 * Math.PI);
+            context.strokeStyle = baseColor;
+            context.stroke();
         }
     }
 }
@@ -195,7 +207,7 @@ function renderHeroBullet(context: CanvasRenderingContext2D, bullet: Bullet): vo
     } else {
         if (bullet.radius > 15) {
             context.save();
-                context.globalAlpha *= Math.max(0.2, 0.9 - (bullet.radius) - 15 / 45);
+                context.globalAlpha *= Math.max(0.2, 0.9 - (bullet.radius - 15) / 45);
                 fillCircle(context, bullet, baseColor);
             context.restore();
         } else {
@@ -209,6 +221,7 @@ function renderHeroBullet(context: CanvasRenderingContext2D, bullet: Bullet): vo
     context.stroke();
 }
 function renderHero(context: CanvasRenderingContext2D, state: GameState, hero: Hero): void {
+    const {armor, weapon} = hero.equipment;
     if (hero.attackChargeDuration > 0 && hero.attackChargeLevel >= 2) {
         // While charged attack still applies, draw an orange halo.
         context.save();
@@ -233,7 +246,7 @@ function renderHero(context: CanvasRenderingContext2D, state: GameState, hero: H
             context.globalAlpha *= (1 - fadeAmount);
         }
         let heroColor = 'blue';
-        if (hero.guardSkill.duration && hero.equipment.armor.armorType === 'heavyArmor') {
+        if (hero.guardSkill.duration && armor.armorType === 'heavyArmor') {
             heroColor = 'lightBlue';
         }
         if (hero.roll) {
@@ -243,26 +256,59 @@ function renderHero(context: CanvasRenderingContext2D, state: GameState, hero: H
         context.beginPath();
         context.strokeStyle = 'lightblue';
         context.lineWidth = 3;
-        if (hero.equipment.armor.armorType === 'heavyArmor') {
+        if (armor.armorType === 'heavyArmor') {
             context.lineWidth = 5;
-        } else if (hero.equipment.armor.armorType === 'lightArmor') {
+        } else if (armor.armorType === 'lightArmor') {
             context.lineWidth = 1;
         }
         context.arc(hero.x, hero.y, hero.radius * 0.8, 0, 2 * Math.PI);
         context.stroke();
-        for (const shot of hero.equipment.weapon.shots) {
-            const bullet = shot.generateBullet(state, hero, hero.equipment.weapon);
-            bullet.x += bullet.vx / 20;
-            bullet.y += bullet.vy / 20;
-            //bullet.radius /= 2;
-            context.beginPath();
-            context.lineWidth = 1;
-            context.strokeStyle = 'white';
-            context.arc(bullet.x, bullet.y, bullet.radius, 0, 2 * Math.PI);
-            context.stroke();
-            //fillCircle(context, bullet, 'black');
+        // TODO: use right analog stick deltas if playing with game pad instead of state.mouse for target.
+        const target = {
+            x: state.hero.x + state.mouse.x - FIELD_CENTER.x,
+            y: state.hero.y + state.mouse.y - FIELD_CENTER.y,
         }
-        if (hero.guardSkill.duration && hero.equipment.armor.armorType === 'mediumArmor') {
+        if (weapon.weaponType === 'wand') {
+            const bullet = weapon.getShots(state, weapon)[0].generateBullet(state, hero, weapon, target);
+            if (bullet) {
+                const mx = hero.x + state.mouse.x - FIELD_CENTER.x, my = hero.y + state.mouse.y - FIELD_CENTER.y;
+                const dx = bullet.x - mx, dy = bullet.y - my;
+                const radius = Math.sqrt(dx * dx + dy * dy);
+                context.beginPath();
+                context.lineWidth = 1;
+                context.strokeStyle = 'white';
+                context.arc(mx, my, radius, 0, 2 * Math.PI);
+                context.stroke();
+            }
+        } else if (weapon.weaponType === 'morningStar') {
+            const bullet = weapon.getShots(state, weapon)[0].generateBullet(state, hero, weapon, target);
+            if (bullet) {
+                const dx = bullet.x - hero.x, dy = bullet.y - hero.y;
+                const radius = Math.sqrt(dx * dx + dy * dy);
+                context.beginPath();
+                context.lineWidth = 1;
+                context.strokeStyle = 'white';
+                context.arc(hero.x, hero.y, radius, 0, 2 * Math.PI);
+                context.stroke();
+            }
+        } else {
+            for (const shot of weapon.getShots(state, weapon)) {
+                const bullet = shot.generateBullet(state, hero, hero.equipment.weapon, target);
+                if (!bullet) {
+                    continue;
+                }
+                bullet.x += bullet.vx / 20;
+                bullet.y += bullet.vy / 20;
+                //bullet.radius /= 2;
+                context.beginPath();
+                context.lineWidth = 1;
+                context.strokeStyle = 'white';
+                context.arc(bullet.x, bullet.y, bullet.radius, 0, 2 * Math.PI);
+                context.stroke();
+                //fillCircle(context, bullet, 'black');
+            }
+        }
+        if (hero.guardSkill.duration && armor.armorType === 'mediumArmor') {
             context.globalAlpha *= 0.5;
             fillCircle(context, getDispersionCircle(state), 'orange');
         }

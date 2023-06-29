@@ -1,4 +1,4 @@
-import { BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED, FRAME_LENGTH } from 'app/constants';
+import { BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED, BOSS_MAX_LIFE_FACTOR, FRAME_LENGTH } from 'app/constants';
 import { getVigorEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
 import { createEnemy, shootBulletCircle, shootEnemyBullet, shootBulletAtHero } from 'app/utils/enemy';
@@ -9,7 +9,7 @@ import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 export const skissue: EnemyDefinition = {
     name: 'Skissue',
     statFactors: {
-        maxLife: 10,
+        maxLife: BOSS_MAX_LIFE_FACTOR,
         damage: 1,
     },
     initialParams: {},
@@ -31,7 +31,7 @@ export const skissue: EnemyDefinition = {
                  enemy.setMode('sakura');
             }
             if (enemy.modeTime % 4000 === 0) {
-                    const minion = createEnemy(enemy.x, enemy.y, blob, enemy.level, enemy.disc);
+                    const minion = createEnemy(state, enemy.x, enemy.y, blob, enemy.level, enemy.disc);
                     enemy.minions.push(minion);
                     minion.master = enemy;
             }
@@ -40,7 +40,7 @@ export const skissue: EnemyDefinition = {
                  enemy.setMode('hanabi');
             }
             if (enemy.modeTime % 4000 === 0) {
-                    const minion = createEnemy(enemy.x, enemy.y, blob, enemy.level, enemy.disc);
+                    const minion = createEnemy(state, enemy.x, enemy.y, blob, enemy.level, enemy.disc);
                     enemy.minions.push(minion);
                     minion.master = enemy;
             }
@@ -51,7 +51,7 @@ export const skissue: EnemyDefinition = {
                 //spawn minions
                 for (let i = 0; i < 4; i++) {
                     const theta = i * 2 * Math.PI / 4;
-                    const minion = createEnemy(
+                    const minion = createEnemy(state,
                         enemy.disc.x + (enemy.disc.radius - 30) * Math.cos(theta),
                         enemy.disc.y + (enemy.disc.radius - 30) * Math.sin(theta), skillPortal, enemy.level, enemy.disc);
                     minion.theta = theta;

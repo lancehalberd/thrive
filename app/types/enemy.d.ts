@@ -14,6 +14,7 @@ interface Enemy<EnemyParams=any> extends Vitals, Geometry {
     mode: string
     modeTime: number
     time: number
+    warningTime?: number
     setMode(this: Enemy, mode: string): void
     isBoss?: boolean
     isInvulnerable?: boolean
@@ -31,8 +32,12 @@ interface EnemyDefinition<EnemyParams=any> {
     solid?: boolean
     radius: number
     isInvulnerable?: boolean
+    initialize?: (state: GameState, enemy: Enemy) => void
     update: (state: GameState, enemy: Enemy) => void
+    // This is not triggered by damage over time
     onHit?: (state: GameState, enemy: Enemy, bullet: Bullet) => void
+    // This is triggered by any damage.
+    onDamage?: (state: GameState, enemy: Enemy, bullet: Bullet) => void
     onDeath?: (state: GameState, enemy: Enemy) => void
     // Set on bosses that drop enchantments
     getEnchantment?: (state: GameState, enemy: Enemy) => Enchantment

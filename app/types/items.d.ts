@@ -2,10 +2,10 @@ interface Shot {
     // [0, 1) defaults to 0.
     // This shot will fire this percent of the way between default shot times for this shots attacksPerSecond
     timingOffset?: number
-    generateBullet(state: GameState, source: Hero, weapon: Weapon): Bullet
+    generateBullet(state: GameState, source: Hero, weapon: Weapon, target: Point): Bullet|undefined
 }
 
-type WeaponType = 'katana'|'dagger'|'sword'|'bow'|'morningStar'|'staff';
+type WeaponType = 'katana'|'dagger'|'sword'|'bow'|'morningStar'|'wand';
 type ArmorType = 'lightArmor'|'mediumArmor'|'heavyArmor';
 
 type WeaponEnchantmentType = 'attackSpeed'|'critChance'|'critDamage'|'damage'|'dropLevel';
@@ -24,16 +24,17 @@ interface Weapon {
     type: 'weapon'
     weaponType: WeaponType
     level: number
-    attacksPerSecond: number
+    getAttacksPerSecond: (state: GameState, weapon: Weapon) => number
     critChance: number
     critDamage: number
     damage: number
     chargeLevel: number
     speed: number
+    range: number
     radius: number
     duration: number
     name: string
-    shots: Shot[]
+    getShots: (state: GameState, weapon: Weapon) => Shot[]
     enchantmentSlots: ItemEnchantment[]
     bonusEnchantmentSlots: ItemEnchantment[]
 }
@@ -83,6 +84,7 @@ interface UniqueEnchantment {
     onShave?: (state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet) => void
     // Sets these flags on the player
     flags?: HeroFlag[]
+    invalidTypes?: (WeaponType | ArmorType)[]
 }
 
 

@@ -2,7 +2,7 @@ import { BASE_BULLET_SPEED } from 'app/constants';
 import { getEnchantmentStrength } from 'app/enchantments';
 import { playerTurret } from 'app/enemies/playerTurret';
 import { addUniqueEnchantments } from 'app/uniqueEnchantmentHash';
-import { updateBoomeringBullet, updateEnemySeekingBullet, updateSourceSeekingBullet, updateReturnBullet }  from 'app/utils/bullet';
+import { updateSimpleBullet, updateEnemySeekingBullet, updateSourceSeekingBullet, updateReturnBullet }  from 'app/utils/bullet';
 import { abbreviate } from 'app/utils/combat';
 import { createEnemy } from 'app/utils/enemy';
 import { rollWithMissBonus } from 'app/utils/rollWithMissBonus';
@@ -25,7 +25,7 @@ const tinkerer: UniqueEnchantment = {
         ];
     },
     onActivateCharge(state: GameState, enchantment: UniqueEnchantmentInstance): boolean {
-        const turret = createEnemy(state.hero.x, state.hero.y, playerTurret, state.hero.level, state.hero.disc);
+        const turret = createEnemy(state, state.hero.x, state.hero.y, playerTurret, state.hero.level, state.hero.disc);
         turret.theta = state.hero.theta;
         // This should be 2x charge attack duration
         turret.params.duration = 4000;
@@ -44,8 +44,12 @@ const wave: UniqueEnchantment = {
     chance: COMMON_UNIQUE_RATE,
     getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
         return [
+            '25% increased attack speed.',
             'Attack with oscillating shots.',
         ];
+    },
+    modifyHero(state: GameState, enchantment: UniqueEnchantmentInstance): void {
+        state.hero.attacksPerSecond *= 1.25;
     },
     modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
         const amplitude = 20;
@@ -102,15 +106,33 @@ const kiting: UniqueEnchantment = {
     chance: UNCOMMON_UNIQUE_RATE,
     getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
         return [
-            'Shots last longer and slow to a stop.',
+            'Shots last longer and slow to a stop and deal damage over time.',
         ];
+    },
+    modifyWeapon(enchantment: UniqueEnchantmentInstance, weapon: Weapon): void {
+        //weapon.speed *= 1.5;
+        weapon.range *= 1.5;
+        weapon.radius *= 1.5;
     },
     modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
         bullet.friction = 0.98;
         bullet.duration += 1500;
+        //bullet.vx *= 1.75;
+        //bullet.vy *= 1.75;
+        bullet.damageOverTime = 4 * bullet.damage;
     },
 };
 
+
+function updateBoomeringBullet(state: GameState, bullet: Bullet): void {
+    updateSimpleBullet(state, bullet);
+    if (bullet.time >= bullet.duration / 2) {
+        bullet.damage *= 3;
+        bullet.vx = -bullet.vx;
+        bullet.vy = -bullet.vy;
+        bullet.update = updateSourceSeekingBullet;
+    }
+}
 const boomerang: UniqueEnchantment = {
     key: 'boomerang',
     name: 'Boomerang',
@@ -119,12 +141,14 @@ const boomerang: UniqueEnchantment = {
     getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
         return [
             'Shots last longer and reverse direction.',
+            'Returning shots deal tripe damage'
         ];
     },
     modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
         bullet.update = updateBoomeringBullet;
         bullet.duration *= 1.5;
     },
+    invalidTypes: ['morningStar'],
 };
 const reversing: UniqueEnchantment = {
     key: 'reversing',
@@ -140,6 +164,7 @@ const reversing: UniqueEnchantment = {
         bullet.update = updateReturnBullet;
         bullet.duration *= 1.5;
     },
+    invalidTypes: ['morningStar'],
 };
 
 const vacuum: UniqueEnchantment = {
@@ -165,6 +190,7 @@ const vacuum: UniqueEnchantment = {
             bullet.update = updateSourceSeekingBullet;
         }
     },
+    invalidTypes: ['morningStar'],
 };
 const seeking: UniqueEnchantment = {
     key: 'seeking',
@@ -179,6 +205,7 @@ const seeking: UniqueEnchantment = {
     modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
         bullet.update = updateEnemySeekingBullet;
     },
+    invalidTypes: ['morningStar'],
 };
 
 const acid: UniqueEnchantment = {
@@ -260,16 +287,72 @@ const laser: UniqueEnchantment = {
     chance: RARE_UNIQUE_RATE,
     getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
         return [
-            'Attacks are very rapid but have reduced range and damage.',
+            'Attacks are very rapid but have reduced range and deal damage over time.',
         ];
     },
+    modifyHero(state: GameState, enchantment: UniqueEnchantmentInstance): void {
+        state.hero.attacksPerSecond *= 5;
+    },
     modifyWeapon(enchantment: UniqueEnchantmentInstance, weapon: Weapon): void {
-        weapon.attacksPerSecond *= 5;
-        weapon.damage /= 3;
+        weapon.range /= 3;
     },
     modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
-        bullet.isEnemyPiercing = true;
-        bullet.duration /= 3;
+        bullet.damageOverTime = 20 * bullet.damage;
+    },
+};
+
+
+const trap: UniqueEnchantment = {
+    key: 'trap',
+    name: 'Trap',
+    enchantmentType: 'uniqueWeaponEnchantment',
+    chance: RARE_UNIQUE_RATE,
+    getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
+        return [
+            'Attacks with traps that trigger multiple shots on hit.',
+        ];
+    },
+    /*modifyWeapon(enchantment: UniqueEnchantmentInstance, weapon: Weapon): void {
+        //weapon.speed *= 1.5;
+        weapon.range *= 1.5;
+        weapon.radius *= 1.5;
+    },*/
+    modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
+        const baseDamage = bullet.damage;
+        const baesIsEnemyPiercing = bullet.isEnemyPiercing;
+        const baseArmorShred = bullet.armorShred;
+        bullet.damage = 0;
+        bullet.armorShred = 0;
+        bullet.isEnemyPiercing = false;
+        bullet.friction = 0.98;
+        bullet.duration += 2000;
+        bullet.onHit = function (state: GameState, bullet: Bullet) {
+            const baseBullet = {
+                ...bullet,
+                damage: baseDamage,
+                isEnemyPiercing: baesIsEnemyPiercing,
+                armorShred: baseArmorShred,
+                friction: 0,
+                duration: 500,
+                time: 0,
+                onHit: undefined,
+                update: updateSimpleBullet,
+            };
+            for (let i = 0; i < 6; i++) {
+                const theta = 2 * Math.PI * i / 6;
+                const dx = Math.cos(theta), dy = Math.sin(theta);
+                state.heroBullets.push({
+                    ...baseBullet,
+                    x: bullet.baseX + 250 * dx,
+                    y: bullet.baseY + 250 * dy,
+                    baseX: bullet.baseX + 250 * dx,
+                    baseY: bullet.baseY + 250 * dy,
+                    vx: -dx * BASE_BULLET_SPEED,
+                    vy: -dy * BASE_BULLET_SPEED,
+                    hitTargets: new Set(),
+                });
+            }
+        }
     },
 };
 
@@ -283,6 +366,7 @@ const globalUniqueWeaponEnchantments = [
     reversing,
     seeking,
     tinkerer,
+    trap,
     vacuum,
     vicious,
     wave,
@@ -317,7 +401,7 @@ const spongey: UniqueEnchantment = {
     }
 };
 function getThornDamage(state: GameState, enchantment: UniqueEnchantmentInstance): number {
-    const fakeEnemy = createEnemy(0, 0, playerTurret, state.hero.equipment.armor.level, undefined as any);
+    const fakeEnemy = createEnemy(state, 0, 0, playerTurret, state.hero.equipment.armor.level, undefined as any);
     return Math.ceil(fakeEnemy.maxLife / 20);
 }
 const thorny: UniqueEnchantment = {
@@ -331,7 +415,7 @@ const thorny: UniqueEnchantment = {
         ];
     },
     onHit(state: GameState, enchantment: UniqueEnchantmentInstance): void {
-        const bullet = basicBullet(state, state.hero, state.hero.equipment.weapon);
+        const bullet = basicBullet(state, state.hero, state.hero.equipment.weapon, state.mouse);
         bullet.radius = 20;
         bullet.damage = getThornDamage(state, enchantment);
         bullet.chargeGain = 0;
@@ -352,7 +436,7 @@ const thorny: UniqueEnchantment = {
     }
 };
 function getSpikeDamage(state: GameState, enchantment: UniqueEnchantmentInstance): number {
-    const fakeEnemy = createEnemy(0, 0, playerTurret, state.hero.equipment.armor.level, undefined as any);
+    const fakeEnemy = createEnemy(state, 0, 0, playerTurret, state.hero.equipment.armor.level, undefined as any);
     return Math.ceil(fakeEnemy.maxLife / 5);
 }
 const spiky: UniqueEnchantment = {
@@ -366,7 +450,7 @@ const spiky: UniqueEnchantment = {
         ];
     },
     onHit(state: GameState, enchantment: UniqueEnchantmentInstance): void {
-        const bullet = basicBullet(state, state.hero, state.hero.equipment.weapon);
+        const bullet = basicBullet(state, state.hero, state.hero.equipment.weapon, state.mouse);
         bullet.radius = 20;
         bullet.damage = getSpikeDamage(state, enchantment);
         bullet.chargeGain = 0;
@@ -449,7 +533,12 @@ export function checkToAddGlobalUniqueEnchantments(state: GameState, item: Equip
 }
 
 export function checkToAddSpecifiedUniqueEnchantments(state: GameState, item: Equipment, enchantments: UniqueEnchantment[], chanceMultiplier = 1): void {
-    const enchantment  = Random.element(enchantments);
+    const enchantment  = Random.element(enchantments.filter(
+        e => !e.invalidTypes?.includes(item.type === 'weapon' ? item.weaponType : item.armorType)
+    ));
+    if (!enchantment) {
+        return;
+    }
     const levelMultiplier = 10 - 9 * item.level / 100;
     if (rollWithMissBonus(state, enchantment.key, enchantment.chance * chanceMultiplier * levelMultiplier)) {
         addUniqueEnchantmentToItem(item, enchantment);

@@ -3,7 +3,7 @@ import { updateCirclingBullet, updateSimpleBullet } from 'app/utils/bullet';
 import { findClosestDisc} from 'app/utils/disc';
 import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 
-export function createEnemy<EnemyParams>(x: number, y: number, definition: EnemyDefinition<EnemyParams>, level: number, disc: Disc): Enemy<EnemyParams> {
+export function createEnemy<EnemyParams>(state: GameState, x: number, y: number, definition: EnemyDefinition<EnemyParams>, level: number, disc: Disc, stats?: Partial<Enemy>): Enemy<EnemyParams> {
     const heroBaseWeaponDamage = level * BASE_WEAPON_DPS_PER_LEVEL;
     const heroLevelDamageFactor = Math.pow(1.05, level);
     const heroProficiencyDamageFactor = Math.pow(1.05, level);
@@ -54,10 +54,12 @@ export function createEnemy<EnemyParams>(x: number, y: number, definition: Enemy
         setMode(this: Enemy, mode: string): void {
             this.mode = mode;
             this.modeTime = 0;
-        }
+        },
+        ...stats,
     };
     if (disc) {
         disc.enemies.push(enemy);
+        definition.initialize?.(state, enemy);
     }
     return enemy;
 }

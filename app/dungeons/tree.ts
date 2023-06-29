@@ -23,7 +23,7 @@ const treeBiome: Biome = {
 
 const platformSizes = [200, 350, 500];
 
-export function createTreeDungeon(seed: number, radius: number, level: number): Dungeon {
+export function createTreeDungeon(state: GameState, seed: number, radius: number, level: number): Dungeon {
     const name = 'Tree';
     const discs: Disc[] = [];
     const entrance: Entrance = {x: 0, y: 0, radius: 16};
@@ -55,7 +55,7 @@ export function createTreeDungeon(seed: number, radius: number, level: number): 
                 finished = true;
                 newDisc.radius = 400;
                 projectDiscToClosestDisc(discs, newDisc, dungeonRandomizer.range(16, 128));
-                newDisc.boss = createEnemy(newDisc.x, newDisc.y, guardian, level + 2, newDisc);
+                newDisc.boss = createEnemy(state, newDisc.x, newDisc.y, guardian, level + 2, newDisc);
                 newDisc.boss.isBoss = true;
                 discs.push(newDisc);
             }
@@ -63,25 +63,25 @@ export function createTreeDungeon(seed: number, radius: number, level: number): 
         }
         discs.push(newDisc);
         if (newDisc.radius >= 300 && dungeonRandomizer.generateAndMutate() < 0.6) {
-            createEnemy(newDisc.x, newDisc.y, ent, newDisc.level, newDisc);
+            createEnemy(state, newDisc.x, newDisc.y, ent, newDisc.level, newDisc);
         } else if (dungeonRandomizer.generateAndMutate() < 0.3) {
-            createEnemy(newDisc.x, newDisc.y, turret, newDisc.level, newDisc);
+            createEnemy(state, newDisc.x, newDisc.y, turret, newDisc.level, newDisc);
         } else if (dungeonRandomizer.generateAndMutate() < 0.3) {
-            createEnemy(newDisc.x, newDisc.y, lord, newDisc.level, newDisc);
+            createEnemy(state, newDisc.x, newDisc.y, lord, newDisc.level, newDisc);
         } else if (dungeonRandomizer.generateAndMutate() < 0.1) {
-            createEnemy(newDisc.x, newDisc.y, chest, newDisc.level + 1, newDisc);
+            createEnemy(state, newDisc.x, newDisc.y, chest, newDisc.level + 1, newDisc);
         }
         if (dungeonRandomizer.generateAndMutate() < 0.3) {
-            createEnemy(newDisc.x + 80, newDisc.y, babySpiderBomber, level, newDisc);
+            createEnemy(state, newDisc.x + 80, newDisc.y, babySpiderBomber, level, newDisc);
         }
         if (dungeonRandomizer.generateAndMutate() < 0.3) {
-            createEnemy(newDisc.x - 80, newDisc.y, snake, level, newDisc);
+            createEnemy(state, newDisc.x - 80, newDisc.y, snake, level, newDisc);
         }
         if (dungeonRandomizer.generateAndMutate() < 0.3) {
-            createEnemy(newDisc.x, newDisc.y + 80, sniper, level, newDisc);
+            createEnemy(state, newDisc.x, newDisc.y + 80, sniper, level, newDisc);
         }
         if (dungeonRandomizer.generateAndMutate() < 0.3) {
-            createEnemy(newDisc.x, newDisc.y - 80, babySpiderNova, level, newDisc);
+            createEnemy(state, newDisc.x, newDisc.y - 80, babySpiderNova, level, newDisc);
         }
     }
     linkDiscs(discs);

@@ -157,7 +157,7 @@ export function getContextMenu(state: GameState): MenuOption[] {
                 return dungeonTypes.map(dungeonType => ({
                     label: dungeonType,
                     onSelect() {
-                        const dungeon = createDungeon(dungeonType, state.hero.level);
+                        const dungeon = createDungeon(state, dungeonType, state.hero.level);
                         startDungeon(state, dungeon);
                     }
                 }));

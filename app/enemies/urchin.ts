@@ -1,6 +1,6 @@
 import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED } from 'app/constants';
 import { fillCircle } from 'app/render/renderGeometry';
-import { moveEnemyInCurrentDirection, shootBulletAtHero, shootBulletCircle } from 'app/utils/enemy';
+import { shootBulletAtHero, shootBulletCircle } from 'app/utils/enemy';
 import { getTargetVector } from 'app/utils/geometry';
 
 
@@ -8,7 +8,7 @@ export const urchin: EnemyDefinition = {
     name: 'Urchin',
     statFactors: {
         armor: 2,
-        speed: 0.1,
+        attacksPerSecond: 0.3,
     },
     initialParams: {},
     dropChance: 1.5 * BASE_DROP_CHANCE,
@@ -18,19 +18,18 @@ export const urchin: EnemyDefinition = {
     portalChance: 0.2,
     portalDungeonType: 'reef',
     update(state: GameState, enemy: Enemy): void {
-        const aggroRadius = 400;
+        const aggroRadius = 600;
         const {distance2} = getTargetVector(enemy, state.hero);
-        enemy.theta += 0.02;
-        moveEnemyInCurrentDirection(state, enemy);
+        enemy.theta += 0.01;
         if (distance2 > aggroRadius * aggroRadius) {
             return;
         }
-        if (enemy.modeTime % 100 === 0) {
-            shootBulletCircle(state, enemy, enemy.theta, 3, BASE_ENEMY_BULLET_SPEED, {duration: 1500});
+        if (enemy.modeTime % 200 === 0 && (enemy.modeTime % 2000) <= 1200) {
+            shootBulletCircle(state, enemy, enemy.theta, 3, 0.6 * BASE_ENEMY_BULLET_SPEED, {duration: 2000});
         }
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletAtHero(state, enemy, 1.2 * BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS});
+            shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS});
         }
     },
     onDeath(state: GameState, enemy: Enemy): void {
@@ -65,3 +64,8 @@ export const urchin: EnemyDefinition = {
         context.stroke();
     }
 };
+
+export const reefUrchin: EnemyDefinition = {
+    ...urchin,
+    portalChance: 0,
+}

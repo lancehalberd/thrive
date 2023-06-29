@@ -142,6 +142,14 @@ export function renderItemDetails(context: CanvasRenderingContext2D, state: Game
     }
 }
 
+function getWeaponAttacksPerSecond(state: GameState, weapon: Weapon): string {
+    if (weapon.weaponType === 'morningStar') {
+        // Half the shots for morning star only apply when using charge attack.
+        return (weapon.getShots(state, weapon).length * weapon.getAttacksPerSecond(state, weapon)).toFixed(2);
+    }
+    return (weapon.getShots(state, weapon).length * weapon.getAttacksPerSecond(state, weapon)).toFixed(2);
+}
+
 function getItemTextLines(state: GameState, item: Item): string[] {
     if (item.type === 'enchantment') {
         return [
@@ -156,7 +164,7 @@ function getItemTextLines(state: GameState, item: Item): string[] {
             'Lv ' + item.level + ' ' + weaponTypeLabels[item.weaponType],
             //Math.round(item.damage * item.shots.length * item.attacksPerSecond) + ' DPS',
             item.damage + ' Damage',
-            (item.shots.length * item.attacksPerSecond).toFixed(2) + ' Attacks per second',
+            getWeaponAttacksPerSecond(state, item) + ' Attacks per second',
             ...getEnchantmentTextLines(state, item),
         ];
     }
@@ -181,9 +189,9 @@ function getItemComparisonTextLines(state: GameState, newItem: Equipment, equipp
             'Lv ' + newItem.level + ' ' + weaponTypeLabels[newItem.weaponType],
             //oldDps + ' → ' + newDps + ' DPS',
             equippedItem.damage +  ' → ' + newItem.damage + ' Damage',
-            (equippedItem.shots.length * equippedItem.attacksPerSecond).toFixed(2)
+            getWeaponAttacksPerSecond(state, equippedItem)
                 + ' → '
-                + (newItem.shots.length * newItem.attacksPerSecond).toFixed(2)
+                + getWeaponAttacksPerSecond(state, newItem)
                 + ' Attacks per second',
             ...getEnchantmentComparisonTextLines(state, newItem, equippedItem),
             ...getBonusEnchantmentComparisonTextLines(state, newItem, equippedItem),

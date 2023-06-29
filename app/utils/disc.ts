@@ -14,6 +14,19 @@ export function findClosestDisc({x, y}: {x: number, y: number}, discs: Disc[]): 
     return closestDisc;
 }
 
+export function findClosestDiscToDisc(disc: Disc, discs: Disc[]): Disc {
+    let closestDistance = Number.MAX_SAFE_INTEGER, closestDisc = discs[0];
+    for (const otherDisc of discs) {
+        const dx = otherDisc.x - disc.x, dy = otherDisc.y - disc.y;
+        const distance = (dx * dx + dy * dy) ** 0.5 - disc.radius - otherDisc.radius;
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closestDisc = otherDisc;
+        }
+    }
+    return closestDisc;
+}
+
 export function createDisc(props: Partial<Disc>): Disc {
     return {
         level: 1,
@@ -39,7 +52,7 @@ export function projectDiscToDisc(newDisc: Disc, targetDisc: Disc, overlap: numb
 }
 
 export function projectDiscToClosestDisc(discs: Disc[], newDisc: Disc, overlap: number): void {
-    const closestDisc = findClosestDisc(newDisc, discs);
+    const closestDisc = findClosestDiscToDisc(newDisc, discs);
     projectDiscToDisc(newDisc, closestDisc, overlap);
 }
 

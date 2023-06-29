@@ -53,7 +53,7 @@ export const clam: EnemyDefinition = {
             enemy.setMode('closing');
         }
     },
-    onHit(state: GameState, enemy: Enemy): void {
+    onDamage(state: GameState, enemy: Enemy): void {
         if (enemy.mode === 'closed' && enemy.modeTime >= 500) {
             enemy.setMode('opening');
         }
@@ -66,9 +66,9 @@ export const giantClam: EnemyDefinition = {
     ...clam,
     name: 'Giant Clam',
     statFactors: {
-        attacksPerSecond: 2,
-        maxLife: BOSS_MAX_LIFE_FACTOR,
-        armor: 5,
+        attacksPerSecond: 1.5,
+        maxLife: 0.75 * BOSS_MAX_LIFE_FACTOR,
+        armor: 4,
     },
     dropChance: 1,
     uniqueMultiplier: 20,
@@ -96,7 +96,7 @@ export const giantClam: EnemyDefinition = {
         if (enemy.mode === 'opening') {
             if (enemy.attackCooldown <= state.fieldTime) {
                 enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-                shootBulletArc(state, enemy, enemy.theta, Math.PI / 3, 3, 1.2 * BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage});
+                shootBulletArc(state, enemy, enemy.theta, Math.PI / 3, 3, 1.2 * BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 1.5 * enemy.damage});
             }
             if (enemy.modeTime >= 400) {
                 enemy.setMode('open');

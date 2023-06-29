@@ -26,7 +26,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
         if (!enemy.minions.length && enemy.life <= enemy.maxLife / 2) {
             for (let i = 0; i < 3; i++) {
                 const theta = i * 2 * Math.PI / 3;
-                const minion = createEnemy(
+                const minion = createEnemy(state,
                     enemy.disc.x + (enemy.disc.radius - 30) * Math.cos(theta),
                     enemy.disc.y + (enemy.disc.radius - 30) * Math.sin(theta), guardianTurret, enemy.level, enemy.disc);
                 minion.theta = theta;

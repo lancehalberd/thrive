@@ -353,7 +353,7 @@ function upgradeBoss(state: GameState, enemy: Enemy): void {
     } else {
         // Replace the boss with a higher leve version.
         boss.disc.enemies = [];
-        boss.disc.boss = createEnemy(boss.x, boss.y, boss.definition, (boss.level | 0) + 1, boss.disc);
+        boss.disc.boss = createEnemy(state, boss.x, boss.y, boss.definition, (boss.level | 0) + 1, boss.disc);
         boss.disc.boss.isBoss = true;
     }
 }

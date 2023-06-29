@@ -23,7 +23,12 @@ interface Disc extends Geometry {
     centerColor?: string
     topEdgeColor?: string
     bottomEdgeColor?: string
-    holes: Circle[]
+    holes: Hole[]
+}
+
+interface Hole extends Geometry {
+    topEdgeColor?: string
+    bottomEdgeColor?: string
 }
 
 interface Biome {

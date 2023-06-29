@@ -35,24 +35,24 @@ function generateConnectingDiscs(source: Disc, target: Disc, randomizer: typeof 
     return discs;
 }
 
-function createBridge(discs: Disc[], source: Disc, target: Disc, randomizer: typeof SRandom): void {
+function createBridge(state: GameState, discs: Disc[], source: Disc, target: Disc, randomizer: typeof SRandom): void {
     const bridgeDiscs = generateConnectingDiscs(source, target, randomizer, smallPlatformSizes);
     for (const disc of bridgeDiscs) {
         disc.holes.push({x: disc.x, y: disc.y, radius: disc.radius / 2});
         if (randomizer.generateAndMutate() < 0.05) {
-            createEnemy(disc.x, disc.y, chest, disc.level + 1, disc);
+            createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
         }
         if (randomizer.generateAndMutate() < 0.2) {
-            createEnemy(disc.x, disc.y - 60, babySpiderBomber, disc.level, disc);
+            createEnemy(state, disc.x, disc.y - 60, babySpiderBomber, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.2) {
-            createEnemy(disc.x, disc.y + 60, babySpiderBomber, disc.level, disc);
+            createEnemy(state, disc.x, disc.y + 60, babySpiderBomber, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.2) {
-            createEnemy(disc.x - 60, disc.y, babySpiderNova, disc.level, disc);
+            createEnemy(state, disc.x - 60, disc.y, babySpiderNova, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.2) {
-            createEnemy(disc.x + 60, disc.y, babySpiderNova, disc.level, disc);
+            createEnemy(state, disc.x + 60, disc.y, babySpiderNova, disc.level, disc);
         }
         discs.push(disc);
     }
@@ -68,7 +68,7 @@ const spiderDenBiome: Biome = {
 }
 
 const smallPlatformSizes = [150, 200, 250];
-export function createSpiderDenDungeon(seed: number, level: number): Dungeon {
+export function createSpiderDenDungeon(state: GameState, seed: number, level: number): Dungeon {
     const dungeonRandomizer = SRandom.seed(seed);
     const radius = 1600 + 10 * level;
     const name = 'Spider Den';
@@ -99,14 +99,14 @@ export function createSpiderDenDungeon(seed: number, level: number): Dungeon {
             y: radius * Math.sin(theta),
             radius: 350,
         });
-        createEnemy(largePlatform.x, largePlatform.y, (i % 2) ? spiderPinwheel : spiderFlower, largePlatform.level + 1, largePlatform);
-        createBridge(discs, largePlatform, previousPlatform, dungeonRandomizer);
+        createEnemy(state, largePlatform.x, largePlatform.y, (i % 2) ? spiderPinwheel : spiderFlower, largePlatform.level + 1, largePlatform);
+        createBridge(state, discs, largePlatform, previousPlatform, dungeonRandomizer);
         discs.push(largePlatform);
         largePlatforms.push(largePlatform);
         previousPlatform = largePlatform;
     }
     // Complete the circle
-    createBridge(discs, previousPlatform, startingPlatform, dungeonRandomizer);
+    createBridge(state, discs, previousPlatform, startingPlatform, dungeonRandomizer);
     const bossPlatform = createDisc({
         level,
         ...spiderDenBiome,
@@ -116,10 +116,10 @@ export function createSpiderDenDungeon(seed: number, level: number): Dungeon {
     });
     // Join all platforms but the starting platform to the boss platform
     for (const largePlatform of largePlatforms) {
-        createBridge(discs, bossPlatform, largePlatform, dungeonRandomizer);
+        createBridge(state, discs, bossPlatform, largePlatform, dungeonRandomizer);
     }
 
-    bossPlatform.boss = createEnemy(bossPlatform.x, bossPlatform.y,
+    bossPlatform.boss = createEnemy(state, bossPlatform.x, bossPlatform.y,
         spider, Math.min(100, level + 2), bossPlatform);
     bossPlatform.boss.isBoss = true;
     discs.push(bossPlatform);

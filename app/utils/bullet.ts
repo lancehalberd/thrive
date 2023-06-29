@@ -10,11 +10,21 @@ export function updateCirclingBullet(state: GameState, bullet: Bullet): void {
         return;
     }
     bullet.theta += FRAME_LENGTH * bullet.vTheta / 1000;
-    bullet.x = bullet.source.x + bullet.orbitRadius * Math.cos(bullet.theta);
-    bullet.y = bullet.source.y + bullet.orbitRadius * Math.sin(bullet.theta);
+    bullet.baseX = bullet.source.x + bullet.orbitRadius * Math.cos(bullet.theta);
+    bullet.baseY = bullet.source.y + bullet.orbitRadius * Math.sin(bullet.theta);
+    if (bullet.frequency && bullet.amplitude) {
+        const theta = bullet.theta;
+        const p = Math.min(1, bullet.time / 200);
+        const amplitude = p * bullet.amplitude * Math.sin(bullet.frequency * 2 * Math.PI * bullet.time / 1000);
+        bullet.x = bullet.baseX + amplitude * Math.cos(theta);
+        bullet.y = bullet.baseY + amplitude * Math.sin(theta);
+    } else {
+        bullet.x = bullet.baseX;
+        bullet.y = bullet.baseY;
+    }
     if (bullet.friction) {
         const multiplier = (1 - bullet.friction) ** (FRAME_LENGTH / 1000);
-        bullet.vTheta *= multiplier;
+        bullet.vTheta = Math.max(0.2, bullet.vTheta * multiplier);
     }
 }
 
@@ -69,8 +79,12 @@ function turnBulletTowardsTarget(bullet: Bullet, rate: number = 0.1, target?: Ci
 
 }
 
+export function isEnemyTargetable(state: GameState, enemy: Enemy): boolean {
+    return !enemy.isInvulnerable && (!enemy.warningTime || enemy.warningTime <= 0);
+}
+
 export function updateEnemySeekingBullet(state: GameState, bullet: Bullet): void {
-    const closestEnemy = getClosestElement(bullet, state.enemies.filter(e => !bullet.hitTargets.has(e) && !e.isInvulnerable));
+    const closestEnemy = getClosestElement(bullet, state.enemies.filter(e => !bullet.hitTargets.has(e) && isEnemyTargetable(state, e)));
     turnBulletTowardsTarget(bullet, 0.1, closestEnemy);
     updateSimpleBullet(state, bullet);
 }

@@ -1,5 +1,5 @@
 
-export function fillCircle(context: CanvasRenderingContext2D, circle: Circle, color?: string, strokeColor?: string) {
+export function fillCircle(context: CanvasRenderingContext2D, circle: Circle, color?: string|CanvasGradient, strokeColor?: string) {
     context.beginPath();
     context.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI);
     if (color) {

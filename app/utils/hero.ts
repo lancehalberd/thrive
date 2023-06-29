@@ -110,7 +110,7 @@ export function setDerivedHeroStats(state: GameState): void {
     // Morning Star gives +0.01 -> 1 increased armor shred effect
     state.hero.armorShredEffect = 1 + getTotalProficiency(state, 'morningStar') * 0.01;
     // Staff gives +0.01 -> 1 increased charge damage
-    state.hero.chargeDamage = getTotalProficiency(state, 'staff') * 0.01;
+    state.hero.chargeDamage = getTotalProficiency(state, 'wand') * 0.01;
     // Sword gives 1% -> 100% increased damage
     state.hero.damage *= (1 + getTotalProficiency(state, 'sword') * 0.01);
 
@@ -138,6 +138,7 @@ export function setDerivedHeroStats(state: GameState): void {
             for (const flag of (definition.flags ?? [])) {
                 state.hero.flags[flag] = true;
             }
+            definition.modifyHero?.(state, enchantment);
         }
     }
 }

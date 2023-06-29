@@ -26,7 +26,7 @@ export const slime: EnemyDefinition = {
         const count = Math.round(2 + Math.random());
         for (let i = 0; i < count; i++) {
             const theta = state.fieldTime / 500 + i * 2 * Math.PI / count;
-            createEnemy(
+            createEnemy(state,
                 enemy.x + enemy.radius * Math.cos(theta),
                 enemy.y + enemy.radius * Math.sin(theta), miniSlime, enemy.level, enemy.disc);
         }
@@ -94,7 +94,7 @@ export const greatSlime: EnemyDefinition = {
         const count = 2;
         for (let i = 0; i < count; i++) {
             const theta = state.fieldTime / 500 + i * 2 * Math.PI / count;
-            createEnemy(
+            createEnemy(state,
                 enemy.x + enemy.radius * Math.cos(theta),
                 enemy.y + enemy.radius * Math.sin(theta), slime, enemy.level, enemy.disc);
         }
@@ -151,7 +151,7 @@ export const megaSlime: EnemyDefinition = {
         const count = 2;
         for (let i = 0; i < count; i++) {
             const theta = state.fieldTime / 500 + i * 2 * Math.PI / count;
-            createEnemy(
+            createEnemy(state,
                 enemy.x + enemy.radius * Math.cos(theta),
                 enemy.y + enemy.radius * Math.sin(theta), greatSlime, enemy.level, enemy.disc);
         }
