@@ -55,6 +55,7 @@ export function createEnemy<EnemyParams>(state: GameState, x: number, y: number,
             this.mode = mode;
             this.modeTime = 0;
         },
+        frameDamageOverTime: 0,
         ...stats,
     };
     if (disc) {

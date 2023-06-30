@@ -5,7 +5,7 @@ import { render } from 'app/render/renderGame';
 import { uniqueEnchantmentHash } from 'app/uniqueEnchantmentHash';
 import { playSound, playTrack, setVolume } from 'app/utils/audio';
 import { mainCanvas, mainContext } from 'app/utils/canvas';
-import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
+import { addDamageNumber, applyArmorToDamage, damageHero, damageHeroOverTime, } from 'app/utils/combat';
 import { findClosestDisc } from 'app/utils/disc';
 import {
     createDungeon,
@@ -15,7 +15,7 @@ import {
 import { doCirclesIntersect, getClosestElement, getTargetVector } from 'app/utils/geometry';
 import { updateGuardSkill } from 'app/utils/guardSkill';
 import {
-    damageHero, damageHeroOverTime, gainExperience, gainEquipmentExperience, getHeroShaveRadius, getMaxChargeLevel, getMastery, getProficiency,
+    gainExperience, gainEquipmentExperience, getHeroShaveRadius, getMaxChargeLevel, getMastery, getProficiency,
     refillAllPotions, setDerivedHeroStats, masteryMap,
 } from 'app/utils/hero';
 import { getMousePosition, isMouseDown, isMiddleMouseDown, isRightMouseDown } from 'app/utils/mouse';
@@ -456,6 +456,7 @@ function gainAttackCharge(state: GameState, amount: number): void {
 function updateEnemies(state: GameState): void {
     const boss = state.hero.disc?.boss;
     for (const enemy of state.enemies) {
+        enemy.frameDamageOverTime = 0;
         // Freeze enemies outside of the boss fight.
         if (boss && enemy.disc?.boss !== boss) {
             continue;
@@ -524,9 +525,20 @@ function updateHeroBullets(state: GameState): void {
             }
             if (doCirclesIntersect(enemy, bullet)) {
                 if (bullet.damageOverTime) {
-                    enemy.life -= bullet.damageOverTime * FRAME_LENGTH / 1000;
-                    if (enemy.life > 0) {
-                        enemy.definition.onDamage?.(state, enemy, bullet);
+                    const perFrameDamage = bullet.damageOverTime * FRAME_LENGTH / 1000;
+                    const maxPerFrameDamage = bullet.damageOverTimeLimit
+                        ? bullet.damageOverTimeLimit * FRAME_LENGTH / 1000
+                        : state.hero.equipment.weapon.damageOverTimeStackSize * perFrameDamage;
+                    // Damage over time only applies up to 5x its base damage on enemies.
+                    const damageDealt = Math.min(perFrameDamage, maxPerFrameDamage - enemy.frameDamageOverTime)
+                    if (damageDealt > 0) {
+                        enemy.life -= damageDealt;
+                        enemy.frameDamageOverTime += damageDealt;
+                        if (enemy.life > 0) {
+                            enemy.definition.onDamage?.(state, enemy, bullet);
+                        }
+                    } else {
+                       // console.log(perFrameDamage, 'limited to ', maxPerFrameDamage);
                     }
                 } else {
                     bulletHit = true;

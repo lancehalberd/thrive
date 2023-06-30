@@ -120,6 +120,7 @@ const kiting: UniqueEnchantment = {
         //bullet.vx *= 1.75;
         //bullet.vy *= 1.75;
         bullet.damageOverTime = 4 * bullet.damage;
+        bullet.damageOverTimeLimit = state.hero.equipment.weapon.damageOverTimeStackSize * bullet.damageOverTime;
     },
 };
 
@@ -298,6 +299,7 @@ const laser: UniqueEnchantment = {
     },
     modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
         bullet.damageOverTime = 20 * bullet.damage;
+        bullet.damageOverTimeLimit = state.hero.equipment.weapon.damageOverTimeStackSize * bullet.damageOverTime;
     },
 };
 

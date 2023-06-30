@@ -89,6 +89,7 @@ function createBow(level: number, name: string): Weapon {
         critChance: 0.2,
         critDamage: 0.5,
         damage: Math.ceil(0.6 * level * BASE_WEAPON_DPS_PER_LEVEL / attacksPerSecond),
+        damageOverTimeStackSize: 5,
         chargeLevel: 3,
         range: 400,
         speed: 1.5 * BASE_BULLET_SPEED,
@@ -137,6 +138,7 @@ function createSword(level: number, name: string): Weapon {
         critChance: 0.05,
         critDamage: 0.5,
         damage: Math.ceil(level * BASE_WEAPON_DPS_PER_LEVEL / BASE_ATTACKS_PER_SECOND),
+        damageOverTimeStackSize: 5,
         chargeLevel: 2,
         range: 350,
         speed: BASE_BULLET_SPEED,
@@ -202,6 +204,7 @@ function createDagger(level: number, name: string): Weapon {
         critChance: 0.05,
         critDamage: 0.5,
         damage: Math.ceil(0.3 * level * BASE_WEAPON_DPS_PER_LEVEL / BASE_ATTACKS_PER_SECOND),
+        damageOverTimeStackSize: 16,
         chargeLevel: 2,
         range: 250,
         speed: Math.ceil(BASE_BULLET_SPEED * 1.2),
@@ -271,6 +274,7 @@ function createKatana(level: number, name: string): Weapon {
         critChance: 0.05,
         critDamage: 1,
         damage: Math.ceil(0.5 * level * BASE_WEAPON_DPS_PER_LEVEL / BASE_ATTACKS_PER_SECOND),
+        damageOverTimeStackSize: 10,
         chargeLevel: 2,
         range: 300,
         speed: BASE_BULLET_SPEED,
@@ -334,7 +338,7 @@ function generateMorningStarShot(timingOffset: number, theta: number, attacksPer
 
 function getMorningStarAttacksPerSecond(state: GameState, weapon: Weapon): number {
     const charged = state.hero.attackChargeLevel > 1;
-    const baseAttacksPerSecond = 3 * state.hero.attacksPerSecond * (charged ? 2 : 1);
+    const baseAttacksPerSecond = 3 * state.hero.attacksPerSecond * (charged ? 1.5 : 1);
     const shotCount = Math.max(1, Math.ceil(baseAttacksPerSecond));
     // This is supposed to just be the attacks per second for the weapon without
     // adding any bonuses, so we need to remove the hero bonus so it doesn't
@@ -344,7 +348,7 @@ function getMorningStarAttacksPerSecond(state: GameState, weapon: Weapon): numbe
 
 function getMorningStarShots(state: GameState, weapon: Weapon): Shot[] {
     const charged = state.hero.attackChargeLevel > 1;
-    const baseAttacksPerSecond = 3 * state.hero.attacksPerSecond * (charged ? 2 : 1);
+    const baseAttacksPerSecond = 3 * state.hero.attacksPerSecond * (charged ? 1.5 : 1);
     const shotCount = Math.max(1, Math.ceil(baseAttacksPerSecond));
     const actualAttacksPerSecond = baseAttacksPerSecond / shotCount;
     const shots: Shot[] = [];
@@ -364,9 +368,10 @@ function createMorningStar(level: number, name: string): Weapon {
         getShots: getMorningStarShots,
         getAttacksPerSecond:getMorningStarAttacksPerSecond,
         critChance: 0.05,
-        critDamage: 1,
-        // This results in 1.5x normal damage if all attacks hit.
-        damage: Math.ceil(level * BASE_WEAPON_DPS_PER_LEVEL / attacksPerSecond / 2),
+        critDamage: 0.5,
+        // This results in 1.2x normal damage if all attacks hit.
+        damage: Math.ceil(0.4 * level * BASE_WEAPON_DPS_PER_LEVEL / attacksPerSecond),
+        damageOverTimeStackSize: 2,
         chargeLevel: 2,
         range: 150,
         speed: BASE_BULLET_SPEED,
@@ -439,8 +444,9 @@ function createWand(level: number, name: string): Weapon {
         getShots: () => wandShots,
         getAttacksPerSecond: () => attacksPerSecond,
         critChance: 0.05,
-        critDamage: 1,
+        critDamage: 0.5,
         damage: Math.ceil(1.5 * level * BASE_WEAPON_DPS_PER_LEVEL / attacksPerSecond),
+        damageOverTimeStackSize: 5,
         chargeLevel: 4,
         range: 300,
         speed: BASE_BULLET_SPEED,

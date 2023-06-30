@@ -11,6 +11,9 @@ interface Bullet extends Circle {
     // If this is set, this damage will be dealt over 1 second while a target is on the bullet
     // and the bullet will no longer hit for regular damage.
     damageOverTime?: number
+    // The maximum amount of damage over time this bullet can deal when stacked with other
+    // sources of damage over time.
+    damageOverTimeLimit?: number
     // Amount of charge the player will gain for hitting an enemy.
     chargeGain?: number
     isEnemyPiercing?: boolean

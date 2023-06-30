@@ -21,6 +21,9 @@ interface Enemy<EnemyParams=any> extends Vitals, Geometry {
     baseColor: string
     vx: number
     vy: number
+    // Tracks how much damage over time an enemy has taken in the current frame.
+    // Used to limit how much damage over time can stack.
+    frameDamageOverTime: number
 }
 interface EnemyDefinition<EnemyParams=any> {
     name: string

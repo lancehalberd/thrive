@@ -5,8 +5,6 @@ import { megaSlime } from 'app/enemies/slime';
 import { uniqueEnchantmentHash } from 'app/uniqueEnchantmentHash';
 import { BASE_MAX_POTIONS, BASE_XP, BULLET_SHAVE_RADIUS } from 'app/constants';
 import { applyEnchantmentsToStats } from 'app/enchantments';
-import { playSound } from 'app/utils/audio';
-import { addDamageNumber, applyArmorToDamage } from 'app/utils/combat';
 
 export const masteryMap: {[key in string]: WeaponType} = {
     [guardian.name]: 'dagger',
@@ -175,45 +173,6 @@ export function refillAllPotions(state: GameState): void {
     state.hero.armor = Math.max(state.hero.armor, state.hero.baseArmor);
 }
 
-export function damageHero(state: GameState, damage: number): void {
-    damage = applyArmorToDamage(state, damage, state.hero.armor);
-
-    // Incoming damage is limited by both the amount of the damage and the players total health.
-    // Shots that deal X damage only deal damage if the player has taken less than 2X damage recently.
-    // A player cannot take more than 50% of their health over their recorded damage history.
-    const damageCap = Math.min(Math.floor(state.hero.maxLife / 2), 2 * damage);
-    const damageTaken = Math.max(0, Math.min(damage, damageCap - state.hero.recentDamageTaken));
-    if (damageTaken <= 0) {
-        return;
-    }
-    if (damageTaken < 0.25 * state.hero.life) {
-        playSound(state, 'takeDamage');
-    } else {
-         playSound(state, 'takeBigDamage');
-    }
-    state.hero.life -= damageTaken;
-    if (state.hero.life < 0) {
-        state.hero.life = 0;
-    }
-    state.hero.damageHistory[0] += damageTaken;
-    state.hero.recentDamageTaken += damageTaken;
-    addDamageNumber(state, state.hero, damageTaken);
-}
-
-export function damageHeroOverTime(state: GameState, damage: number): void {
-    // Incoming damage over time is limited only by player health.
-    const damageCap = Math.floor(state.hero.maxLife / 2);
-    const damageTaken = Math.max(0, Math.min(damage, damageCap - state.hero.recentDamageTaken));
-    if (damageTaken <= 0) {
-        return;
-    }
-    state.hero.life -= damageTaken;
-    if (state.hero.life < 0) {
-        state.hero.life = 0;
-    }
-    state.hero.damageHistory[0] += damageTaken;
-    state.hero.recentDamageTaken += damageTaken;
-}
 
 export function getMaxChargeLevel(state: GameState): number {
     const proficiency = getTotalProficiency(state, state.hero.equipment.weapon.weaponType);

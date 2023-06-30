@@ -85,6 +85,9 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
             }
             loot.render(context, state);
         }
+        for (const bullet of state.heroBullets) {
+            renderHeroBullet(context, bullet);
+        }
         state.activeLoot?.render(context, state);
         for (const enemy of state.enemies) {
             enemy.definition.render(context, state, enemy);
@@ -93,9 +96,6 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
             renderEnemyLifebar(context, enemy);
         }
         renderHero(context, state, state.hero);
-        for (const bullet of state.heroBullets) {
-            renderHeroBullet(context, bullet);
-        }
         for (const bullet of state.enemyBullets) {
             renderEnemyBullet(context, bullet);
         }

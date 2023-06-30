@@ -1,5 +1,10 @@
 Add Staff + Morning Star
 
+Ask Robert for "Day Four" score to see if we can convert it to js generated audio.
+"Back Pain" would work for boss music
+"upper Forest" would be good for the forest theme
+
+
 Add forest enemies
     Spinning Faye - Shoots boomerang bullets out quickly, switching angles by 45 degrees each shot
         - Switches between slowly chasing a player, pausing and dashing towards where the player is going.
@@ -7,15 +12,12 @@ Add forest enemies
     Enrapturing Faye - Shoots a nova of boomerangs then dashes past the player, does a small circle, then repeats
 
 Bad unique interactions:
-    Laser Morning Star is probably too strong end game.
 
 Disabled unique interactions:
     Boomerang Morning Star: Bullets don't move at all
     Returning Morning Star: Bullets don't move at all
     Seeking Morning Star: Bullets don't move at all
     Vacuum Morning Star: Boring, bullets just fire backwards a bit faster
-
-Gain 1 guard skill charge per 50% of health taken as damage.
 
 Mechanic Ideas
     Unlockable slots for equiping enchantments on players

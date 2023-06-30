@@ -28,6 +28,7 @@ interface Weapon {
     critChance: number
     critDamage: number
     damage: number
+    damageOverTimeStackSize: number
     chargeLevel: number
     speed: number
     range: number
