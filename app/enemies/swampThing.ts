@@ -77,9 +77,6 @@ export const swampThing: EnemyDefinition<SwampThingParams> = {
                         context.restore();
                     },
                     renderFloor(context: CanvasRenderingContext2D, state: GameState, bullet: Bullet) {
-                        //const fill = context.createRadialGradient(bullet.x, bullet.y, 0, bullet.x, bullet.y, bullet.radius);
-                        //fill.addColorStop(0, 'brown');
-                        //fill.addColorStop(1, '#CF4');
                         context.save();
                             context.globalAlpha *= Math.min(1, (bullet.duration - bullet.time) / 200);
                             fillCircle(context, bullet, '#A82');

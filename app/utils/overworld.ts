@@ -7,6 +7,7 @@ import { crab } from 'app/enemies/crab';
 import { thrivingReef } from 'app/events/thrivingReef';
 import { ent } from 'app/enemies/ent';
 import { lord } from 'app/enemies/lord';
+import { skeleton } from 'app/enemies/skeleton';
 import { greatSlime, slime } from 'app/enemies/slime';
 import { snake } from 'app/enemies/snake';
 import { sniper } from 'app/enemies/sniper';
@@ -92,7 +93,9 @@ export function updateActiveCells(state: GameState) {
     state.loot = [];
     state.portals = [];
     state.holes = [];
-    const enemyR2 = 2000 ** 2;
+    // This is 4x the player's sight radius.
+    // Note that enemies outside of this radius will not render on the extended map.
+    const enemyR2 = 1600 ** 2;
     const itemR2 = 500 ** 2;
     for (const disc of state.activeDiscs) {
         disc.enemies = disc.enemies.filter(e => e.life > 0);
@@ -139,13 +142,16 @@ function getCellLevel(randomizer: typeof SRandom, cellY: number): number {
     if (cellY === 1) {
         return randomizer.range(2, 3);
     }
-    if (cellY <= 3) {
-        return randomizer.range(5, 8);
+    if (cellY === 2) {
+        return randomizer.range(4, 5);
+    }
+    if (cellY === 3) {
+        return randomizer.range(6, 8);
     }
     const baseLevel = Math.min(90, 10 * (Math.floor(cellY / 2) - 1));
     if (cellY % 2 === 0) {
-        // 10/11/12
-        return randomizer.range(baseLevel, baseLevel + 2);
+        // 9/10/11
+        return randomizer.range(baseLevel - 1, baseLevel + 1);
     }
     // 13/14/15
     return randomizer.range(baseLevel + 3, baseLevel + 5);
@@ -158,12 +164,17 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
     // We always reduce by 2+ tiers so that the same tier doesn't appear at very different
     // levels next to each other. If that happens, a player can accidentally enter more
     // difficult areas without any warning.
-    if (cellY >= 4 && randomizer.generateAndMutate() < 0.2) {
+    for (let alternateY = cellY - 4; alternateY >= 0; alternateY -= 4) {
+        if (randomizer.generateAndMutate() < 0.05) {
+            return getBiome(alternateY, randomizer);
+        }
+    }
+    /*if (cellY >= 4 && randomizer.generateAndMutate() < 0.2) {
         return getBiome(cellY - 4, randomizer);
     } else if (cellY >= 2 && cellY < 4 && randomizer.generateAndMutate() < 0.2) {
         return getBiome(cellY - 2, randomizer);
-    }
-    if (cellY === 0) {
+    }*/
+    if (cellY <= 1) {
         // Tan sand with blue sides
         return {
             name: 'Beach',
@@ -173,7 +184,7 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
             bottomEdgeColor: '#28F',
         };
     }
-    if (cellY === 1) {
+    if (cellY <= 3) {
         // Yellow sand, yellow sides
         return {
             name: 'Desert',
@@ -183,7 +194,7 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
             bottomEdgeColor: '#BA0',
         };
     }
-    if (cellY <= 3) {
+    if (cellY <= 5) {
         // Grass green, earth brown sides
         return {
             name: 'Field',
@@ -193,7 +204,7 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
             bottomEdgeColor: '#320',
         };
     }
-    if (cellY <= 5) { // Level 10
+    if (cellY <= 7) { // Level 10
         // Dark green, earth brown sides
         return {
             name: 'Forest',
@@ -203,7 +214,7 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
             bottomEdgeColor: '#320',
         };
     }
-    if (cellY <= 7) {
+    if (cellY <= 9) {
         // Mustard green with matching sides
         return {
             name: 'Swamp',
@@ -213,7 +224,7 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
             bottomEdgeColor: '#230',
         };
     }
-    if (cellY <= 9) { // Level 30
+    if (cellY <= 11) { // Level 30
         return {
             name: 'Foothills',
             // Light bluish-green grass
@@ -224,7 +235,7 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
             bottomEdgeColor: '#542',
         };
     }
-    if (cellY <= 11) {
+    if (cellY <= 13) {
         return {
             name: 'Mountains',
             // Very slightly brown grey
@@ -234,7 +245,7 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
             bottomEdgeColor: '#665',
         };
     }
-    if (cellY <= 13) { // Level 50
+    if (cellY <= 15) { // Level 50
         return {
             name: 'Frozen Peaks',
             // Very pale blue ice/snow
@@ -246,7 +257,7 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
             bottomEdgeColor: '#666',
         };
     }
-    if (cellY <= 15) { // Level 60
+    if (cellY <= 17) { // Level 60
         return {
             name: 'Descent',
             // Monochrome grey, but not too dark
@@ -257,7 +268,7 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
             bottomEdgeColor: '#333',
         };
     }
-    if (cellY <= 17) { // Level 70
+    if (cellY <= 19) { // Level 70
         return {
             name: 'Badlands',
             // Sickly yellow brown surface
@@ -267,7 +278,7 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
             bottomEdgeColor: '#553',
         };
     }
-    if (cellY <= 19) { // Level 80
+    if (cellY <= 21) { // Level 80
         return {
             name: 'Inferno',
             //Top is burning fire/lava surface
@@ -326,11 +337,11 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
         if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
             createEnemy(state, disc.x, disc.y + 100, slime, disc.level, disc);
         }
-        if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(state, disc.x + 100, disc.y, chaser, disc.level, disc);
+        if (randomizer.generateAndMutate() < 0.5) {
+            createEnemy(state, disc.x + 100, disc.y, skeleton, disc.level, disc);
         }
-        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
-            createEnemy(state, disc.x - 100, disc.y, chaser, disc.level, disc);
+        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.5) {
+            createEnemy(state, disc.x - 100, disc.y, skeleton, disc.level, disc);
         }
         return;
     }
@@ -357,33 +368,33 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
     if (disc.name === 'Forest') {
         if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.6) {
             createEnemy(state, disc.x, disc.y, ent, disc.level, disc);
-        } else if (randomizer.generateAndMutate() < 0.3) {
+        } else if (randomizer.generateAndMutate() < 0.2) {
             createEnemy(state, disc.x, disc.y, turret, disc.level, disc);
         } else if (randomizer.generateAndMutate() < 0.1) {
             createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
         }
-        if (randomizer.generateAndMutate() < 0.3) {
+        if (randomizer.generateAndMutate() < 0.2) {
             createEnemy(state, disc.x, disc.y - 100, overworldSpiderNova, disc.level, disc);
         }
-        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
+        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.2) {
             createEnemy(state, disc.x, disc.y + 100, overworldSpiderNova, disc.level, disc);
         }
-        if (randomizer.generateAndMutate() < 0.3) {
+        if (randomizer.generateAndMutate() < 0.5) {
             createEnemy(state, disc.x + 100, disc.y, snake, disc.level, disc);
         }
-        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
+        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.5) {
             createEnemy(state, disc.x - 100, disc.y, sniper, disc.level, disc);
         }
         return;
     }
     if (disc.name === 'Swamp') {
-        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
+        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.2) {
             createEnemy(state, disc.x, disc.y, greatSlime, disc.level, disc);
         }
-        if (randomizer.generateAndMutate() < 1) {
+        if (randomizer.generateAndMutate() < 0.5) {
             createEnemy(state, disc.x - 100, disc.y, swampThing, disc.level, disc);
         }
-        if (randomizer.generateAndMutate() < 0.3) {
+        if (randomizer.generateAndMutate() < 0.2) {
             createEnemy(state, disc.x + 100, disc.y, snake, disc.level, disc);
         }
         return;

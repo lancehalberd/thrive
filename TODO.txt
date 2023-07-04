@@ -2,8 +2,8 @@ Ask Robert for "Day Four" score to see if we can convert it to js generated audi
 "Back Pain" would work for boss music
 "upper Forest" would be good for the forest theme
 
-Improve performance:
-    Cull bullets that are further than R from the hero.
+Add "Bone Daddy" skeleton boss/miniboss.
+Add "Jolly Roger" skeleton that has the strawhat.
 
 Add forest enemies
     Spinning Faye - Shoots boomerang bullets out quickly, switching angles by 45 degrees each shot

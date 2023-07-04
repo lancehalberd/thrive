@@ -661,6 +661,9 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
     }
 }
 
+// This radius should be slightly larger than the maximum enemy aggro radius.
+// Currently the highest aggro radius is 800 on the sniper.
+const enemyBulletR2 = 900 ** 2;
 function updateEnemyBullets(state: GameState): void {
     const hero = state.hero;
     hero.frameDamageOverTime = 0;
@@ -696,6 +699,11 @@ function updateEnemyBullets(state: GameState): void {
     state.enemyBullets = [];
     const shaveRadius = getHeroShaveRadius(state);
     for (const bullet of activeBullets) {
+        const bulletDistance2 = getTargetVector(state.hero, bullet).distance2;
+        // Forget about enemy bullets that get too far away.
+        if (bulletDistance2 >= enemyBulletR2) {
+            continue;
+        }
         bullet.time += window.FRAME_LENGTH;
         if (bullet.warningTime > 0) {
             bullet.warningTime -= window.FRAME_LENGTH;
@@ -706,7 +714,7 @@ function updateEnemyBullets(state: GameState): void {
             continue;
         }
         let hitTarget = false;
-        if (!hero.roll && doCirclesIntersect(state.hero, bullet)) {
+        if (!hero.roll && bulletDistance2 < (state.hero.radius + bullet.radius) ** 2) {
             if (bullet.slowEffect) {
                 applySlowEffect(state.hero, bullet.slowEffect);
             }

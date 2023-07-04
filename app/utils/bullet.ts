@@ -89,7 +89,7 @@ export function updateEnemySeekingBullet(state: GameState, bullet: Bullet): void
 }
 
 export function updateHeroSeekingBullet(state: GameState, bullet: Bullet): void {
-    turnBulletTowardsTarget(bullet, 0.2, state.hero);
+    turnBulletTowardsTarget(bullet, 0.1, state.hero);
     updateSimpleBullet(state, bullet);
 }
 

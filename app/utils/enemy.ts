@@ -76,8 +76,11 @@ export function getEnemyColor(level: number): string {
     if (level <= 3) {
         return 'lightGreen';
     }
-    if (level < 10) {
+    if (level <= 5) {
         return 'orange';
+    }
+    if (level < 10) {
+        return 'white';
     }
     if (level < 20) {
         return '#262';
