@@ -1,4 +1,3 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT } from 'app/constants';
 import { drawRect, fillCircle } from 'app/render/renderGeometry';
 import { embossText } from 'app/render/renderText';
 import { armorTypeLabels } from 'app/armor';
@@ -82,7 +81,7 @@ export function renderWeaponShort(context: CanvasRenderingContext2D, x: number, 
 }
 
 export function getItemName(item: Equipment): string {
-    let name = item.type === 'weapon' ? weaponTypeLabels[item.weaponType] : armorTypeLabels[item.armorType];
+    let name = item.name;
     for (const enchantment of item.bonusEnchantmentSlots) {
         if (enchantment.enchantmentType === 'uniqueWeaponEnchantment' || enchantment.enchantmentType === 'uniqueArmorEnchantment') {
             const definition = uniqueEnchantmentHash[enchantment.uniqueEnchantmentKey];
@@ -127,8 +126,8 @@ export function renderItemDetails(context: CanvasRenderingContext2D, state: Game
         lineWidths.push(lineWidth);
     }
     h = Math.max(h, textLines.length * 20 + 20);
-    x = Math.max(10, Math.min(CANVAS_WIDTH - 10 - w, x - w / 2));
-    y = Math.max(10, Math.min(CANVAS_HEIGHT - 10 - h, y - h - 10));
+    x = Math.max(10, Math.min(window.CANVAS_WIDTH - 10 - w, x - w / 2));
+    y = Math.max(10, Math.min(window.CANVAS_HEIGHT - 10 - h, y - h - 10));
     context.fillStyle = 'white';
     context.fillRect(x, y, w, h);
     context.fillStyle = 'black';
@@ -162,7 +161,7 @@ function getItemTextLines(state: GameState, item: Item): string[] {
         return [
             getItemName(item),
             'Lv ' + item.level + ' ' + weaponTypeLabels[item.weaponType],
-            //Math.round(item.damage * item.shots.length * item.attacksPerSecond) + ' DPS',
+            //Math.round(item.damage * item.shots.length * item.attacksPerSecond) + ' window.DPS',
             item.damage + ' Damage',
             getWeaponAttacksPerSecond(state, item) + ' Attacks per second',
             ...getEnchantmentTextLines(state, item),
@@ -187,7 +186,7 @@ function getItemComparisonTextLines(state: GameState, newItem: Equipment, equipp
         return [
             getItemName(newItem),
             'Lv ' + newItem.level + ' ' + weaponTypeLabels[newItem.weaponType],
-            //oldDps + ' → ' + newDps + ' DPS',
+            //oldDps + ' → ' + newDps + ' window.DPS',
             equippedItem.damage +  ' → ' + newItem.damage + ' Damage',
             getWeaponAttacksPerSecond(state, equippedItem)
                 + ' → '

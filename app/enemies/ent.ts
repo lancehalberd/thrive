@@ -1,4 +1,3 @@
-import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED } from 'app/constants';
 import { fillCircle } from 'app/render/renderGeometry';
 import { renderNormalizedEnemy, shootBulletAtHero, shootBulletCircle, shootCirclingBullet } from 'app/utils/enemy';
 import { getTargetVector } from 'app/utils/geometry';
@@ -12,7 +11,7 @@ export const ent: EnemyDefinition = {
         armor: 2,
     },
     initialParams: {},
-    dropChance: 2 * BASE_DROP_CHANCE,
+    dropChance: 2 * window.BASE_DROP_CHANCE,
     uniqueMultiplier: 2,
     experienceFactor: 2,
     radius: 32,
@@ -40,12 +39,12 @@ export const ent: EnemyDefinition = {
 
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletAtHero(state, enemy, 0.8 * BASE_ENEMY_BULLET_SPEED, {
+            shootBulletAtHero(state, enemy, 0.8 * window.BASE_ENEMY_BULLET_SPEED, {
                 duration: 2000,
                 damage: 3 * enemy.damage,
-                radius: 2 * BASE_ENEMY_BULLET_RADIUS,
+                radius: 2 * window.BASE_ENEMY_BULLET_RADIUS,
                 onDeath(state: GameState, bullet: Bullet) {
-                    shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 6, BASE_ENEMY_BULLET_SPEED, {
+                    shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 6, window.BASE_ENEMY_BULLET_SPEED, {
                         baseX: bullet.x,
                         baseY: bullet.y,
                         x: bullet.x,

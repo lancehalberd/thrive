@@ -1,4 +1,3 @@
-import { FIELD_CENTER, CANVAS_HEIGHT, CANVAS_WIDTH, SIGHT_RADIUS } from 'app/constants';
 import { fillCircle, renderBar } from 'app/render/renderGeometry';
 import { renderHUD } from 'app/render/renderHUD';
 import { getRightAnalogDeltas } from 'app/utils/userInput'
@@ -9,9 +8,9 @@ import { getHeroShaveRadius } from 'app/utils/hero';
 
 export function render(context: CanvasRenderingContext2D, state: GameState): void {
     context.fillStyle = '#000';
-    context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    context.fillRect(0, 0, window.CANVAS_WIDTH, window.CANVAS_HEIGHT);
     context.save();
-        context.translate(FIELD_CENTER.x - state.hero.x, FIELD_CENTER.y - state.hero.y);
+        context.translate(window.FIELD_CENTER.x - state.hero.x, window.FIELD_CENTER.y - state.hero.y);
         state.visibleDiscs.sort((A: Disc, B: Disc) => A.y - B.y);
         const normalDiscs = state.visibleDiscs.filter(d => !d.boss);
         const bossDiscs = state.visibleDiscs.filter(d => d.boss);
@@ -23,10 +22,10 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
         }
         for (const disc of normalDiscs) {
             renderDisc(context, disc);
-        }
-        for (const disc of normalDiscs) {
             renderDiscCenter(context, disc);
         }
+        //for (const disc of normalDiscs) {
+        //}
         // Render tops of boss discs over other discs to make the arena edge clear.
         for (const disc of bossDiscs) {
             renderDisc(context, disc);
@@ -71,13 +70,19 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
         }
         if (state.hero?.disc?.boss) {
             context.save();
-                context.translate(-(FIELD_CENTER.x - state.hero.x), -(FIELD_CENTER.y - state.hero.y));
+                context.translate(-(window.FIELD_CENTER.x - state.hero.x), -(window.FIELD_CENTER.y - state.hero.y));
                 context.globalAlpha *= 0.6;
                 context.fillStyle = '#000';
-                context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                context.fillRect(0, 0, window.CANVAS_WIDTH, window.CANVAS_HEIGHT);
             context.restore();
             renderDisc(context, state.hero.disc);
             renderDiscCenter(context, state.hero.disc);
+        }
+        for (const bullet of state.enemyBullets) {
+            bullet.renderFloorBefore?.(context, state, bullet);
+        }
+        for (const bullet of state.enemyBullets) {
+            bullet.renderFloor?.(context, state, bullet);
         }
         for (const loot of state.loot) {
             if (loot === state.activeLoot) {
@@ -95,23 +100,27 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
         for (const enemy of state.enemies) {
             renderEnemyLifebar(context, enemy);
         }
-        renderHero(context, state, state.hero);
         for (const bullet of state.enemyBullets) {
-            renderEnemyBullet(context, bullet);
+            if (bullet.render) {
+                bullet.render?.(context, state, bullet);
+            } else {
+                renderEnemyBullet(context, bullet);
+            }
         }
+        renderHero(context, state, state.hero);
         for (const fieldText of state.fieldText) {
             renderFieldText(context, fieldText);
         }
     context.restore();
     context.beginPath();
-    context.rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    context.arc(FIELD_CENTER.x, FIELD_CENTER.y, state.sightRadius, 0, 2 * Math.PI, true);
+    context.rect(0, 0, window.CANVAS_WIDTH, window.CANVAS_HEIGHT);
+    context.arc(window.FIELD_CENTER.x, window.FIELD_CENTER.y, state.sightRadius, 0, 2 * Math.PI, true);
     context.fillStyle = '#000';
     context.fill();
 
     if (state.isUsingXbox) {
         const [dx, dy] = getRightAnalogDeltas(state);
-        /*const x = FIELD_CENTER.x + dx * 100, y = FIELD_CENTER.y + dy * 100;
+        /*const x = window.FIELD_CENTER.x + dx * 100, y = window.FIELD_CENTER.y + dy * 100;
         context.beginPath();
         context.arc(x, y, 15, 0, 2 * Math.PI, true);
         context.strokeStyle = 'blue';
@@ -126,8 +135,8 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
         context.beginPath();
         context.setLineDash([10, 15]);
         context.strokeStyle = 'blue';
-        context.moveTo(FIELD_CENTER.x, FIELD_CENTER.y);
-        context.lineTo(SIGHT_RADIUS * dx + FIELD_CENTER.x, SIGHT_RADIUS * dy + FIELD_CENTER.y);
+        context.moveTo(window.FIELD_CENTER.x, window.FIELD_CENTER.y);
+        context.lineTo(window.SIGHT_RADIUS * dx + window.FIELD_CENTER.x, window.SIGHT_RADIUS * dy + window.FIELD_CENTER.y);
         context.stroke();
         context.restore();
     }
@@ -155,7 +164,7 @@ function renderPortal(context: CanvasRenderingContext2D, state: GameState, porta
 }
 
 function renderEnemyLifebar(context: CanvasRenderingContext2D, enemy: Enemy): void {
-    if (enemy.life < enemy.maxLife) {
+    if (enemy.life < enemy.maxLife && !enemy.isInvulnerable) {
         let color = '#0F0';
         if (enemy.life <= enemy.maxLife / 4) {
             color = '#F00';
@@ -263,15 +272,15 @@ function renderHero(context: CanvasRenderingContext2D, state: GameState, hero: H
         }
         context.arc(hero.x, hero.y, hero.radius * 0.8, 0, 2 * Math.PI);
         context.stroke();
-        // TODO: use right analog stick deltas if playing with game pad instead of state.mouse for target.
+        // window.TODO: use right analog stick deltas if playing with game pad instead of state.mouse for target.
         const target = {
-            x: state.hero.x + state.mouse.x - FIELD_CENTER.x,
-            y: state.hero.y + state.mouse.y - FIELD_CENTER.y,
+            x: state.hero.x + state.mouse.x - window.FIELD_CENTER.x,
+            y: state.hero.y + state.mouse.y - window.FIELD_CENTER.y,
         }
         if (weapon.weaponType === 'wand') {
             const bullet = weapon.getShots(state, weapon)[0].generateBullet(state, hero, weapon, target);
             if (bullet) {
-                const mx = hero.x + state.mouse.x - FIELD_CENTER.x, my = hero.y + state.mouse.y - FIELD_CENTER.y;
+                const mx = hero.x + state.mouse.x - window.FIELD_CENTER.x, my = hero.y + state.mouse.y - window.FIELD_CENTER.y;
                 const dx = bullet.x - mx, dy = bullet.y - my;
                 const radius = Math.sqrt(dx * dx + dy * dy);
                 context.beginPath();

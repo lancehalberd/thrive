@@ -1,4 +1,3 @@
-import { BASE_ENEMY_BULLET_SPEED, FRAME_LENGTH } from 'app/constants';
 import { fillCircle } from 'app/render/renderGeometry';
 import { turnTowardsTarget, shootBulletArc } from 'app/utils/enemy';
 import { getTargetVector } from 'app/utils/geometry';
@@ -30,15 +29,15 @@ export const squid: EnemyDefinition = {
             if (enemy.modeTime >= delay && Math.random() < 0.05) {
                 enemy.setMode('burst');
             }
-            enemy.x += enemy.vx * FRAME_LENGTH / 1000;
-            enemy.y += enemy.vy * FRAME_LENGTH / 1000;
+            enemy.x += enemy.vx * window.FRAME_LENGTH / 1000;
+            enemy.y += enemy.vy * window.FRAME_LENGTH / 1000;
             return;
         }
         if (enemy.mode === 'burst') {
             for (let i = 0; i < 4; i++) {
                 const randomDirection = enemy.theta + (Math.random() - 0.5) * Math.PI / 4;
                 const randomSpread = Math.PI / 12 + Math.random() * Math.PI / 3;
-                const speed = 0.8 * BASE_ENEMY_BULLET_SPEED + i * 0.2 * BASE_ENEMY_BULLET_SPEED;
+                const speed = 0.8 * window.BASE_ENEMY_BULLET_SPEED + i * 0.2 * window.BASE_ENEMY_BULLET_SPEED;
                 shootBulletArc(state, enemy, randomDirection, randomSpread, 3, speed);
             }
             // Bursts backwards.
@@ -50,8 +49,8 @@ export const squid: EnemyDefinition = {
         if (enemy.mode === 'glide') {
             enemy.vx *= 0.98;
             enemy.vy *= 0.98;
-            enemy.x += enemy.vx * FRAME_LENGTH / 1000;
-            enemy.y += enemy.vy * FRAME_LENGTH / 1000;
+            enemy.x += enemy.vx * window.FRAME_LENGTH / 1000;
+            enemy.y += enemy.vy * window.FRAME_LENGTH / 1000;
             if (enemy.modeTime >= 500 && Math.random() < 0.05) {
                 enemy.setMode('choose');
             }

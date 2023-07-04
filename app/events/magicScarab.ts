@@ -1,29 +1,37 @@
-import { BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED, EVENT_BOSS_MAX_LIFE_FACTOR } from 'app/constants';
 import { crab } from 'app/enemies/crab';
 import { reefUrchin } from 'app/enemies/urchin';
 import { fillCircle } from 'app/render/renderGeometry';
-import { updateSimpleBullet } from 'app/utils/bullet';
-import { createEnemy, getBaseEnemyBullet, renderNormalizedEnemy, shootBulletAtHero, shootBulletCircle, shootCirclingBullet } from 'app/utils/enemy';
+import { createEnemy, getBaseEnemyBullet, renderNormalizedEnemy, shootCirclingBullet } from 'app/utils/enemy';
 import { getTargetVector } from 'app/utils/geometry';
 
-interface ThrivingReefParams {
-    attackTheta: number
+interface MagicScarabParams {
+    // List of paths the scarab will take during the event. Each path is a sequence of discs.
+    chasePaths: Disc[][]
+    // Index of the current path the scarab is taking
+    pathIndex: number
+    // Index of the current disc the scarab is approaching
+    discIndex: number
 }
 
-export const thrivingReef: EnemyDefinition<ThrivingReefParams> = {
-    name: 'Thriving Reef',
+export const magicScarab: EnemyDefinition<MagicScarabParams> = {
+    name: 'MagicScarab',
     statFactors: {
         attacksPerSecond: 0.5,
-        maxLife: EVENT_BOSS_MAX_LIFE_FACTOR * 0.75,
+        maxLife: window.EVENT_BOSS_MAX_LIFE_FACTOR * 0.75,
         armor: 2,
     },
-    initialParams: {attackTheta: 0},
+    initialParams: {
+        chasePaths: [],
+        pathIndex: 0,
+        discIndex: 0,
+    },
     dropChance: 0,
     uniqueMultiplier: 20,
     experienceFactor: 20,
     radius: 80,
     portalChance: 1,
-    portalDungeonType: 'pearlTrove',
+    portalDungeonType: 'caveOfWanderers',
+    isInvulnerable: true,
     initialize(state: GameState, enemy: Enemy): void {
         const disc = enemy.disc;
         // Add holes to reef's disc.
@@ -42,7 +50,7 @@ export const thrivingReef: EnemyDefinition<ThrivingReefParams> = {
                 disc.y + 3 / 5 * disc.radius * Math.sin(theta + Math.PI), reefUrchin, enemy.level, disc);
         }
     },
-    update(state: GameState, enemy: Enemy<ThrivingReefParams>): void {
+    update(state: GameState, enemy: Enemy<MagicScarabParams>): void {
         const bulletShieldTime = enemy.time % 2000;
         // The reef generates two circles of spinning bullets around it that move in
         // opposite directions and have clustered bullets with gapbs between them.
@@ -115,54 +123,6 @@ export const thrivingReef: EnemyDefinition<ThrivingReefParams> = {
         const {distance2} = getTargetVector(enemy, state.hero);
         if (distance2 > aggroRadius * aggroRadius) {
             return;
-        }
-
-        if (enemy.attackCooldown <= state.fieldTime) {
-            enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            if (enemy.mode === 'choose' || enemy.mode === 'phase1') {
-                shootBulletAtHero(state, enemy, 0.8 * BASE_ENEMY_BULLET_SPEED, {
-                    duration: 2000,
-                    damage: 2 * enemy.damage,
-                    radius: 2 * BASE_ENEMY_BULLET_RADIUS,
-                });
-            } else if (enemy.mode === 'phase2' || enemy.mode === 'phase3') {
-                shootBulletCircle(state, enemy, enemy.params.attackTheta, 12, 0.8 * BASE_ENEMY_BULLET_SPEED, {
-                    duration: 2000
-                });
-                enemy.params.attackTheta += Math.PI / 24;
-            } else if (enemy.mode === 'phase3' || enemy.mode === 'phase4') {
-                shootBulletAtHero(state, enemy, 0.8 * BASE_ENEMY_BULLET_SPEED, {
-                    duration: 2000,
-                    damage: 3 * enemy.damage,
-                    radius: 2 * BASE_ENEMY_BULLET_RADIUS,
-                    onDeath(state: GameState, bullet: Bullet) {
-                        shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 6, BASE_ENEMY_BULLET_SPEED, {
-                            baseX: bullet.x,
-                            baseY: bullet.y,
-                            x: bullet.x,
-                            y: bullet.y,
-                        });
-                    }
-                });
-            } else {
-                shootBulletAtHero(state, enemy, 0.8 * BASE_ENEMY_BULLET_SPEED, {
-                    duration: 2000,
-                    damage: 3 * enemy.damage,
-                    radius: 2 * BASE_ENEMY_BULLET_RADIUS,
-                    update(state: GameState, bullet: Bullet) {
-                        updateSimpleBullet(state, bullet);
-                        if (bullet.time % 500 === 0) {
-                            shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 6, 0.5 * BASE_ENEMY_BULLET_SPEED, {
-                                baseX: bullet.x,
-                                baseY: bullet.y,
-                                x: bullet.x,
-                                y: bullet.y,
-                            });
-                        }
-                    }
-                });
-
-            }
         }
     },
     render: renderNormalizedEnemy((context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => {

@@ -1,23 +1,23 @@
-import { CANVAS_HEIGHT, CANVAS_WIDTH, GAME_KEY, SLOT_PADDING, SLOT_SIZE } from 'app/constants';
+import { GAME_KEY } from 'app/constants';
 import { applyEnchantmentToEquipment } from 'app/enchantments';
 import { isPointInRect } from 'app/utils/geometry';
 import { gainItemExperience, setDerivedHeroStats } from 'app/utils/hero';
 import { wasGameKeyPressed } from 'app/utils/userInput';
 
-const slotSpacing = SLOT_SIZE + SLOT_PADDING;
+const slotSpacing = window.SLOT_SIZE + window.SLOT_PADDING;
 
 const weaponSlot: InventorySlot = {
-    x: SLOT_PADDING,
-    y: CANVAS_HEIGHT - slotSpacing,
-    w: SLOT_SIZE,
-    h: SLOT_SIZE,
+    x: window.SLOT_PADDING,
+    y: window.CANVAS_HEIGHT - slotSpacing,
+    w: window.SLOT_SIZE,
+    h: window.SLOT_SIZE,
 };
 
 const armorSlot: InventorySlot = {
-    x: SLOT_PADDING,
-    y: CANVAS_HEIGHT - 2 * slotSpacing,
-    w: SLOT_SIZE,
-    h: SLOT_SIZE,
+    x: window.SLOT_PADDING,
+    y: window.CANVAS_HEIGHT - 2 * slotSpacing,
+    w: window.SLOT_SIZE,
+    h: window.SLOT_SIZE,
 };
 
 export function getInventorySlots(state: GameState): InventorySlot[] {
@@ -32,28 +32,28 @@ export function getInventorySlots(state: GameState): InventorySlot[] {
         },
     ];
     let slotCount = state.paused ? 10 : 4;
-    let y = CANVAS_HEIGHT - 3 * slotSpacing;
+    let y = window.CANVAS_HEIGHT - 3 * slotSpacing;
     for (let i = 0; i < slotCount; i++) {
-        const x = CANVAS_WIDTH - (i + 1) * slotSpacing;
+        const x = window.CANVAS_WIDTH - (i + 1) * slotSpacing;
         slots.push({
             x,
             y,
-            w: SLOT_SIZE,
-            h: SLOT_SIZE,
+            w: window.SLOT_SIZE,
+            h: window.SLOT_SIZE,
             item: state.hero.enchantments[i],
         });
         slots.push({
             x,
             y: y + slotSpacing,
-            w: SLOT_SIZE,
-            h: SLOT_SIZE,
+            w: window.SLOT_SIZE,
+            h: window.SLOT_SIZE,
             item: state.hero.weapons[i],
         });
         slots.push({
             x,
             y: y + 2 * slotSpacing,
-            w: SLOT_SIZE,
-            h: SLOT_SIZE,
+            w: window.SLOT_SIZE,
+            h: window.SLOT_SIZE,
             item: state.hero.armors[i],
         });
     }
@@ -94,10 +94,10 @@ export function getSelectedInventorySlot(state: GameState): InventorySlot|undefi
         return weaponSlot;
     }
     return {
-        x: CANVAS_WIDTH - slotSpacing,
-        y: CANVAS_HEIGHT - 3 * slotSpacing + state.menuRow * slotSpacing,
-        w: SLOT_SIZE,
-        h: SLOT_SIZE,
+        x: window.CANVAS_WIDTH - slotSpacing,
+        y: window.CANVAS_HEIGHT - 3 * slotSpacing + state.menuRow * slotSpacing,
+        w: window.SLOT_SIZE,
+        h: window.SLOT_SIZE,
     };
 }
 

@@ -1,4 +1,3 @@
-import { BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED, EVENT_BOSS_MAX_LIFE_FACTOR } from 'app/constants';
 import { crab } from 'app/enemies/crab';
 import { reefUrchin } from 'app/enemies/urchin';
 import { fillCircle } from 'app/render/renderGeometry';
@@ -14,7 +13,7 @@ export const thrivingReef: EnemyDefinition<ThrivingReefParams> = {
     name: 'Thriving Reef',
     statFactors: {
         attacksPerSecond: 0.5,
-        maxLife: EVENT_BOSS_MAX_LIFE_FACTOR * 0.75,
+        maxLife: window.EVENT_BOSS_MAX_LIFE_FACTOR * 0.75,
         armor: 2,
     },
     initialParams: {attackTheta: 0},
@@ -120,23 +119,23 @@ export const thrivingReef: EnemyDefinition<ThrivingReefParams> = {
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             if (enemy.mode === 'choose' || enemy.mode === 'phase1') {
-                shootBulletAtHero(state, enemy, 0.8 * BASE_ENEMY_BULLET_SPEED, {
+                shootBulletAtHero(state, enemy, 0.8 * window.BASE_ENEMY_BULLET_SPEED, {
                     duration: 2000,
                     damage: 2 * enemy.damage,
-                    radius: 2 * BASE_ENEMY_BULLET_RADIUS,
+                    radius: 2 * window.BASE_ENEMY_BULLET_RADIUS,
                 });
             } else if (enemy.mode === 'phase2' || enemy.mode === 'phase3') {
-                shootBulletCircle(state, enemy, enemy.params.attackTheta, 12, 0.8 * BASE_ENEMY_BULLET_SPEED, {
+                shootBulletCircle(state, enemy, enemy.params.attackTheta, 12, 0.8 * window.BASE_ENEMY_BULLET_SPEED, {
                     duration: 2000
                 });
                 enemy.params.attackTheta += Math.PI / 24;
             } else if (enemy.mode === 'phase3' || enemy.mode === 'phase4') {
-                shootBulletAtHero(state, enemy, 0.8 * BASE_ENEMY_BULLET_SPEED, {
+                shootBulletAtHero(state, enemy, 0.8 * window.BASE_ENEMY_BULLET_SPEED, {
                     duration: 2000,
                     damage: 3 * enemy.damage,
-                    radius: 2 * BASE_ENEMY_BULLET_RADIUS,
+                    radius: 2 * window.BASE_ENEMY_BULLET_RADIUS,
                     onDeath(state: GameState, bullet: Bullet) {
-                        shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 6, BASE_ENEMY_BULLET_SPEED, {
+                        shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 6, window.BASE_ENEMY_BULLET_SPEED, {
                             baseX: bullet.x,
                             baseY: bullet.y,
                             x: bullet.x,
@@ -145,14 +144,14 @@ export const thrivingReef: EnemyDefinition<ThrivingReefParams> = {
                     }
                 });
             } else {
-                shootBulletAtHero(state, enemy, 0.8 * BASE_ENEMY_BULLET_SPEED, {
+                shootBulletAtHero(state, enemy, 0.8 * window.BASE_ENEMY_BULLET_SPEED, {
                     duration: 2000,
                     damage: 3 * enemy.damage,
-                    radius: 2 * BASE_ENEMY_BULLET_RADIUS,
+                    radius: 2 * window.BASE_ENEMY_BULLET_RADIUS,
                     update(state: GameState, bullet: Bullet) {
                         updateSimpleBullet(state, bullet);
                         if (bullet.time % 500 === 0) {
-                            shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 6, 0.5 * BASE_ENEMY_BULLET_SPEED, {
+                            shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 6, 0.5 * window.BASE_ENEMY_BULLET_SPEED, {
                                 baseX: bullet.x,
                                 baseY: bullet.y,
                                 x: bullet.x,

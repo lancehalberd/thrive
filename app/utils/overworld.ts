@@ -1,4 +1,3 @@
-import { CELL_SIZE } from 'app/constants';
 import { overworldSpiderNova } from 'app/bosses/spider';
 import { bat } from 'app/enemies/bat';
 import { chaser } from 'app/enemies/chaser';
@@ -8,10 +7,11 @@ import { crab } from 'app/enemies/crab';
 import { thrivingReef } from 'app/events/thrivingReef';
 import { ent } from 'app/enemies/ent';
 import { lord } from 'app/enemies/lord';
-import { slime } from 'app/enemies/slime';
+import { greatSlime, slime } from 'app/enemies/slime';
 import { snake } from 'app/enemies/snake';
 import { sniper } from 'app/enemies/sniper';
 import { squid} from 'app/enemies/squid';
+import { swampThing } from 'app/enemies/swampThing';
 import { turret } from 'app/enemies/turret';
 import { urchin } from 'app/enemies/urchin';
 import { createDisc, findClosestDiscToDisc, linkDiscs, projectDiscToClosestDisc } from 'app/utils/disc';
@@ -52,8 +52,8 @@ export function addOverworldPortalToDisc({x, y}: Point, disc: Disc): Portal {
 
 export function getCellCoordinates(state: GameState, x = state.hero.x, y = state.hero.y): Point {
     return {
-        x: Math.floor(x / CELL_SIZE),
-        y: Math.floor(-y / CELL_SIZE),
+        x: Math.floor(x / window.CELL_SIZE),
+        y: Math.floor(-y / window.CELL_SIZE),
     }
 }
 
@@ -92,16 +92,24 @@ export function updateActiveCells(state: GameState) {
     state.loot = [];
     state.portals = [];
     state.holes = [];
+    const enemyR2 = 2000 ** 2;
+    const itemR2 = 500 ** 2;
     for (const disc of state.activeDiscs) {
         disc.enemies = disc.enemies.filter(e => e.life > 0);
         for (const enemy of disc.enemies) {
-            state.enemies.push(enemy);
+            if (getTargetVector(enemy, state.hero).distance2 < enemyR2) {
+                state.enemies.push(enemy);
+            }
         }
         for (const loot of disc.loot) {
-            state.loot.push(loot);
+            if (getTargetVector(loot, state.hero).distance2 < itemR2) {
+                state.loot.push(loot);
+            }
         }
         for (const portal of disc.portals) {
-            state.portals.push(portal);
+            if (getTargetVector(portal, state.hero).distance2 < itemR2) {
+                state.portals.push(portal);
+            }
         }
         for (const hole of disc.holes) {
             state.holes.push(hole);
@@ -156,6 +164,7 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
         return getBiome(cellY - 2, randomizer);
     }
     if (cellY === 0) {
+        // Tan sand with blue sides
         return {
             name: 'Beach',
             color: '#FC8',
@@ -165,6 +174,7 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
         };
     }
     if (cellY === 1) {
+        // Yellow sand, yellow sides
         return {
             name: 'Desert',
             color: '#FE4',
@@ -174,6 +184,7 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
         };
     }
     if (cellY <= 3) {
+        // Grass green, earth brown sides
         return {
             name: 'Field',
             color: '#4E8',
@@ -183,6 +194,7 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
         };
     }
     if (cellY <= 5) { // Level 10
+        // Dark green, earth brown sides
         return {
             name: 'Forest',
             color: '#080',
@@ -192,6 +204,7 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
         };
     }
     if (cellY <= 7) {
+        // Mustard green with matching sides
         return {
             name: 'Swamp',
             color: '#682',
@@ -203,8 +216,10 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
     if (cellY <= 9) { // Level 30
         return {
             name: 'Foothills',
+            // Light bluish-green grass
             color: '#6FA',
             centerColor: '#AFC',
+            // lighter brown earth sides
             topEdgeColor: '#862',
             bottomEdgeColor: '#542',
         };
@@ -212,31 +227,68 @@ function getBiome(cellY: number, randomizer: typeof SRandom): Biome {
     if (cellY <= 11) {
         return {
             name: 'Mountains',
+            // Very slightly brown grey
+            color: '#998',
+            centerColor: '#BBA',
+            topEdgeColor: '#887',
+            bottomEdgeColor: '#665',
         };
     }
     if (cellY <= 13) { // Level 50
         return {
             name: 'Frozen Peaks',
+            // Very pale blue ice/snow
+            color: '#CDF',
+            centerColor: '#DEF',
+            // Pale blue top layer of ice/snow
+            topEdgeColor: '#BCF',
+            // Dark grey stone
+            bottomEdgeColor: '#666',
         };
     }
     if (cellY <= 15) { // Level 60
         return {
             name: 'Descent',
+            // Monochrome grey, but not too dark
+            color: '#999',
+            // Center color is darker than base color
+            centerColor: '#777',
+            topEdgeColor: '#555',
+            bottomEdgeColor: '#333',
         };
     }
     if (cellY <= 17) { // Level 70
         return {
             name: 'Badlands',
+            // Sickly yellow brown surface
+            color: '#996',
+            centerColor: '#AA5',
+            topEdgeColor: '#885',
+            bottomEdgeColor: '#553',
         };
     }
     if (cellY <= 19) { // Level 80
         return {
             name: 'Inferno',
+            //Top is burning fire/lava surface
+            color: '#F94',
+            centerColor: '#FC0',
+            // Red cool lava layer
+            topEdgeColor: '#C42',
+            // Bright orange molten core
+            bottomEdgeColor: '#FC0',
         };
     }
     // Level 90
     return {
         name: 'Abyss',
+            // Very dark base color has poor contrast with black background
+            color: '#111',
+            // Slightly lighter center color so it doesn't look like a pit.
+            centerColor: '#222',
+            // Purple edges
+            topEdgeColor: '#A6A',
+            bottomEdgeColor: '#424',
     };
 }
 
@@ -260,7 +312,9 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
                 createEnemy(state, disc.x, disc.y - 100, squid, disc.level, disc);
             }
         }
-    } else if (disc.name === 'Desert') {
+        return;
+    }
+    if (disc.name === 'Desert') {
         if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
             createEnemy(state, disc.x, disc.y, turret, disc.level, disc);
         } else if (randomizer.generateAndMutate() < 0.1) {
@@ -278,7 +332,9 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
         if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
             createEnemy(state, disc.x - 100, disc.y, chaser, disc.level, disc);
         }
-    } else if (disc.name === 'Field') {
+        return;
+    }
+    if (disc.name === 'Field') {
         if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
             createEnemy(state, disc.x, disc.y, urchin, disc.level, disc);
         } else if (randomizer.generateAndMutate() < 0.1) {
@@ -296,7 +352,9 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
         if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
             createEnemy(state, disc.x - 100, disc.y, slime, disc.level, disc);
         }
-    } else if (disc.name === 'Forest') {
+        return;
+    }
+    if (disc.name === 'Forest') {
         if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.6) {
             createEnemy(state, disc.x, disc.y, ent, disc.level, disc);
         } else if (randomizer.generateAndMutate() < 0.3) {
@@ -316,31 +374,57 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
         if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
             createEnemy(state, disc.x - 100, disc.y, sniper, disc.level, disc);
         }
-    }  else {
-        // For undefined biomes, just include a variety of enemies that can drop dungeons.
-        if (randomizer.generateAndMutate() < 0.2) {
-            createEnemy(state, disc.x, disc.y, lord, disc.level, disc);
-        } else if (randomizer.generateAndMutate() < 0.2) {
-            createEnemy(state, disc.x, disc.y, urchin, disc.level, disc);
-        } else if (randomizer.generateAndMutate() < 0.2) {
-            createEnemy(state, disc.x, disc.y, turret, disc.level, disc);
-        } else if (randomizer.generateAndMutate() < 0.2) {
-            createEnemy(state, disc.x, disc.y, clam, disc.level, disc);
-        }  else if (randomizer.generateAndMutate() < 0.2) {
-            createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
+        return;
+    }
+    if (disc.name === 'Swamp') {
+        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
+            createEnemy(state, disc.x, disc.y, greatSlime, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 1) {
+            createEnemy(state, disc.x - 100, disc.y, swampThing, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(state, disc.x - 50, disc.y, chaser, disc.level, disc);
+            createEnemy(state, disc.x + 100, disc.y, snake, disc.level, disc);
         }
-        if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(state, disc.x + 50, disc.y, slime, disc.level, disc);
-        }
-        if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(state, disc.x, disc.y + 50, bat, disc.level, disc);
-        }
-        if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(state, disc.x, disc.y - 50, overworldSpiderNova, disc.level, disc);
-        }
+        return;
+    }
+    if (disc.name === 'Foothills') {
+    }
+    if (disc.name === 'Mountains') {
+    }
+    if (disc.name === 'Frozen Peaks') {
+    }
+    if (disc.name === 'Descent') {
+    }
+    if (disc.name === 'Badlands') {
+    }
+    if (disc.name === 'Inferno') {
+    }
+    if (disc.name === 'Abyss') {
+    }
+    // For undefined biomes, just include a variety of enemies that can drop dungeons.
+    if (randomizer.generateAndMutate() < 0.2) {
+        createEnemy(state, disc.x, disc.y, lord, disc.level, disc);
+    } else if (randomizer.generateAndMutate() < 0.2) {
+        createEnemy(state, disc.x, disc.y, urchin, disc.level, disc);
+    } else if (randomizer.generateAndMutate() < 0.2) {
+        createEnemy(state, disc.x, disc.y, turret, disc.level, disc);
+    } else if (randomizer.generateAndMutate() < 0.2) {
+        createEnemy(state, disc.x, disc.y, clam, disc.level, disc);
+    }  else if (randomizer.generateAndMutate() < 0.2) {
+        createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
+    }
+    if (randomizer.generateAndMutate() < 0.3) {
+        createEnemy(state, disc.x - 50, disc.y, chaser, disc.level, disc);
+    }
+    if (randomizer.generateAndMutate() < 0.3) {
+        createEnemy(state, disc.x + 50, disc.y, slime, disc.level, disc);
+    }
+    if (randomizer.generateAndMutate() < 0.3) {
+        createEnemy(state, disc.x, disc.y + 50, bat, disc.level, disc);
+    }
+    if (randomizer.generateAndMutate() < 0.3) {
+        createEnemy(state, disc.x, disc.y - 50, overworldSpiderNova, disc.level, disc);
     }
 }
 
@@ -367,10 +451,10 @@ export function createWorldCell(state: GameState, {x, y}: Point): WorldCell {
     const cellRandomizer = worldRandomizer.addSeed(x * 37).addSeed(y * 29);
     const level = getCellLevel(cellRandomizer, y);
 
-    const cellRadius = CELL_SIZE / 2;
+    const cellRadius = window.CELL_SIZE / 2;
     const biome = getBiome(y, cellRandomizer);
 
-    const c = {x: CELL_SIZE * (x + 0.5), y: -CELL_SIZE * (y + 0.5)};
+    const c = {x: window.CELL_SIZE * (x + 0.5), y: -window.CELL_SIZE * (y + 0.5)};
 
     let discRandomizer = cellRandomizer.addSeed(79);
 
@@ -436,8 +520,8 @@ export function createWorldCell(state: GameState, {x, y}: Point): WorldCell {
         discs.push(createDisc({
             level,
             ...biome,
-            x: c.x + (discRandomizer.generateAndMutate() - 0.5) * CELL_SIZE / 10,
-            y: c.y + (discRandomizer.generateAndMutate() - 0.5) * CELL_SIZE / 10,
+            x: c.x + (discRandomizer.generateAndMutate() - 0.5) * window.CELL_SIZE / 10,
+            y: c.y + (discRandomizer.generateAndMutate() - 0.5) * window.CELL_SIZE / 10,
             radius: discRandomizer.element(platformSizes),
         }));
     }

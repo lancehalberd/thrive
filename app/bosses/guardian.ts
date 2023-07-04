@@ -1,4 +1,3 @@
-import { BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED, BASE_ENEMY_SPEED, BOSS_MAX_LIFE_FACTOR } from 'app/constants';
 import { getVigorEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
 import { chaseTarget, createEnemy, moveEnemyInDirection, moveEnemyToTarget, shootBulletArc, shootEnemyBullet } from 'app/utils/enemy';
@@ -10,7 +9,7 @@ interface GuardianParams {
 export const guardian: EnemyDefinition<GuardianParams> = {
     name: 'Guardian',
     statFactors: {
-        maxLife: BOSS_MAX_LIFE_FACTOR,
+        maxLife: window.BOSS_MAX_LIFE_FACTOR,
         damage: 1,
     },
     initialParams: {
@@ -35,7 +34,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
             }
         }
         if (enemy.mode === 'choose') {
-            enemy.speed = BASE_ENEMY_SPEED;
+            enemy.speed = window.BASE_ENEMY_SPEED;
             chaseTarget(state, enemy, state.hero);
             if (enemy.modeTime >= 400) {
                 enemy.setMode(Random.element(['moveToEdge', 'moveToEdge', 'moveToCenter', 'chase']));
@@ -44,7 +43,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
             return;
         }
         if (enemy.mode === 'moveToEdge') {
-            enemy.speed = 1.2 * BASE_ENEMY_SPEED;
+            enemy.speed = 1.2 * window.BASE_ENEMY_SPEED;
             let {x, y, distance2} = getTargetVector(enemy.disc, enemy);
             if (distance2 >= (enemy.disc.radius * 0.8) ** 2) {
                 enemy.setMode(Random.element(['shoot', 'shoot', 'circle']));
@@ -55,7 +54,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
             return;
         }
         if (enemy.mode === 'moveToCenter') {
-            enemy.speed = 1.2 * BASE_ENEMY_SPEED;
+            enemy.speed = 1.2 * window.BASE_ENEMY_SPEED;
             if (moveEnemyToTarget(state, enemy, enemy.disc)) {
                 enemy.setMode(Random.element(['chasingSpirals', 'crossingSpirals']));
                 //enemy.setMode(Random.element(['chasingSpirals']));
@@ -72,8 +71,8 @@ export const guardian: EnemyDefinition<GuardianParams> = {
                 for (let i = 0; i < 2; i++) {
                     const thetaIndex = (enemy.modeTime - 400) / 200 + i;
                     const theta = -Math.PI / 2 + (i + 1) * thetaIndex * Math.PI / 12;
-                    shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(theta), BASE_ENEMY_BULLET_SPEED * Math.sin(theta), {duration});
-                    shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(theta + Math.PI), BASE_ENEMY_BULLET_SPEED * Math.sin(theta + Math.PI), {duration});
+                    shootEnemyBullet(state, enemy, window.BASE_ENEMY_BULLET_SPEED * Math.cos(theta), window.BASE_ENEMY_BULLET_SPEED * Math.sin(theta), {duration});
+                    shootEnemyBullet(state, enemy, window.BASE_ENEMY_BULLET_SPEED * Math.cos(theta + Math.PI), window.BASE_ENEMY_BULLET_SPEED * Math.sin(theta + Math.PI), {duration});
                 }
             }
             if (enemy.modeTime >= 4000) {
@@ -91,7 +90,7 @@ export const guardian: EnemyDefinition<GuardianParams> = {
                 for (let i = 0; i < 2; i++) {
                     const thetaIndex = (enemy.modeTime - 400) / 200;
                     const theta = Math.PI / 2 + thetaIndex * Math.PI / 6 * (i ? -1 : 1);
-                    shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(theta), BASE_ENEMY_BULLET_SPEED * Math.sin(theta), {duration});
+                    shootEnemyBullet(state, enemy, window.BASE_ENEMY_BULLET_SPEED * Math.cos(theta), window.BASE_ENEMY_BULLET_SPEED * Math.sin(theta), {duration});
                 }
             }
             if (enemy.modeTime >= 4000) {
@@ -106,11 +105,11 @@ export const guardian: EnemyDefinition<GuardianParams> = {
             }
             if (enemy.modeTime === 1000) {
                 shootEnemyBullet(state, enemy,
-                    2 * BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta), 2 * BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta),
+                    2 * window.BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta), 2 * window.BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta),
                     {
                         duration: 2000,
                         damage: enemy.damage * 5,
-                        radius: 3 * BASE_ENEMY_BULLET_RADIUS,
+                        radius: 3 * window.BASE_ENEMY_BULLET_RADIUS,
                     }
                 );
             }
@@ -120,11 +119,11 @@ export const guardian: EnemyDefinition<GuardianParams> = {
             return;
         }
         if (enemy.mode === 'charge') {
-            enemy.speed = 1.5 * BASE_ENEMY_SPEED;
+            enemy.speed = 1.5 * window.BASE_ENEMY_SPEED;
             moveEnemyInDirection(state, enemy);
             if (enemy.modeTime % 200 === 0) {
-                const vx = 1.2 * BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta + Math.PI / 2);
-                const vy = 1.2 * BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta + Math.PI / 2);
+                const vx = 1.2 * window.BASE_ENEMY_BULLET_SPEED * Math.cos(enemy.theta + Math.PI / 2);
+                const vy = 1.2 * window.BASE_ENEMY_BULLET_SPEED * Math.sin(enemy.theta + Math.PI / 2);
                 shootEnemyBullet(state, enemy, vx, vy, {duration: 3000});
                 shootEnemyBullet(state, enemy, -vx, -vy, {duration: 3000});
             }
@@ -141,10 +140,10 @@ export const guardian: EnemyDefinition<GuardianParams> = {
             return;
         }
         if (enemy.mode === 'chase') {
-            enemy.speed = BASE_ENEMY_SPEED;
+            enemy.speed = window.BASE_ENEMY_SPEED;
             chaseTarget(state, enemy, state.hero);
             if (enemy.modeTime % 800 === 0) {
-                shootBulletArc(state, enemy, enemy.theta, Math.PI / 6, 3, 2 * BASE_ENEMY_BULLET_SPEED);
+                shootBulletArc(state, enemy, enemy.theta, Math.PI / 6, 3, 2 * window.BASE_ENEMY_BULLET_SPEED);
             }
             if (enemy.modeTime >= 4000) {
                 enemy.setMode('choose');
@@ -152,12 +151,12 @@ export const guardian: EnemyDefinition<GuardianParams> = {
             return;
         }
         if (enemy.mode === 'circle') {
-            enemy.speed = 2 * BASE_ENEMY_SPEED;
+            enemy.speed = 2 * window.BASE_ENEMY_SPEED;
             let {x, y} = getTargetVector(enemy, enemy.disc);
             enemy.theta = Math.atan2(y, x);
             moveEnemyInDirection(state, enemy, enemy.theta + Math.PI / 2);
             if (enemy.modeTime % 600 === 0) {
-                shootBulletArc(state, enemy, enemy.theta, Math.PI / 6, 3, 2 * BASE_ENEMY_BULLET_SPEED);
+                shootBulletArc(state, enemy, enemy.theta, Math.PI / 6, 3, 2 * window.BASE_ENEMY_BULLET_SPEED);
             }
             if (enemy.modeTime >= 6000) {
                 enemy.setMode('choose');
@@ -208,7 +207,7 @@ const guardianTurret: EnemyDefinition = {
         const {x, y} = getTargetVector(enemy, enemy.disc);
         enemy.theta = turnTowardsAngle(enemy.theta, 0.1, Math.atan2(y, x));
         if (enemy.modeTime > 1000 && enemy.modeTime % 400 === 0) {
-            shootBulletArc(state, enemy, enemy.theta, 2 * Math.PI / 3, 2, BASE_ENEMY_BULLET_SPEED * 1.5);
+            shootBulletArc(state, enemy, enemy.theta, 2 * Math.PI / 3, 2, window.BASE_ENEMY_BULLET_SPEED * 1.5);
         }
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {

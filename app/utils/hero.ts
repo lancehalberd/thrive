@@ -3,8 +3,13 @@ import { spider } from 'app/bosses/spider';
 import { giantClam } from 'app/enemies/clam';
 import { megaSlime } from 'app/enemies/slime';
 import { uniqueEnchantmentHash } from 'app/uniqueEnchantmentHash';
-import { BASE_MAX_POTIONS, BASE_XP, BULLET_SHAVE_RADIUS } from 'app/constants';
 import { applyEnchantmentsToStats } from 'app/enchantments';
+import {
+    getExperienceForNextEquipmentLevel,
+    getExperienceForNextLevel,
+    getHeroLevelDamageBonus,
+    getHeroWeaponProficiencyLevelDamageBonus,
+} from 'app/utils/coreCalculations';
 
 export const masteryMap: {[key in string]: WeaponType} = {
     [guardian.name]: 'dagger',
@@ -53,7 +58,7 @@ export function getTotalProficiency(state: GameState, type: ArmorType|WeaponType
 
 export function gainItemExperience(state: GameState, item: Item): void {
     const experiencePenalty = Math.min(1, Math.max(0, (state.hero.level - item.level) * 0.1));
-    const experience = BASE_XP * Math.pow(1.2, item.level) * 1.5;
+    const experience = window.BASE_XP * Math.pow(1.2, item.level) * 1.5;
     gainExperience(state, Math.ceil(experience * (1 - experiencePenalty)));
     if (item.type === 'armor') {
         gainEquipmentExperience(state, item.armorType, item.level, 2 * experience);
@@ -78,7 +83,7 @@ export function setDerivedHeroStats(state: GameState): void {
     const {armor, weapon} = state.hero.equipment;
     const weaponLevel = weapon.level;
     const proficiency = getTotalProficiency(state, weapon.weaponType);
-    state.hero.damage = Math.pow(1.05, state.hero.level - 1 + proficiency);
+    state.hero.damage = getHeroWeaponProficiencyLevelDamageBonus(proficiency) * getHeroLevelDamageBonus(state.hero.level);
     state.hero.attacksPerSecond = 1 + 0.01 * state.hero.level + 0.01 * proficiency;
     // If weapon level is higher than your proficiency, attack speed is reduced down to a minimum of 10% base attack speed.
     const proficiencyDefecit = weaponLevel - proficiency;
@@ -89,7 +94,7 @@ export function setDerivedHeroStats(state: GameState): void {
     const armorPercentage = state.hero.baseArmor ? (state.hero.armor / state.hero.baseArmor) : 0;
     state.hero.maxLife = 20 * state.hero.level;
     state.hero.baseArmor = 0;
-    state.hero.speed = 250;
+    state.hero.speed = 400;
     state.hero.potionEffect = 1;
     state.hero.dropChance = 0;
     state.hero.dropLevel = 0;
@@ -141,35 +146,10 @@ export function setDerivedHeroStats(state: GameState): void {
     }
 }
 
-export function getExperienceForNextLevel(currentLevel: number): number {
-    // This is:
-    // ~5 kills for 1 -> 2
-    // ~16 kills for 10 -> 11
-    // 30 kills for 20 -> 21
-    // 100 kills for 50 -> 51
-    // 125 kills for 60 -> 61
-    // 200 kills for 75 -> 76
-    // 250 kills for 80 -> 81
-    // 500 kills for 90 -> 91
-    // 1000 kills for 95 -> 96
-    // 2500 kills for 98 -> 99
-    // 5000 kills for 99 -> 100
-    const averageKills = Math.min(50, 4 + currentLevel) * 100 / (100 - currentLevel);
-    const xpPerKill = Math.ceil(BASE_XP * Math.pow(1.2, currentLevel - 1));
-    return averageKills * xpPerKill;
-}
-// @ts-ignore-next-line
-window['getExperienceForNextLevel'] = getExperienceForNextLevel;
-
-export function getExperienceForNextEquipmentLevel(currentLevel: number): number {
-    const averageKills = Math.min(20, 5 + currentLevel) * 100 / (100 - currentLevel);
-    const xpPerKill = Math.ceil(BASE_XP * Math.pow(1.2, currentLevel));
-    return averageKills * xpPerKill;
-}
 
 export function refillAllPotions(state: GameState): void {
     state.hero.life = state.hero.maxLife;
-    state.hero.potions = BASE_MAX_POTIONS;
+    state.hero.potions = window.BASE_MAX_POTIONS;
     state.hero.armor = Math.max(state.hero.armor, state.hero.baseArmor);
 }
 
@@ -188,10 +168,10 @@ export function getHeroShaveRadius(state: GameState): number {
         p = 1;
     }
     if (state.hero.equipment.armor.armorType === 'lightArmor') {
-        return p * 1.25 * BULLET_SHAVE_RADIUS * bonus;
+        return p * 1.25 * window.BULLET_SHAVE_RADIUS * bonus;
     }
     if (state.hero.equipment.armor.armorType === 'heavyArmor') {
-        return p * 0.75 * BULLET_SHAVE_RADIUS * bonus;
+        return p * 0.75 * window.BULLET_SHAVE_RADIUS * bonus;
     }
-    return p * BULLET_SHAVE_RADIUS * bonus;
+    return p * window.BULLET_SHAVE_RADIUS * bonus;
 }

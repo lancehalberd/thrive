@@ -1,4 +1,3 @@
-import { BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED, BOSS_MAX_LIFE_FACTOR, FRAME_LENGTH } from 'app/constants';
 import { getVigorEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
 import { createEnemy, shootBulletCircle, shootEnemyBullet, shootBulletAtHero } from 'app/utils/enemy';
@@ -9,7 +8,7 @@ import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
 export const skissue: EnemyDefinition = {
     name: 'Skissue',
     statFactors: {
-        maxLife: BOSS_MAX_LIFE_FACTOR,
+        maxLife: window.BOSS_MAX_LIFE_FACTOR,
         damage: 1,
     },
     initialParams: {},
@@ -47,7 +46,7 @@ export const skissue: EnemyDefinition = {
         }
         
         if (enemy.mode === 'sakura') {
-            if (enemy.minions.filter(E => E.definition === skillPortal).length === 0) {
+            if (enemy.minions.filter(e => e.definition === skillPortal).length === 0) {
                 //spawn minions
                 for (let i = 0; i < 4; i++) {
                     const theta = i * 2 * Math.PI / 4;
@@ -61,7 +60,7 @@ export const skissue: EnemyDefinition = {
             }
             if (enemy.modeTime % 100 === 0) {
                 const theta1 = Math.PI * 2 / 40000 * enemy.modeTime
-                shootBulletCircle(state, enemy, theta1, 5, BASE_ENEMY_BULLET_SPEED, {duration: 2000});
+                shootBulletCircle(state, enemy, theta1, 5, window.BASE_ENEMY_BULLET_SPEED, {duration: 2000});
             }
         }
         if (enemy.mode === 'hanabi') {
@@ -71,16 +70,16 @@ export const skissue: EnemyDefinition = {
                         minion.life = 0;
                 }
             }
-            enemy.minions = enemy.minions.filter(E => E.life > 0)
+            enemy.minions = enemy.minions.filter(e => e.life > 0)
             if (enemy.modeTime % 3600 === 0) {
-                shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED / 2, {
+                shootBulletAtHero(state, enemy, window.BASE_ENEMY_BULLET_SPEED / 2, {
                     damage: 5 * enemy.damage,
-                    radius: BASE_ENEMY_BULLET_RADIUS * 2,
+                    radius: window.BASE_ENEMY_BULLET_RADIUS * 2,
                     duration: 2000,
                     onDeath(state: GameState, bullet: Bullet) {
                         for (let i = 0; i < 5; i++) {
                             const bulletTheta = 2 * Math.PI * i / 5;
-                            shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * 1.5 * Math.cos(bulletTheta), BASE_ENEMY_BULLET_SPEED * 1.5 * Math.sin(bulletTheta), {                        
+                            shootEnemyBullet(state, enemy, window.BASE_ENEMY_BULLET_SPEED * 1.5 * Math.cos(bulletTheta), window.BASE_ENEMY_BULLET_SPEED * 1.5 * Math.sin(bulletTheta), {
                                 x: bullet.x,
                                 y: bullet.y,
                                 baseX: bullet.x,
@@ -89,7 +88,7 @@ export const skissue: EnemyDefinition = {
                                 onDeath(state: GameState, bullet: Bullet) {
                                     for (let i = 0; i < 5; i++) {
                                         const bulletTheta = 2 * Math.PI * i / 5;
-                                        shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * 2 * Math.cos(bulletTheta), BASE_ENEMY_BULLET_SPEED * 2 * Math.sin(bulletTheta), {                        
+                                        shootEnemyBullet(state, enemy, window.BASE_ENEMY_BULLET_SPEED * 2 * Math.cos(bulletTheta), window.BASE_ENEMY_BULLET_SPEED * 2 * Math.sin(bulletTheta), {
                                             x: bullet.x,
                                             y: bullet.y,
                                             baseX: bullet.x,
@@ -98,7 +97,7 @@ export const skissue: EnemyDefinition = {
                                             onDeath(state: GameState, bullet: Bullet) {
                                                 for (let i = 0; i < 5; i++) {
                                                     const bulletTheta = 2 * Math.PI * i / 5;
-                                                    shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(bulletTheta), BASE_ENEMY_BULLET_SPEED * Math.sin(bulletTheta), {                        
+                                                    shootEnemyBullet(state, enemy, window.BASE_ENEMY_BULLET_SPEED * Math.cos(bulletTheta), window.BASE_ENEMY_BULLET_SPEED * Math.sin(bulletTheta), {
                                                         x: bullet.x,
                                                         y: bullet.y,
                                                         baseX: bullet.x,
@@ -174,8 +173,8 @@ const skillPortal: EnemyDefinition = {
 
             if (enemy.modeTime % 100 === 0 && enemy.modeTime % 2000 < 1500) {
                 shootEnemyBullet(state, enemy,
-                    BASE_ENEMY_BULLET_SPEED / 2 * Math.cos(enemy.theta),
-                    BASE_ENEMY_BULLET_SPEED / 2 * Math.sin(enemy.theta),
+                    window.BASE_ENEMY_BULLET_SPEED / 2 * Math.cos(enemy.theta),
+                    window.BASE_ENEMY_BULLET_SPEED / 2 * Math.sin(enemy.theta),
                     {duration: 3000}
                 );
             }
@@ -227,8 +226,8 @@ const blob: EnemyDefinition = {
         if (enemy.mode === 'choose') {
             const {x, y, distance2} = getTargetVector(enemy, state.hero);
             enemy.theta = turnTowardsAngle(enemy.theta, 0.2, Math.atan2(y, x));
-            enemy.x += enemy.speed * Math.cos(enemy.theta) * FRAME_LENGTH / 1800;
-            enemy.y += enemy.speed * Math.sin(enemy.theta) * FRAME_LENGTH / 1800;
+            enemy.x += enemy.speed * Math.cos(enemy.theta) * window.FRAME_LENGTH / 1800;
+            enemy.y += enemy.speed * Math.sin(enemy.theta) * window.FRAME_LENGTH / 1800;
             const radius = 30
             if (distance2 <= radius * radius) {
                 enemy.setMode('exploding')
@@ -242,7 +241,7 @@ const blob: EnemyDefinition = {
         }
     },
     onDeath(state: GameState, enemy: Enemy): void {
-        shootBulletCircle(state, enemy, 0, 30, BASE_ENEMY_BULLET_SPEED * 3, {duration: + 200});
+        shootBulletCircle(state, enemy, 0, 30, window.BASE_ENEMY_BULLET_SPEED * 3, {duration: + 200});
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
         fillCircle(context, enemy, 'black');

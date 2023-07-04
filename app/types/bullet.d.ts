@@ -14,6 +14,7 @@ interface Bullet extends Circle {
     // The maximum amount of damage over time this bullet can deal when stacked with other
     // sources of damage over time.
     damageOverTimeLimit?: number
+    slowEffect?: SlowEffect
     // Amount of charge the player will gain for hitting an enemy.
     chargeGain?: number
     isEnemyPiercing?: boolean
@@ -41,4 +42,19 @@ interface Bullet extends Circle {
     shaveCompleted?: boolean
     // Amount to slow bullets by each second.
     friction?: number
+    // Renders directly before the regular renderFloor function for all bullets.
+    // This was added so that outlines could be rendered behind fills on AoE bullets to make
+    // them looked joined together.
+    renderFloorBefore?: (context: CanvasRenderingContext2D, state: GameState, bullet: Bullet) => void
+    renderFloor?: (context: CanvasRenderingContext2D, state: GameState, bullet: Bullet) => void
+    // Renders directly before the regular render function for all bullets.
+    // This was added so that outlines could be rendered behind fills on AoE bullets to make
+    // them looked joined together.
+    renderBefore?: (context: CanvasRenderingContext2D, state: GameState, bullet: Bullet) => void
+    render?: (context: CanvasRenderingContext2D, state: GameState, bullet: Bullet) => void
+}
+
+interface SlowEffect {
+    effect: number
+    duration: number
 }

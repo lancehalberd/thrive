@@ -1,4 +1,3 @@
-import { BASE_ENEMY_BULLET_SPEED } from 'app/constants';
 import { fillCircle, parametricCurve } from 'app/render/renderGeometry';
 import { updateSimpleBullet } from 'app/utils/bullet';
 import { isEnemyPositionInvalid, moveEnemyInDirection, renderNormalizedEnemy, shootBulletAtHero, shootBulletAtHeroHeading } from 'app/utils/enemy';
@@ -34,11 +33,11 @@ export const snake: EnemyDefinition<SnakeParams> = {
                 const closeRadius = 300;
                 const {distance2} = getTargetVector(enemy, state.hero);
                 if (distance2 > closeRadius * closeRadius) {
-                    shootBulletAtHero(state, enemy, 1.5 * BASE_ENEMY_BULLET_SPEED, {amplitude: 20, frequency: 3});
-                    shootBulletAtHero(state, enemy, 1.5 * BASE_ENEMY_BULLET_SPEED, {amplitude: -20, frequency: 3});
+                    shootBulletAtHero(state, enemy, 1.5 * window.BASE_ENEMY_BULLET_SPEED, {amplitude: 20, frequency: 3});
+                    shootBulletAtHero(state, enemy, 1.5 * window.BASE_ENEMY_BULLET_SPEED, {amplitude: -20, frequency: 3});
                 } else {
                     // This slows down quickly, and doesn't damage until after 500ms.
-                    shootBulletAtHeroHeading(state, enemy, 2 * BASE_ENEMY_BULLET_SPEED, 0.2, {
+                    shootBulletAtHeroHeading(state, enemy, 2 * window.BASE_ENEMY_BULLET_SPEED, 0.2, {
                         warningTime: 500,
                         duration: 2000,
                         friction: 0.95,

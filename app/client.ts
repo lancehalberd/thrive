@@ -1,3 +1,7 @@
+// This file sets a bunch of values on `window` and must be the first thing imported.
+import { GAME_KEY } from 'app/constants';
+
+
 import { addContextMenuListeners } from 'app/contextMenu';
 import { checkToDropBasicLoot, dropEnchantmentLoot } from 'app/loot';
 import { getHoverInventorySlot, updateInventory } from 'app/inventory';
@@ -5,7 +9,15 @@ import { render } from 'app/render/renderGame';
 import { uniqueEnchantmentHash } from 'app/uniqueEnchantmentHash';
 import { playSound, playTrack, setVolume } from 'app/utils/audio';
 import { mainCanvas, mainContext } from 'app/utils/canvas';
-import { addDamageNumber, applyArmorToDamage, damageHero, damageHeroOverTime, } from 'app/utils/combat';
+import {
+    addDamageNumber,
+    applyArmorToDamage,
+    applySlowEffect,
+    damageHero,
+    damageHeroOverTime,
+    updateSlowEffects,
+} from 'app/utils/combat';
+import { getBaseEnemyExperience } from 'app/utils/coreCalculations';
 import { findClosestDisc } from 'app/utils/disc';
 import {
     createDungeon,
@@ -24,17 +36,6 @@ import { getMovementDeltas, getRightAnalogDeltas, isGameKeyDown, isKeyboardKeyDo
 import Random from 'app/utils/Random';
 import { rollWithMissBonus } from 'app/utils/rollWithMissBonus';
 import { mediumArmors } from 'app/armor';
-import {
-    BASE_MAX_POTIONS,
-    BASE_XP,
-    CANVAS_HEIGHT, CANVAS_SCALE, CANVAS_WIDTH,
-    CELL_SIZE,
-    FIELD_CENTER,
-    FRAME_LENGTH,
-    GAME_KEY,
-    HERO_DAMAGE_FRAME_COUNT,
-    SIGHT_RADIUS,
-} from 'app/constants';
 import { initializeGame } from 'app/initialize';
 import { loadGame } from 'app/saveGame';
 import { allWeapons, weaponTypeLabels } from 'app/weapons';
@@ -56,10 +57,10 @@ function getInitialState(): GameState {
             level: 1,
             experience: 0,
             speed: 100,
-            x: CELL_SIZE / 2,
-            y: - CELL_SIZE / 2,
-            overworldX: CELL_SIZE / 2,
-            overworldY: - CELL_SIZE / 2,
+            x: window.CELL_SIZE / 2,
+            y: - window.CELL_SIZE / 2,
+            overworldX: window.CELL_SIZE / 2,
+            overworldY: - window.CELL_SIZE / 2,
             radius: 20,
             theta: 0,
             damageHistory: [],
@@ -87,7 +88,7 @@ function getInitialState(): GameState {
             attackChargeLevel: 1,
             attackChargeDuration: 0,
             totalChargeDuration: 2000,
-            potions: BASE_MAX_POTIONS,
+            potions: window.BASE_MAX_POTIONS,
             isShooting: false,
             // Base crit damage/chance is on weapons, this just stores
             // bonuses from enchantments+weapon proficiencies.
@@ -107,6 +108,8 @@ function getInitialState(): GameState {
                 charges: 0,
                 time: 0,
             },
+            frameDamageOverTime: 0,
+            slowEffects: [],
         },
         heroBullets: [],
         enemies: [],
@@ -123,8 +126,8 @@ function getInitialState(): GameState {
         gameHasBeenInitialized: false,
         paused: false,
         mouse: {
-            x: CANVAS_WIDTH / 2,
-            y: CANVAS_HEIGHT / 2,
+            x: window.CANVAS_WIDTH / 2,
+            y: window.CANVAS_HEIGHT / 2,
             isDown: false,
             wasPressed: false,
             isRightDown: false,
@@ -145,7 +148,7 @@ function getInitialState(): GameState {
             playingTracks: [],
         },
         missedRolls: {},
-        sightRadius: SIGHT_RADIUS,
+        sightRadius: window.SIGHT_RADIUS,
     };
 }
 
@@ -160,7 +163,7 @@ function restartGame(state: GameState): void {
     setDerivedHeroStats(state);
     refillAllPotions(state);
     clearNearbyEnemies(state);
-    state.sightRadius = SIGHT_RADIUS;
+    state.sightRadius = window.SIGHT_RADIUS;
     //saveGame(state);
 }
 
@@ -203,7 +206,7 @@ function update(): void {
     const healthThreshold = Math.max(0.5, 1 - 0.2 * state.hero.potionEffect);
     // Ranges from 0.5 - 1 as health ranges from 0 to maxLife - 1 potion.
     const sightPercentage = 0.5 + 0.5 * Math.min(1, state.hero.life / state.hero.maxLife / healthThreshold);
-    const targetSightRadius = sightPercentage * SIGHT_RADIUS;
+    const targetSightRadius = sightPercentage * window.SIGHT_RADIUS;
     if (state.sightRadius < targetSightRadius) {
         state.sightRadius = Math.min(state.sightRadius + 4, targetSightRadius);
     } else if (state.sightRadius > targetSightRadius) {
@@ -224,8 +227,8 @@ function update(): void {
         state.hero.theta = Math.atan2(dy, dx);
         state.hero.isShooting = isGameKeyDown(state, GAME_KEY.SHOOT);
     } else {
-        const [x, y] = getMousePosition(mainCanvas, CANVAS_SCALE);
-        let aimDx = x - FIELD_CENTER.x, aimDy = y - FIELD_CENTER.y;
+        const [x, y] = getMousePosition(mainCanvas, window.CANVAS_SCALE);
+        let aimDx = x - window.FIELD_CENTER.x, aimDy = y - window.FIELD_CENTER.y;
         state.hero.theta = Math.atan2(aimDy, aimDx);
         state.mouse.x = x;
         state.mouse.y = y;
@@ -279,13 +282,13 @@ function update(): void {
                 dy /= m;
             }
             const speed = 5000;
-            state.hero.x += dx * speed * FRAME_LENGTH / 1000;
-            state.hero.y += dy * speed * FRAME_LENGTH / 1000;
+            state.hero.x += dx * speed * window.FRAME_LENGTH / 1000;
+            state.hero.y += dy * speed * window.FRAME_LENGTH / 1000;
             updateActiveCells(state);
         }
         return;
     }
-    state.fieldTime += FRAME_LENGTH;
+    state.fieldTime += window.FRAME_LENGTH;
     if (state.hero.life <= 0) {
         restartGame(state);
         return;
@@ -299,7 +302,7 @@ function update(): void {
     for (const fieldText of state.fieldText) {
         fieldText.x += fieldText.vx;
         fieldText.y += fieldText.vy;
-        fieldText.time += FRAME_LENGTH;
+        fieldText.time += window.FRAME_LENGTH;
     }
     const hoverSlot = getHoverInventorySlot(state);
     if (!hoverSlot) {
@@ -325,7 +328,7 @@ function updateHero(state: GameState): void {
     const hero = state.hero;
     // Hero damage frames
     hero.damageHistory.unshift(0);
-    if (hero.damageHistory.length > HERO_DAMAGE_FRAME_COUNT) {
+    if (hero.damageHistory.length > window.HERO_DAMAGE_FRAME_COUNT) {
         const oldDamage = hero.damageHistory.pop()!;
         hero.recentDamageTaken -= oldDamage;
     }
@@ -337,22 +340,21 @@ function updateHero(state: GameState): void {
         dx /= m;
         dy /= m;
     }
-    // Currently walking is always disabled, but we can add a key for it later if we want.
-    const isWalking = false;
-    const speed = isWalking ? hero.speed : 1.5 * hero.speed;
-    hero.x += dx * speed * FRAME_LENGTH / 1000;
-    hero.y += dy * speed * FRAME_LENGTH / 1000;
+    const slowEffect = updateSlowEffects(state, state.hero);
+    const speed = hero.speed * (1 - slowEffect);
+    hero.x += dx * speed * window.FRAME_LENGTH / 1000;
+    hero.y += dy * speed * window.FRAME_LENGTH / 1000;
     hero.vx = dx * speed;
     hero.vy = dy * speed;
 
     // Hero attack
     const weapon = hero.equipment.weapon;
-    const attacksPerSecond = weapon.getAttacksPerSecond(state, weapon) * hero.attacksPerSecond;
+    const attacksPerSecond = weapon.getAttacksPerSecond(state, weapon) * hero.attacksPerSecond * (1 - slowEffect);
 
 
     // chargingLevel increases as long as the hero
     // Default charge speed is 1 charge per 20 seconds.
-    gainAttackCharge(state, FRAME_LENGTH / 20000);
+    gainAttackCharge(state, window.FRAME_LENGTH / 20000);
 
 
     updateGuardSkill(state);
@@ -362,7 +364,7 @@ function updateHero(state: GameState): void {
     const isRolling = !!state.hero.roll;
 
     if (state.hero.attackChargeLevel > 1) {
-        state.hero.attackChargeDuration -= FRAME_LENGTH;
+        state.hero.attackChargeDuration -= window.FRAME_LENGTH;
         if (state.hero.attackChargeDuration <= 0) {
             state.hero.attackChargeLevel = 1;
         }
@@ -387,7 +389,13 @@ function updateHero(state: GameState): void {
             hero.attackCooldown = state.fieldTime;
         }
     }
-    if (state.hero.isShooting && !isRolling) {
+
+    const isShooting = (
+        state.hero.isShooting
+        // Automatically shoot when using charge attack.
+        || (state.hero.attackChargeLevel > 1 && state.hero.attackChargeDuration > 0)
+    ) && !isRolling;
+    if (isShooting) {
         const attackCooldownDuration = 1000 / attacksPerSecond;
         if (hero.attackCooldown <= state.fieldTime) {
             hero.attackCooldown = state.fieldTime + attackCooldownDuration;
@@ -395,11 +403,11 @@ function updateHero(state: GameState): void {
         const attackTime = attackCooldownDuration - (hero.attackCooldown - state.fieldTime);
         for (const shot of weapon.getShots(state, weapon)) {
             const shotTime = attackCooldownDuration * (shot.timingOffset ?? 0);
-            if (shotTime >= attackTime - FRAME_LENGTH / 2 && shotTime < attackTime + FRAME_LENGTH / 2) {
+            if (shotTime >= attackTime - window.FRAME_LENGTH / 2 && shotTime < attackTime + window.FRAME_LENGTH / 2) {
                 // TODO: use right analog stick deltas if playing with game pad instead of state.mouse for target.
                 const target = {
-                    x: state.hero.x + state.mouse.x - FIELD_CENTER.x,
-                    y: state.hero.y + state.mouse.y - FIELD_CENTER.y,
+                    x: state.hero.x + state.mouse.x - window.FIELD_CENTER.x,
+                    y: state.hero.y + state.mouse.y - window.FIELD_CENTER.y,
                 }
                 const bullet = shot.generateBullet(state, hero, weapon, target);
                 if (bullet) {
@@ -466,11 +474,11 @@ function updateEnemies(state: GameState): void {
             continue;
         }
         if (enemy.warningTime && enemy.warningTime > 0) {
-            enemy.warningTime -= FRAME_LENGTH;
+            enemy.warningTime -= window.FRAME_LENGTH;
             continue;
         }
-        enemy.modeTime += FRAME_LENGTH;
-        enemy.time += FRAME_LENGTH;
+        enemy.modeTime += window.FRAME_LENGTH;
+        enemy.time += window.FRAME_LENGTH;
         enemy.definition.update(state, enemy);
         // No changing discs during boss fights.
         if (!boss) {
@@ -495,9 +503,9 @@ function updateHeroBullets(state: GameState): void {
     const boss = state.hero.disc?.boss;
     let playedSound = false;
     for (const bullet of activeBullets) {
-        bullet.time += FRAME_LENGTH;
+        bullet.time += window.FRAME_LENGTH;
         if (bullet.warningTime > 0) {
-            bullet.warningTime -= FRAME_LENGTH;
+            bullet.warningTime -= window.FRAME_LENGTH;
         }
         bullet.update(state, bullet);
         if (bullet.warningTime > 0) {
@@ -524,10 +532,13 @@ function updateHeroBullets(state: GameState): void {
                 continue;
             }
             if (doCirclesIntersect(enemy, bullet)) {
+                if (bullet.slowEffect) {
+                    applySlowEffect(enemy, bullet.slowEffect);
+                }
                 if (bullet.damageOverTime) {
-                    const perFrameDamage = bullet.damageOverTime * FRAME_LENGTH / 1000;
+                    const perFrameDamage = bullet.damageOverTime * window.FRAME_LENGTH / 1000;
                     const maxPerFrameDamage = bullet.damageOverTimeLimit
-                        ? bullet.damageOverTimeLimit * FRAME_LENGTH / 1000
+                        ? bullet.damageOverTimeLimit * window.FRAME_LENGTH / 1000
                         : state.hero.equipment.weapon.damageOverTimeStackSize * perFrameDamage;
                     // Damage over time only applies up to 5x its base damage on enemies.
                     const damageDealt = Math.min(perFrameDamage, maxPerFrameDamage - enemy.frameDamageOverTime)
@@ -592,7 +603,7 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
     enemy.life = 0;
     enemy.definition.onDeath?.(state, enemy);
     const experiencePenalty = Math.min(1, Math.max(0, (state.hero.level - enemy.level) * 0.1));
-    const experience = BASE_XP * Math.pow(1.2, enemy.level - 1) * (enemy.definition.experienceFactor ?? 1);
+    const experience = getBaseEnemyExperience(enemy.level) * (enemy.definition.experienceFactor ?? 1);
     gainExperience(state, Math.ceil(experience * (1 - experiencePenalty)));
     const {armor, weapon} = state.hero.equipment;
     // Gain more weapon experience when using higher level weapons.
@@ -652,6 +663,7 @@ function defeatEnemy(state: GameState, enemy: Enemy): void {
 
 function updateEnemyBullets(state: GameState): void {
     const hero = state.hero;
+    hero.frameDamageOverTime = 0;
     let shaved = false, onHit = false;
     const shavebullet = (bullet: Bullet) => {
         if (!state.hero.flags.noShaveCharge) {
@@ -684,9 +696,9 @@ function updateEnemyBullets(state: GameState): void {
     state.enemyBullets = [];
     const shaveRadius = getHeroShaveRadius(state);
     for (const bullet of activeBullets) {
-        bullet.time += FRAME_LENGTH;
+        bullet.time += window.FRAME_LENGTH;
         if (bullet.warningTime > 0) {
-            bullet.warningTime -= FRAME_LENGTH;
+            bullet.warningTime -= window.FRAME_LENGTH;
         }
         bullet.update(state, bullet);
         if (bullet.warningTime > 0) {
@@ -695,8 +707,11 @@ function updateEnemyBullets(state: GameState): void {
         }
         let hitTarget = false;
         if (!hero.roll && doCirclesIntersect(state.hero, bullet)) {
+            if (bullet.slowEffect) {
+                applySlowEffect(state.hero, bullet.slowEffect);
+            }
             if (bullet.damageOverTime) {
-                damageHeroOverTime(state, bullet.damageOverTime * FRAME_LENGTH / 1000);
+                damageHeroOverTime(state, bullet.damageOverTime * window.FRAME_LENGTH / 1000);
             } else {
                 if (!onHit) {
                     for (const enchantment of state.hero.uniqueEnchantments) {
@@ -773,5 +788,5 @@ function renderLoop() {
     }
 }
 renderLoop();
-setInterval(update, FRAME_LENGTH);
+setInterval(update, window.FRAME_LENGTH);
 

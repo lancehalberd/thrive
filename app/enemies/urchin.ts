@@ -1,4 +1,3 @@
-import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED } from 'app/constants';
 import { fillCircle } from 'app/render/renderGeometry';
 import { shootBulletAtHero, shootBulletCircle } from 'app/utils/enemy';
 import { getTargetVector } from 'app/utils/geometry';
@@ -7,11 +6,12 @@ import { getTargetVector } from 'app/utils/geometry';
 export const urchin: EnemyDefinition = {
     name: 'Urchin',
     statFactors: {
-        armor: 2,
-        attacksPerSecond: 0.3,
+        maxLife: 1.5,
+        armor: 1.5,
+        attacksPerSecond: 0.5,
     },
     initialParams: {},
-    dropChance: 1.5 * BASE_DROP_CHANCE,
+    dropChance: 1.5 * window.BASE_DROP_CHANCE,
     uniqueMultiplier: 2,
     experienceFactor: 2,
     radius: 24,
@@ -25,15 +25,15 @@ export const urchin: EnemyDefinition = {
             return;
         }
         if (enemy.modeTime % 200 === 0 && (enemy.modeTime % 2000) <= 1200) {
-            shootBulletCircle(state, enemy, enemy.theta, 3, 0.6 * BASE_ENEMY_BULLET_SPEED, {duration: 2000});
+            shootBulletCircle(state, enemy, enemy.theta, 3, 0.6 * window.BASE_ENEMY_BULLET_SPEED, {duration: 2000});
         }
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS});
+            shootBulletAtHero(state, enemy, window.BASE_ENEMY_BULLET_SPEED);
         }
     },
     onDeath(state: GameState, enemy: Enemy): void {
-        shootBulletCircle(state, enemy, enemy.theta, 12, 2 * BASE_ENEMY_BULLET_SPEED, {damage: enemy.damage * 2})
+        shootBulletCircle(state, enemy, enemy.theta, 12, 2 * window.BASE_ENEMY_BULLET_SPEED, {damage: enemy.damage * 2})
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
         fillCircle(context, enemy, enemy.baseColor);

@@ -1,4 +1,3 @@
-import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED, BOSS_MAX_LIFE_FACTOR, FRAME_LENGTH } from 'app/constants';
 import { getThiefEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
 import { updateReturnBullet } from 'app/utils/bullet';
@@ -25,7 +24,7 @@ interface SpiderParams {
 export const spider: EnemyDefinition<SpiderParams> = {
     name: 'Spider',
     statFactors: {
-        maxLife: BOSS_MAX_LIFE_FACTOR,
+        maxLife: window.BOSS_MAX_LIFE_FACTOR,
         damage: 1,
     },
     initialParams: {
@@ -48,13 +47,13 @@ export const spider: EnemyDefinition<SpiderParams> = {
             enemy.params.attackTime = 0;
             enemy.params.attackIntensity = (enemy.life <= enemy.maxLife / 2) ? 1 : 0;
         };
-        enemy.params.attackTime += FRAME_LENGTH;
+        enemy.params.attackTime += window.FRAME_LENGTH;
         if (enemy.params.attackMode === 'novas') {
             const spacing = 800 - enemy.params.attackIntensity * 400;
             if (enemy.params.attackTime % spacing === 0 && enemy.params.attackTime <= 3000) {
                 const count = 10;
                 const parity = [0, 2, 1, 3][(enemy.params.attackTime / spacing) % 4];
-                shootBulletCircle(state, enemy, parity * 2 * Math.PI / count / 4, count, 0.6 * BASE_ENEMY_BULLET_SPEED, {duration: 3000});
+                shootBulletCircle(state, enemy, parity * 2 * Math.PI / count / 4, count, 0.6 * window.BASE_ENEMY_BULLET_SPEED, {duration: 3000});
             }
             if (enemy.params.attackTime >= 3500) {
                 nextAttack();
@@ -63,7 +62,7 @@ export const spider: EnemyDefinition<SpiderParams> = {
             const spacing = 200;
             if (enemy.params.attackTime > spacing * 5 && enemy.params.attackTime % spacing === 0 && enemy.params.attackTime <= spacing * 35) {
                 const count = 3 + enemy.params.attackIntensity * 2;
-                shootBulletCircle(state, enemy, enemy.params.attackTime / spacing * 2 * Math.PI / 40, count, 1.1 * BASE_ENEMY_BULLET_SPEED, {
+                shootBulletCircle(state, enemy, enemy.params.attackTime / spacing * 2 * Math.PI / 40, count, 1.1 * window.BASE_ENEMY_BULLET_SPEED, {
                     duration: 3000,
                     update: updateReturnBullet,
                 });
@@ -73,7 +72,7 @@ export const spider: EnemyDefinition<SpiderParams> = {
             }
         } else if (enemy.params.attackMode === 'pinwheels') {
             const spacing = 2000;
-            if (enemy.params.attackTime % spacing === FRAME_LENGTH && enemy.params.attackTime < spacing * 4) {
+            if (enemy.params.attackTime % spacing === window.FRAME_LENGTH && enemy.params.attackTime < spacing * 4) {
                 const count = 3 + enemy.params.attackIntensity;
                 for (let r = 20; r < enemy.radius + 450; r += 40) {
                     for (let i = 0; i < count; i++) {
@@ -144,7 +143,7 @@ export const spider: EnemyDefinition<SpiderParams> = {
             if (enemy.modeTime % bombSpacing === 0) {
                 const t = time / bombSpacing;
                 const r = 50 + t * 350 / (totalTime / bombSpacing);
-                const count = Math.floor(2 * Math.PI * r / (2 * 3 * BASE_ENEMY_BULLET_RADIUS));
+                const count = Math.floor(2 * Math.PI * r / (2 * 3 * window.BASE_ENEMY_BULLET_RADIUS));
                 for (let i = 0; i < count; i++) {
                     const theta = 2 * Math.PI * (i + (t % 2) * 0.5) / count;
                     createBombBullet(state, enemy, enemy.disc.x + r * Math.cos(theta), enemy.disc.y + r * Math.sin(theta), {
@@ -233,7 +232,7 @@ export const babySpiderBomber: EnemyDefinition = {
 
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED, {
+            shootBulletAtHero(state, enemy, window.BASE_ENEMY_BULLET_SPEED, {
                 duration: 2000,
             });
         }
@@ -281,7 +280,7 @@ export const babySpiderNova: EnemyDefinition<BabySpiderNovaParams> = {
             if (enemy.modeTime % spacing === 0) {
                 const count = 7;
                 const parity = [0, 2, 1, 3][(enemy.modeTime / spacing) % 4];
-                shootBulletCircle(state, enemy, parity * 2 * Math.PI / count / 4, count, BASE_ENEMY_BULLET_SPEED, {duration: 1000});
+                shootBulletCircle(state, enemy, parity * 2 * Math.PI / count / 4, count, window.BASE_ENEMY_BULLET_SPEED, {duration: 1000});
             }
             if (enemy.modeTime >= 3000) {
                 enemy.setMode('choose');
@@ -324,14 +323,14 @@ export const overworldSpiderNova: EnemyDefinition<BabySpiderNovaParams> = {
             // Normal directed shots at the player
             if (enemy.attackCooldown <= state.fieldTime) {
                 enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-                shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED);
+                shootBulletAtHero(state, enemy, window.BASE_ENEMY_BULLET_SPEED);
             }
             // Periodic novas.
             const spacing =  20 * Math.ceil(1000 / enemy.attacksPerSecond / 20);
             if (enemy.modeTime % spacing === 0) {
                 const count = 7;
                 const parity = [0, 2, 1, 3][(enemy.modeTime / spacing) % 4];
-                shootBulletCircle(state, enemy, parity * 2 * Math.PI / count / 4, count, BASE_ENEMY_BULLET_SPEED, {duration: 1000});
+                shootBulletCircle(state, enemy, parity * 2 * Math.PI / count / 4, count, window.BASE_ENEMY_BULLET_SPEED, {duration: 1000});
             }
             if (enemy.modeTime >= 2000) {
                 enemy.setMode('choose');
@@ -361,7 +360,7 @@ function upgradeBoss(state: GameState, enemy: Enemy): void {
 export const spiderFlower: EnemyDefinition = {
     name: 'SpiderFlower',
     statFactors: {maxLife: 2},
-    dropChance: 2 * BASE_DROP_CHANCE,
+    dropChance: 2 * window.BASE_DROP_CHANCE,
     uniqueMultiplier: 10,
     experienceFactor: 5,
     initialParams: {},
@@ -376,14 +375,14 @@ export const spiderFlower: EnemyDefinition = {
         const spacing = 200;
         if (enemy.modeTime % spacing === 0) {
             const count = 3;
-            shootBulletCircle(state, enemy, enemy.modeTime / spacing * 2 * Math.PI / 40, count, 1.1 * BASE_ENEMY_BULLET_SPEED, {
+            shootBulletCircle(state, enemy, enemy.modeTime / spacing * 2 * Math.PI / 40, count, 1.1 * window.BASE_ENEMY_BULLET_SPEED, {
                 duration: 3000,
                 update: updateReturnBullet,
             });
         }
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage});
+            shootBulletAtHero(state, enemy, window.BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * window.BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage});
         }
     },
     render: renderNormalizedEnemy((context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => renderNormalizedSpider(context, enemy, 3)),
@@ -392,7 +391,7 @@ export const spiderFlower: EnemyDefinition = {
 export const spiderPinwheel: EnemyDefinition = {
     name: 'SpiderPinwheel',
     statFactors: {maxLife: 2},
-    dropChance: 2 * BASE_DROP_CHANCE,
+    dropChance: 2 * window.BASE_DROP_CHANCE,
     uniqueMultiplier: 10,
     experienceFactor: 5,
     initialParams: {},
@@ -420,7 +419,7 @@ export const spiderPinwheel: EnemyDefinition = {
         }
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage});
+            shootBulletAtHero(state, enemy, window.BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * window.BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage});
         }
     },
     render: renderNormalizedEnemy((context: CanvasRenderingContext2D, state: GameState, enemy: Enemy) => renderNormalizedSpider(context, enemy, 3)),

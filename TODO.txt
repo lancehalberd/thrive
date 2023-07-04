@@ -1,9 +1,9 @@
-Add Staff + Morning Star
-
 Ask Robert for "Day Four" score to see if we can convert it to js generated audio.
 "Back Pain" would work for boss music
 "upper Forest" would be good for the forest theme
 
+Improve performance:
+    Cull bullets that are further than R from the hero.
 
 Add forest enemies
     Spinning Faye - Shoots boomerang bullets out quickly, switching angles by 45 degrees each shot
@@ -44,6 +44,14 @@ Mechanic Ideas
         30s half damage taken, regenerate 1% of life per second
         30s deal 50% more damage
         30s move 50% faster, bullets 50% faster, attack 50% faster
+    Elite mobs
+        Basically unique enchantments for monsters
+        Would give bonus XP/item/unique chance
+        Could drop stat boosts
+    Stat boost items
+        Give linear boosts like
+            Flat HP
+            Flat damage
 
 Crafting Unique Enchantments:
     Selling an item with a unique enchantment gives a player Unique Points based on the rarity of the enchantment and item level and unlocks that enchantment to purchase for any weapon from the inventory.

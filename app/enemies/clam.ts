@@ -1,24 +1,27 @@
-import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED, BOSS_MAX_LIFE_FACTOR } from 'app/constants';
 import { getPowerEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
 import { turnTowardsTarget, shootBulletArc, shootBulletAtHero, shootCirclingBullet } from 'app/utils/enemy';
 
+interface ClamParams {
+    shotIndex: number
+}
 
-export const clam: EnemyDefinition = {
+export const clam: EnemyDefinition<ClamParams> = {
     name: 'Clam',
     statFactors: {
-        attacksPerSecond: 2,
+        attacksPerSecond: 1.25,
+        damage: 0.8,
         maxLife: 2,
         armor: 5,
     },
-    initialParams: {},
-    dropChance: 2 * BASE_DROP_CHANCE,
+    initialParams: {shotIndex: 0},
+    dropChance: 2 * window.BASE_DROP_CHANCE,
     uniqueMultiplier: 2,
     experienceFactor: 2,
     radius: 32,
     portalChance: 0.2,
     portalDungeonType: 'reef',
-    update(state: GameState, enemy: Enemy): void {
+    update(state: GameState, enemy: Enemy<ClamParams>): void {
         if (enemy.mode === 'closed' || enemy.mode === 'choose') {
             turnTowardsTarget(state, enemy, state.hero);
             enemy.mode = 'closed';
@@ -32,7 +35,7 @@ export const clam: EnemyDefinition = {
         if (enemy.mode === 'opening') {
             if (enemy.attackCooldown <= state.fieldTime) {
                 enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-                shootBulletAtHero(state, enemy, 1.2 * BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS});
+                shootBulletAtHero(state, enemy, 1.2 * window.BASE_ENEMY_BULLET_SPEED, {damage: 1.5 * enemy.damage, radius: 1.5 * window.BASE_ENEMY_BULLET_RADIUS});
             }
             if (enemy.modeTime >= 400) {
                 enemy.setMode('open');
@@ -47,9 +50,10 @@ export const clam: EnemyDefinition = {
         }
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletArc(state, enemy, enemy.theta, Math.PI, 7, BASE_ENEMY_BULLET_SPEED);
+            shootBulletArc(state, enemy, enemy.theta, Math.PI, 6 + (enemy.params.shotIndex % 2), window.BASE_ENEMY_BULLET_SPEED);
+            enemy.params.shotIndex++;
         }
-        if (enemy.modeTime >= 2000) {
+        if (enemy.modeTime >= 3000) {
             enemy.setMode('closing');
         }
     },
@@ -62,12 +66,13 @@ export const clam: EnemyDefinition = {
 };
 
 
-export const giantClam: EnemyDefinition = {
+export const giantClam: EnemyDefinition<ClamParams> = {
     ...clam,
     name: 'Giant Clam',
     statFactors: {
-        attacksPerSecond: 1.5,
-        maxLife: 0.75 * BOSS_MAX_LIFE_FACTOR,
+        attacksPerSecond: 1,
+        damage: 0.8,
+        maxLife: 0.75 * window.BOSS_MAX_LIFE_FACTOR,
         armor: 4,
     },
     dropChance: 1,
@@ -75,7 +80,7 @@ export const giantClam: EnemyDefinition = {
     experienceFactor: 20,
     radius: 50,
     portalChance: 0,
-    update(state: GameState, enemy: Enemy): void {
+    update(state: GameState, enemy: Enemy<ClamParams>): void {
         // Constantly shoots small novas to hurt players that get too close.
         if (state.fieldTime % 200 === 0) {
             const healthPercentage = (enemy.maxLife - enemy.life) / enemy.maxLife;
@@ -96,7 +101,7 @@ export const giantClam: EnemyDefinition = {
         if (enemy.mode === 'opening') {
             if (enemy.attackCooldown <= state.fieldTime) {
                 enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-                shootBulletArc(state, enemy, enemy.theta, Math.PI / 3, 3, 1.2 * BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 1.5 * enemy.damage});
+                shootBulletArc(state, enemy, enemy.theta, Math.PI / 3, 3, 1.2 * window.BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * window.BASE_ENEMY_BULLET_RADIUS, damage: 1.5 * enemy.damage});
             }
             if (enemy.modeTime >= 400) {
                 enemy.setMode('open');
@@ -111,14 +116,15 @@ export const giantClam: EnemyDefinition = {
         }
         if (enemy.life <= enemy.maxLife / 2) {
             if (state.fieldTime % 200 === 0) {
-                shootBulletAtHero(state, enemy, 1.2 * BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS});
+                shootBulletAtHero(state, enemy, 1.2 * window.BASE_ENEMY_BULLET_SPEED, {damage: 1.5 * enemy.damage, radius: 1.5 * window.BASE_ENEMY_BULLET_RADIUS});
             }
         }
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletArc(state, enemy, enemy.theta, Math.PI, 7, BASE_ENEMY_BULLET_SPEED, {duration: 2000});
+            shootBulletArc(state, enemy, enemy.theta, Math.PI, 6 + (enemy.params.shotIndex % 4), window.BASE_ENEMY_BULLET_SPEED, {duration: 2000});
+            enemy.params.shotIndex++;
         }
-        if (enemy.modeTime >= 2000) {
+        if (enemy.modeTime >= 4000) {
             enemy.setMode('closing');
         }
     },

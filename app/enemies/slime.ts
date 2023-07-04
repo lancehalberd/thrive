@@ -1,4 +1,3 @@
-import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED, BOSS_MAX_LIFE_FACTOR, FRAME_LENGTH } from 'app/constants';
 import { getInsightEnchantment } from 'app/enchantments';
 import { fillCircle } from 'app/render/renderGeometry';
 import { updateSimpleBullet } from 'app/utils/bullet';
@@ -13,9 +12,8 @@ export const slime: EnemyDefinition = {
         armor: 0,
     },
     initialParams: {},
-    dropChance: BASE_DROP_CHANCE,
-    uniqueMultiplier: 20,
-    experienceFactor: 2,
+    dropChance: 1.5 * window.BASE_DROP_CHANCE,
+    experienceFactor: 1.5,
     radius: 24,
     portalChance: 0.1,
     portalDungeonType: 'cave',
@@ -34,7 +32,7 @@ export const slime: EnemyDefinition = {
     onHit(state: GameState, enemy: Enemy): void {
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 12, 1.2 * BASE_ENEMY_BULLET_SPEED);
+            shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 12, 1.2 * window.BASE_ENEMY_BULLET_SPEED);
         }
     },
     render(context: CanvasRenderingContext2D, state: GameState, enemy: Enemy): void {
@@ -65,8 +63,8 @@ function updateSlimeMovement(state: GameState, enemy: Enemy) {
         }
     }
     if (enemy.mode === 'dash') {
-        enemy.x += enemy.vx * FRAME_LENGTH / 1000;
-        enemy.y += enemy.vy * FRAME_LENGTH / 1000;
+        enemy.x += enemy.vx * window.FRAME_LENGTH / 1000;
+        enemy.y += enemy.vy * window.FRAME_LENGTH / 1000;
         enemy.vx *= 0.97;
         enemy.vy *= 0.97;
         if (enemy.modeTime >= enemy.radius * 40) {
@@ -85,7 +83,7 @@ export const greatSlime: EnemyDefinition = {
         armor: 0,
     },
     initialParams: {},
-    dropChance: 2 * BASE_DROP_CHANCE,
+    dropChance: 2 * window.BASE_DROP_CHANCE,
     uniqueMultiplier: 2,
     portalChance: 0,
     experienceFactor: 2,
@@ -102,8 +100,8 @@ export const greatSlime: EnemyDefinition = {
     onHit(state: GameState, enemy: Enemy): void {
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletAtHero(state, enemy, 1.2 * BASE_ENEMY_BULLET_SPEED, {radius: 2 * BASE_ENEMY_BULLET_RADIUS});
-            shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 12, 1.2 * BASE_ENEMY_BULLET_SPEED);
+            shootBulletAtHero(state, enemy, 1.2 * window.BASE_ENEMY_BULLET_SPEED, {radius: 2 * window.BASE_ENEMY_BULLET_RADIUS});
+            shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 12, 1.2 * window.BASE_ENEMY_BULLET_SPEED);
         }
     },
 };
@@ -113,14 +111,15 @@ export const megaSlime: EnemyDefinition = {
     name: 'Mega Slime',
     statFactors: {
         attacksPerSecond: 0.5,
-        maxLife: BOSS_MAX_LIFE_FACTOR,
-        damage: 1.5,
+        maxLife: window.BOSS_MAX_LIFE_FACTOR,
+        damage: 1.25,
         armor: 1,
     },
     initialParams: {},
     dropChance: 1,
     portalChance: 0,
-    experienceFactor: 5,
+    uniqueMultiplier: 20,
+    experienceFactor: 20,
     radius: 40,
     getEnchantment(state: GameState, enemy: Enemy) {
         return getInsightEnchantment(state, enemy.level);
@@ -128,11 +127,11 @@ export const megaSlime: EnemyDefinition = {
     update(state: GameState, enemy: Enemy): void {
         updateSlimeMovement(state, enemy);
         if (enemy.mode === 'dash' && enemy.modeTime === 0) {
-            shootBulletAtHero(state, enemy, 2 * BASE_ENEMY_BULLET_SPEED, {
+            shootBulletAtHero(state, enemy, 2 * window.BASE_ENEMY_BULLET_SPEED, {
                 warningTime: 800,
                 duration: 3000,
                 friction: 0.5,
-                damageOverTime: 1.5 * enemy.damage,
+                damageOverTime: 1.25 * enemy.damage,
                 update: (state: GameState, bullet: Bullet) => {
                     updateSimpleBullet(state, bullet);
                     if (bullet.warningTime <= 0) {
@@ -141,10 +140,10 @@ export const megaSlime: EnemyDefinition = {
                     }
                 },
             });
-            //shootBulletAtHero(state, enemy, 1.5 * BASE_ENEMY_BULLET_SPEED, {damage: 1.5 * enemy.damage, radius: 2 * BASE_ENEMY_BULLET_RADIUS});
+            //shootBulletAtHero(state, enemy, 1.5 * window.BASE_ENEMY_BULLET_SPEED, {damage: 1.5 * enemy.damage, radius: 2 * window.BASE_ENEMY_BULLET_RADIUS});
         }
         if (enemy.mode === 'choose' && enemy.modeTime === 0) {
-            shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 12, 1.2 * BASE_ENEMY_BULLET_SPEED, {duration: 2000});
+            shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 12, 1.2 * window.BASE_ENEMY_BULLET_SPEED, {duration: 2000});
         }
     },
     onDeath(state: GameState, enemy: Enemy): void {
@@ -160,7 +159,7 @@ export const megaSlime: EnemyDefinition = {
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             for (let i = 0; i < 3; i++) {
-                const speed = 0.3 * BASE_ENEMY_BULLET_SPEED + i * 0.3 * BASE_ENEMY_BULLET_SPEED;
+                const speed = 0.3 * window.BASE_ENEMY_BULLET_SPEED + i * 0.3 * window.BASE_ENEMY_BULLET_SPEED;
                 shootBulletCircle(state, enemy, Math.random() * 2 * Math.PI, 6, speed, {duration: 2000});
             }
         }
@@ -180,12 +179,12 @@ export const miniSlime: EnemyDefinition = {
     experienceFactor: 0.1,
     radius: 16,
     onDeath(state: GameState, enemy: Enemy): void {
-        shootBulletCircle(state, enemy, 0, 6, BASE_ENEMY_BULLET_SPEED);
+        shootBulletCircle(state, enemy, 0, 6, window.BASE_ENEMY_BULLET_SPEED);
     },
     onHit(state: GameState, enemy: Enemy): void {
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED);
+            shootBulletAtHero(state, enemy, window.BASE_ENEMY_BULLET_SPEED);
         }
     },
 };

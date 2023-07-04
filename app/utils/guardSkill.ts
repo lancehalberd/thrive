@@ -1,4 +1,4 @@
-import { FRAME_LENGTH, GAME_KEY,  } from 'app/constants';
+import { GAME_KEY } from 'app/constants';
 import { uniqueEnchantmentHash } from 'app/uniqueEnchantmentHash';
 import { doCirclesIntersect } from 'app/utils/geometry';
 import { getTotalProficiency } from 'app/utils/hero';
@@ -41,7 +41,7 @@ export function getGuardSkillCooldownTime(state: GameState): number {
 export function updateGuardSkill(state: GameState): void {
     const guardSkill = state.hero.guardSkill;
     if (state.hero.roll) {
-        state.hero.roll.time += FRAME_LENGTH;
+        state.hero.roll.time += window.FRAME_LENGTH;
         const roll = state.hero.roll;
         const p = roll.time / roll.duration;
         state.hero.x = roll.start.x + p * (roll.goal.x - roll.start.x);
@@ -50,7 +50,7 @@ export function updateGuardSkill(state: GameState): void {
             delete state.hero.roll;
         }
     } else if (guardSkill.duration) {
-        guardSkill.time += FRAME_LENGTH;
+        guardSkill.time += window.FRAME_LENGTH;
         if (guardSkill.time >= guardSkill.duration) {
             guardSkill.duration = 0;
             // Remove the guard skill effect.
@@ -61,7 +61,7 @@ export function updateGuardSkill(state: GameState): void {
             state.enemyBullets = state.enemyBullets.filter(bullet => !doCirclesIntersect(circle, bullet));
         }
     } else {
-        chargeGuardSkill(state, FRAME_LENGTH);
+        chargeGuardSkill(state, window.FRAME_LENGTH);
         if (guardSkill.charges > 0 && wasGameKeyPressed(state, GAME_KEY.GUARD_SKILL)) {
             useGuardSkill(state);
         }
@@ -106,7 +106,7 @@ export function useGuardSkill(state: GameState): void {
     const guardSkill = state.hero.guardSkill;
     guardSkill.charges--;
     if (state.hero.equipment.armor.armorType === 'lightArmor') {
-        /*let rollDx = state.mouse.x - FIELD_CENTER.x, rollDy = state.mouse.y - FIELD_CENTER.y;
+        /*let rollDx = state.mouse.x - window.FIELD_CENTER.x, rollDy = state.mouse.y - window.FIELD_CENTER.y;
         const magnitude = Math.sqrt(rollDx * rollDx + rollDy * rollDy);
         if (magnitude > maxRollDistance) {
             rollDx *= maxRollDistance / magnitude;

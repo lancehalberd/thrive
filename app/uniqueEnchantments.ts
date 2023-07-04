@@ -1,4 +1,3 @@
-import { BASE_BULLET_SPEED } from 'app/constants';
 import { getEnchantmentStrength } from 'app/enchantments';
 import { playerTurret } from 'app/enemies/playerTurret';
 import { addUniqueEnchantments } from 'app/uniqueEnchantmentHash';
@@ -91,11 +90,11 @@ const vicious: UniqueEnchantment = {
     chance: UNCOMMON_UNIQUE_RATE,
     getDescription(state: GameState, enchantment: UniqueEnchantmentInstance): string[] {
         return [
-            'Weapon has +' + 40 * enchantment.tier + ' base damage.',
+            'Weapon has +' + 20 * (enchantment.tier ** 2) + ' base damage.',
         ];
     },
     modifyWeapon(enchantment: UniqueEnchantmentInstance, weapon: Weapon): void {
-        weapon.damage  += 40 * enchantment.tier;
+        weapon.damage  += 20 * (enchantment.tier ** 2);
     }
 };
 
@@ -266,14 +265,14 @@ const explosive: UniqueEnchantment = {
                 ...bullet,
                 time: 0,
                 radius: 10,
-                duration: 100,
+                duration: 200,
                 isEnemyPiercing: true,
                 vx: 0,
                 vy: 0,
                 hitTargets: new Set(),
                 onHitOrDeath: undefined,
                 update(state: GameState, bullet: Bullet) {
-                    bullet.radius *= 1.5;
+                    bullet.radius *= 1.2;
                 },
             };
             state.heroBullets.push(explosion);
@@ -314,11 +313,10 @@ const trap: UniqueEnchantment = {
             'Attacks with traps that trigger multiple shots on hit.',
         ];
     },
-    /*modifyWeapon(enchantment: UniqueEnchantmentInstance, weapon: Weapon): void {
-        //weapon.speed *= 1.5;
-        weapon.range *= 1.5;
-        weapon.radius *= 1.5;
-    },*/
+    modifyWeapon(enchantment: UniqueEnchantmentInstance, weapon: Weapon): void {
+        const getBaseAttacksPerSecond = weapon.getAttacksPerSecond;
+        weapon.getAttacksPerSecond = (state: GameState, weapon: Weapon) => getBaseAttacksPerSecond(state, weapon) / 3;
+    },
     modifyBullet(state: GameState, enchantment: UniqueEnchantmentInstance, bullet: Bullet): void {
         const baseDamage = bullet.damage;
         const baesIsEnemyPiercing = bullet.isEnemyPiercing;
@@ -349,8 +347,8 @@ const trap: UniqueEnchantment = {
                     y: bullet.baseY + 250 * dy,
                     baseX: bullet.baseX + 250 * dx,
                     baseY: bullet.baseY + 250 * dy,
-                    vx: -dx * BASE_BULLET_SPEED,
-                    vy: -dy * BASE_BULLET_SPEED,
+                    vx: -dx * window.BASE_BULLET_SPEED,
+                    vy: -dy * window.BASE_BULLET_SPEED,
                     hitTargets: new Set(),
                 });
             }
@@ -425,7 +423,7 @@ const thorny: UniqueEnchantment = {
         bullet.isEnemyPiercing = true;
         bullet.isCrit = true;
         const range = 300;
-        const speed = BASE_BULLET_SPEED;
+        const speed = window.BASE_BULLET_SPEED;
         bullet.duration = 1000 * range / speed;
         for (let i = 0; i < 12; i++) {
             const theta = 2 * Math.PI * i / 12;
@@ -460,7 +458,7 @@ const spiky: UniqueEnchantment = {
         bullet.isEnemyPiercing = true;
         bullet.isCrit = true;
         const range = 300;
-        const speed = BASE_BULLET_SPEED;
+        const speed = window.BASE_BULLET_SPEED;
         bullet.duration = 1000 * range / speed;
         for (let i = 0; i < 12; i++) {
             const theta = 2 * Math.PI * i / 12;

@@ -1,4 +1,3 @@
-import { BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED } from 'app/constants';
 import { fillCircle } from 'app/render/renderGeometry';
 import { moveEnemyInDirection, renderNormalizedEnemy, shootBulletAtHero, turnTowardsTarget } from 'app/utils/enemy';
 import { getTargetVector } from 'app/utils/geometry';
@@ -33,9 +32,9 @@ export const sniper: EnemyDefinition = {
 
         if (enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-            shootBulletAtHero(state, enemy, 1.5 * BASE_ENEMY_BULLET_SPEED, {
+            shootBulletAtHero(state, enemy, 1.5 * window.BASE_ENEMY_BULLET_SPEED, {
                 duration: 2000,
-                radius: 1.2 * BASE_ENEMY_BULLET_RADIUS,
+                radius: 1.2 * window.BASE_ENEMY_BULLET_RADIUS,
             });
         }
     },

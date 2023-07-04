@@ -5,8 +5,8 @@ export function damageHero(state: GameState, damage: number): void {
     damage = applyArmorToDamage(state, damage, state.hero.armor);
 
     // Incoming damage is limited by both the amount of the damage and the players total health.
-    // Shots that deal X damage only deal damage if the player has taken less than 2X damage recently.
-    // A player cannot take more than 50% of their health over their recorded damage history.
+    // Shots that deal window.X damage only deal damage if the player has taken less than 2X damage recently.
+    // window.A player cannot take more than 50% of their health over their recorded damage history.
     const damageCap = Math.min(Math.floor(state.hero.maxLife / 2), 2 * damage);
     const damageTaken = Math.max(0, Math.min(damage, damageCap - state.hero.recentDamageTaken));
     if (damageTaken <= 0) {
@@ -25,10 +25,17 @@ export function damageHero(state: GameState, damage: number): void {
 export function damageHeroOverTime(state: GameState, damage: number): void {
     // Incoming damage over time is limited only by player health.
     const damageCap = Math.floor(state.hero.maxLife / 2);
-    const damageTaken = Math.max(0, Math.min(damage, damageCap - state.hero.recentDamageTaken));
+    const damageTaken = Math.min(
+        damage,
+        // Damage over time cannot put the player over there max damage taken cap.
+        damageCap - state.hero.recentDamageTaken,
+        // Only the max damage over time value applies to a player each frame.
+        damage - state.hero.frameDamageOverTime
+    );
     if (damageTaken <= 0) {
         return;
     }
+    state.hero.frameDamageOverTime += damageTaken;
     applyDamageToHero(state, damageTaken);
 }
 
@@ -100,11 +107,31 @@ export function abbreviateHealth(number: number, digits?: number): string {
     return `${number}`;
 }
 
-export function rollForCritDamage(state: GameState, additionalCritchance: number = 0): number {
-    const weapon = state.hero.equipment.weapon;
-    const isCrit = Math.random() < additionalCritchance + state.hero.critChance + weapon.critChance;
-    if (!isCrit) {
-        return 1;
+
+export function applySlowEffect(target: Vitals, slow: SlowEffect): void {
+    for (const oldSlow of target.slowEffects) {
+        if (slow.effect >= oldSlow.effect && slow.duration >= oldSlow.duration) {
+            oldSlow.effect = slow.effect;
+            oldSlow.duration = slow.duration;
+            return;
+        }
+        if (slow.effect <= oldSlow.effect && slow.duration <= oldSlow.duration) {
+            return;
+        }
     }
-    return 1 + state.hero.critDamage + weapon.critDamage;
+    target.slowEffects.unshift({...slow});
+}
+
+export function updateSlowEffects(state: GameState, target: Vitals): number {
+    let highestSlowEffect = 0;
+    const currentSlowEffects = target.slowEffects;
+    target.slowEffects = [];
+    for (const slowEffect of currentSlowEffects) {
+        highestSlowEffect = Math.max(highestSlowEffect, slowEffect.effect);
+        slowEffect.duration -= window.FRAME_LENGTH;
+        if (slowEffect.duration > 0) {
+            target.slowEffects.push(slowEffect);
+        }
+    }
+    return highestSlowEffect;
 }

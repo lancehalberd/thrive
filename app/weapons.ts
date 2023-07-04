@@ -1,12 +1,5 @@
-import {
-    BASE_ATTACKS_PER_SECOND,
-    BASE_WEAPON_DPS_PER_LEVEL,
-    BASE_BULLET_SPEED,
-    BASE_BULLET_RADIUS,
-    BASE_BULLET_DURATION,
-} from 'app/constants';
 import { updateCirclingBullet, updateSimpleBullet } from 'app/utils/bullet';
-import { rollForCritDamage } from 'app/utils/combat';
+import { getBaseWeaponDpsForLevel, rollForCritDamage } from 'app/utils/coreCalculations';
 
 
 function getArmorShred(state: GameState, chargeLevel: number): number {
@@ -78,7 +71,7 @@ const bowShots: Shot[] = [
 ];
 
 function createBow(level: number, name: string): Weapon {
-    const attacksPerSecond = BASE_ATTACKS_PER_SECOND * 0.8;
+    const attacksPerSecond = window.BASE_ATTACKS_PER_SECOND * 0.8;
     return {
         type: 'weapon',
         weaponType: 'bow',
@@ -88,13 +81,13 @@ function createBow(level: number, name: string): Weapon {
         getAttacksPerSecond: () => attacksPerSecond,
         critChance: 0.2,
         critDamage: 0.5,
-        damage: Math.ceil(0.6 * level * BASE_WEAPON_DPS_PER_LEVEL / attacksPerSecond),
+        damage: Math.ceil(0.6 * getBaseWeaponDpsForLevel(level) / attacksPerSecond),
         damageOverTimeStackSize: 5,
         chargeLevel: 3,
         range: 400,
-        speed: 1.5 * BASE_BULLET_SPEED,
-        radius: BASE_BULLET_RADIUS,
-        duration: BASE_BULLET_DURATION,
+        speed: 1.5 * window.BASE_BULLET_SPEED,
+        radius: window.BASE_BULLET_RADIUS,
+        duration: window.BASE_BULLET_DURATION,
         enchantmentSlots: [],
         bonusEnchantmentSlots: [],
     };
@@ -134,16 +127,16 @@ function createSword(level: number, name: string): Weapon {
         level,
         name,
         getShots: () => swordShots,
-        getAttacksPerSecond: () => BASE_ATTACKS_PER_SECOND,
+        getAttacksPerSecond: () => window.BASE_ATTACKS_PER_SECOND,
         critChance: 0.05,
         critDamage: 0.5,
-        damage: Math.ceil(level * BASE_WEAPON_DPS_PER_LEVEL / BASE_ATTACKS_PER_SECOND),
+        damage: Math.ceil(getBaseWeaponDpsForLevel(level) / window.BASE_ATTACKS_PER_SECOND),
         damageOverTimeStackSize: 5,
         chargeLevel: 2,
         range: 350,
-        speed: BASE_BULLET_SPEED,
-        radius: Math.ceil(1.2 * BASE_BULLET_RADIUS),
-        duration: BASE_BULLET_DURATION,
+        speed: window.BASE_BULLET_SPEED,
+        radius: Math.ceil(1.2 * window.BASE_BULLET_RADIUS),
+        duration: window.BASE_BULLET_DURATION,
         enchantmentSlots: [],
         bonusEnchantmentSlots: [],
     };
@@ -200,16 +193,16 @@ function createDagger(level: number, name: string): Weapon {
         level: Math.floor(level),
         name,
         getShots: () => daggerShots,
-        getAttacksPerSecond: () => BASE_ATTACKS_PER_SECOND,
+        getAttacksPerSecond: () => window.BASE_ATTACKS_PER_SECOND,
         critChance: 0.05,
         critDamage: 0.5,
-        damage: Math.ceil(0.3 * level * BASE_WEAPON_DPS_PER_LEVEL / BASE_ATTACKS_PER_SECOND),
+        damage: Math.ceil(0.3 * getBaseWeaponDpsForLevel(level) / window.BASE_ATTACKS_PER_SECOND),
         damageOverTimeStackSize: 16,
         chargeLevel: 2,
         range: 250,
-        speed: Math.ceil(BASE_BULLET_SPEED * 1.2),
-        radius: BASE_BULLET_RADIUS,
-        duration: BASE_BULLET_DURATION,
+        speed: Math.ceil(window.BASE_BULLET_SPEED * 1.2),
+        radius: window.BASE_BULLET_RADIUS,
+        duration: window.BASE_BULLET_DURATION,
         enchantmentSlots: [],
         bonusEnchantmentSlots: [],
     };
@@ -270,31 +263,31 @@ function createKatana(level: number, name: string): Weapon {
         level: Math.floor(level),
         name,
         getShots: () => katanaShots,
-        getAttacksPerSecond: () => BASE_ATTACKS_PER_SECOND,
+        getAttacksPerSecond: () => window.BASE_ATTACKS_PER_SECOND,
         critChance: 0.05,
         critDamage: 1,
-        damage: Math.ceil(0.5 * level * BASE_WEAPON_DPS_PER_LEVEL / BASE_ATTACKS_PER_SECOND),
+        damage: Math.ceil(0.5 * getBaseWeaponDpsForLevel(level) / window.BASE_ATTACKS_PER_SECOND),
         damageOverTimeStackSize: 10,
         chargeLevel: 2,
         range: 300,
-        speed: BASE_BULLET_SPEED,
-        radius: BASE_BULLET_RADIUS,
-        duration: BASE_BULLET_DURATION,
+        speed: window.BASE_BULLET_SPEED,
+        radius: window.BASE_BULLET_RADIUS,
+        duration: window.BASE_BULLET_DURATION,
         enchantmentSlots: [],
         bonusEnchantmentSlots: [],
     };
 }
 
 export const katanas: Weapon[] = [
-    createKatana(1.5, 'Kitetsu I'),
+    createKatana(1.5, 'Kitetsu window.I'),
     createKatana(4, 'Yubashiri'),
-    createKatana(7, 'Kitetsu II'),
+    createKatana(7, 'Kitetsu window.II'),
     createKatana(11, 'Shusui'),
     createKatana(16, 'Ichimonji'),
     createKatana(22, 'Soto Muso'),
     createKatana(30, 'Sukesan'),
     createKatana(40, 'Shigure'),
-    createKatana(51, 'Kitetsu III'),
+    createKatana(51, 'Kitetsu window.III'),
     createKatana(64, 'Ame no Habakiri'),
     createKatana(76, 'Wado Ichimonji'),
     createKatana(90, 'Enma'),
@@ -359,7 +352,7 @@ function getMorningStarShots(state: GameState, weapon: Weapon): Shot[] {
 }
 
 function createMorningStar(level: number, name: string): Weapon {
-    const attacksPerSecond = BASE_ATTACKS_PER_SECOND / 3;
+    const attacksPerSecond = window.BASE_ATTACKS_PER_SECOND / 3;
     return {
         type: 'weapon',
         weaponType: 'morningStar',
@@ -370,13 +363,13 @@ function createMorningStar(level: number, name: string): Weapon {
         critChance: 0.05,
         critDamage: 0.5,
         // This results in 1.2x normal damage if all attacks hit.
-        damage: Math.ceil(0.4 * level * BASE_WEAPON_DPS_PER_LEVEL / attacksPerSecond),
+        damage: Math.ceil(0.4 * getBaseWeaponDpsForLevel(level) / attacksPerSecond),
         damageOverTimeStackSize: 2,
         chargeLevel: 2,
         range: 150,
-        speed: BASE_BULLET_SPEED,
-        radius: 1.5 * BASE_BULLET_RADIUS,
-        duration: BASE_BULLET_DURATION,
+        speed: window.BASE_BULLET_SPEED,
+        radius: 1.5 * window.BASE_BULLET_RADIUS,
+        duration: window.BASE_BULLET_DURATION,
         enchantmentSlots: [],
         bonusEnchantmentSlots: [],
     };
@@ -401,7 +394,7 @@ export const morningStars: Weapon[] = [
 const wandShots: Shot[] = [{
     generateBullet(state: GameState, source: Hero, weapon: Weapon, target: Point): Bullet {
         let dx = target.x - source.x, dy = target.y - source.y;
-        const mag = Math.sqrt(dx * dx + dy * dy);
+        const mag = Math.sqrt(dx * dx + dy * dy) - 75;
         const minRadius = 100;
         const maxRadius = 300;
         const targetX = source.x + dx, targetY = source.y + dy;
@@ -425,7 +418,7 @@ const wandShots: Shot[] = [{
             damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage) * damageP,
             chargeGain: 0.2,
             isCrit: critDamage > 1,
-            isEnemyPiercing: source.attackChargeLevel > 1,
+            isEnemyPiercing: radius <= minRadius,
             radius: weapon.radius + (source.attackChargeLevel - 1) - 5 + 10 * damageP,
             duration: 1000 * radius / speed,
             // Double armor shred effect
@@ -435,7 +428,7 @@ const wandShots: Shot[] = [{
 }];
 
 function createWand(level: number, name: string): Weapon {
-    const attacksPerSecond = 5 * BASE_ATTACKS_PER_SECOND;
+    const attacksPerSecond = 5 * window.BASE_ATTACKS_PER_SECOND;
     return {
         type: 'weapon',
         weaponType: 'wand',
@@ -445,13 +438,13 @@ function createWand(level: number, name: string): Weapon {
         getAttacksPerSecond: () => attacksPerSecond,
         critChance: 0.05,
         critDamage: 0.5,
-        damage: Math.ceil(1.5 * level * BASE_WEAPON_DPS_PER_LEVEL / attacksPerSecond),
+        damage: Math.ceil(1.5 * getBaseWeaponDpsForLevel(level) / attacksPerSecond),
         damageOverTimeStackSize: 5,
         chargeLevel: 4,
         range: 300,
-        speed: BASE_BULLET_SPEED,
-        radius: BASE_BULLET_RADIUS,
-        duration: BASE_BULLET_DURATION,
+        speed: window.BASE_BULLET_SPEED,
+        radius: window.BASE_BULLET_RADIUS,
+        duration: window.BASE_BULLET_DURATION,
         enchantmentSlots: [],
         bonusEnchantmentSlots: [],
     };

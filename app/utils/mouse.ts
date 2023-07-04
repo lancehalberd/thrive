@@ -1,4 +1,4 @@
-//import { CANVAS_SCALE } from 'app/constants';
+//import { window.CANVAS_SCALE } from 'app/constants';
 import { mainCanvas } from 'app/utils/canvas';
 import { KEY, isKeyboardKeyDown } from 'app/utils/userInput';
 
@@ -75,6 +75,6 @@ export function addContextMenuListeners(): void {
         }
         event.preventDefault();
         // const [x, y] = getMousePosition();
-        // lastContextClick = getMousePosition(mainCanvas, CANVAS_SCALE);
+        // lastContextClick = getMousePosition(mainCanvas, window.CANVAS_SCALE);
     });
 }

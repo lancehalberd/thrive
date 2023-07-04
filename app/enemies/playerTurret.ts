@@ -1,4 +1,3 @@
-import { FRAME_LENGTH } from 'app/constants';
 import { uniqueEnchantmentHash } from 'app/uniqueEnchantmentHash';
 import { fillCircle } from 'app/render/renderGeometry';
 import { isEnemyTargetable } from 'app/utils/bullet';
@@ -36,7 +35,7 @@ export const playerTurret: EnemyDefinition<PlayerTurretParams> = {
         const attackTime = attackCooldownDuration - (enemy.attackCooldown - state.fieldTime);
         for (const shot of weapon.getShots(state, weapon)) {
             const shotTime = attackCooldownDuration * (shot.timingOffset ?? 0);
-            if (shotTime >= attackTime - FRAME_LENGTH / 2 && shotTime < attackTime + FRAME_LENGTH / 2) {
+            if (shotTime >= attackTime - window.FRAME_LENGTH / 2 && shotTime < attackTime + window.FRAME_LENGTH / 2) {
                 // Setting the source here is a little hacky and might have unpredictable results in some cases.
                 const bullet = shot.generateBullet(state,
                     // Fake hero standing where the turret is.

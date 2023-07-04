@@ -1,4 +1,3 @@
-import { BASE_MAX_POTIONS, CANVAS_HEIGHT, CANVAS_WIDTH, CELL_SIZE, SLOT_SIZE, SLOT_PADDING } from 'app/constants';
 import { getInventorySlots, getSelectedInventorySlot, getSelectedItem } from 'app/inventory';
 import { fillCircle, renderBar } from 'app/render/renderGeometry';
 import { renderInventorySlot, renderItemDetails, renderSelectedInventorySlot } from 'app/render/renderInventory';
@@ -11,14 +10,16 @@ import { weaponTypeLabels, weaponTypes } from 'app/weapons';
 import {
     getExperienceForNextLevel,
     getExperienceForNextEquipmentLevel,
+} from 'app/utils/coreCalculations';
+import {
     getMastery,
     getProficiency,
 } from 'app/utils/hero';
 
 
 const minimapSize = 500;
-const smallMapRect = {x: CANVAS_WIDTH - 160, y: 10, w: 150, h: 150};
-const largeMapRect = {x: (CANVAS_WIDTH - 400) / 2, y: (CANVAS_HEIGHT - 400) / 2, w: 400, h: 400};
+const smallMapRect = {x: window.CANVAS_WIDTH - 160, y: 10, w: 150, h: 150};
+const largeMapRect = {x: (window.CANVAS_WIDTH - 400) / 2, y: (window.CANVAS_HEIGHT - 400) / 2, w: 400, h: 400};
 const [mapCanvas, mapContext] = createCanvasAndContext(minimapSize, minimapSize);
 const mapScale = 15;
 
@@ -41,12 +42,12 @@ export function renderMinimap(state: GameState): void {
         for (const hole of state.holes) {
             fillCircle(mapContext, hole, 'black');
         }
-        CELL_SIZE;
+        window.CELL_SIZE;
         // Debug code to draw world cell boundaries.
         /*mapContext.lineWidth = 4;
         mapContext.strokeStyle = 'red';
         for (const cell of state.activeCells) {
-            mapContext.strokeRect(cell.x * CELL_SIZE, (cell.y + 1) * -CELL_SIZE, CELL_SIZE, CELL_SIZE);
+            mapContext.strokeRect(cell.x * window.CELL_SIZE, (cell.y + 1) * -CELL_SIZE, window.CELL_SIZE, window.CELL_SIZE);
         }*/
     mapContext.restore();
 }
@@ -63,7 +64,7 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
         context.save();
             context.globalAlpha *= 0.6;
             context.fillStyle = 'black';
-            context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            context.fillRect(0, 0, window.CANVAS_WIDTH, window.CANVAS_HEIGHT);
         context.restore();
     }
 
@@ -103,21 +104,21 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
     }
     if (state.paused) {
         const instructions = [
-            'Press ENTER to pause/unpause.',
+            'Press window.ENTER to pause/unpause.',
             '',
-            'Use WASD to move.',
+            'Use window.WASD to move.',
             'Move mouse to aim.',
             'Hold left click to shoot.',
             '',
-            'Press SPACE to use a life potion.',
+            'Press window.SPACE to use a life potion.',
             'Potions and life refill on level up.',
             '',
-            'Press F to pick up items.',
-            'Pess X to sell an item for XP.',
+            'Press window.F to pick up items.',
+            'Pess window.X to sell an item for window.XP.',
             '',
             'Inventory items:',
             '  Left click an item equip it.',
-            '  Press X on an item to sell it for XP.',
+            '  Press window.X on an item to sell it for window.XP.',
             '  Left click an enchantment',
             '  then click an armor or weapon.',
             '',
@@ -125,7 +126,7 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
             'Right click to use charge.',
             '',
             'Enemies can drop portals.',
-            'Press F to enter a portal.',
+            'Press window.F to enter a portal.',
             'Middle click to escape a dungeon.',
             '',
             'On entering/leaving a dungeon:',
@@ -136,7 +137,7 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
         ];
         let y = 20;
         for (const line of instructions) {
-            context.fillText(line, CANVAS_WIDTH - 280, y);
+            context.fillText(line, window.CANVAS_WIDTH - 280, y);
             y += 20;
         }
     }
@@ -170,8 +171,8 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
 
     let hoveredProficiencyType: ArmorType|WeaponType|undefined;
 
-    let y = CANVAS_HEIGHT - 25;
-    let x = SLOT_SIZE + 2 * SLOT_PADDING;
+    let y = window.CANVAS_HEIGHT - 25;
+    let x = window.SLOT_SIZE + 2 * window.SLOT_PADDING;
     const {armor, weapon} = state.hero.equipment;
     const weaponXpRect: Rect = {x, y, h: 10, w: 160};
     const weaponProficiency = getProficiency(state, weapon.weaponType);
@@ -187,7 +188,7 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
         weaponProficiencyLabel += ' (+' + weaponMastery + ')';
     }
     context.fillText(weaponProficiencyLabel, x, y - 8);
-    if (isPointInRect({x, y: CANVAS_HEIGHT - 40, h: 30, w: 160}, state.mouse)) {
+    if (isPointInRect({x, y: window.CANVAS_HEIGHT - 40, h: 30, w: 160}, state.mouse)) {
         hoveredProficiencyType = weapon.weaponType
     }
 
@@ -216,7 +217,7 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
         }
     }
 
-    y -= (SLOT_SIZE + SLOT_PADDING);
+    y -= (window.SLOT_SIZE + window.SLOT_PADDING);
 
 
     const armorXpRect: Rect = {x, y, h: 10, w: 160};
@@ -233,13 +234,13 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
         armorProficiencyLabel += ' (+' + armorMastery + ')';
     }
     context.fillText(armorProficiencyLabel, x, y - 8);
-    if (isPointInRect({x, y: CANVAS_HEIGHT - 40 - (SLOT_SIZE + SLOT_PADDING), h: 30, w: 160}, state.mouse)) {
+    if (isPointInRect({x, y: window.CANVAS_HEIGHT - 40 - (window.SLOT_SIZE + window.SLOT_PADDING), h: 30, w: 160}, state.mouse)) {
         hoveredProficiencyType = armor.armorType
     }
 
     context.strokeStyle = 'red';
     context.fillStyle = 'red';
-    for (let i = 0; i < BASE_MAX_POTIONS; i++) {
+    for (let i = 0; i < window.BASE_MAX_POTIONS; i++) {
         if (i < state.hero.potions) {
             context.fillRect(5 + i * 15, experienceRect.y + experienceRect.h + 5, 10, 15);
         }
@@ -274,7 +275,7 @@ export function renderHUD(context: CanvasRenderingContext2D, state: GameState): 
 
     const boss = state.hero.disc?.boss;
     if (!state.paused && boss) {
-        const lifeRect: Rect = {x: 210, y: CANVAS_HEIGHT - 60, h: 24, w: CANVAS_WIDTH - 420};
+        const lifeRect: Rect = {x: 210, y: window.CANVAS_HEIGHT - 60, h: 24, w: window.CANVAS_WIDTH - 420};
         let color = '#0F0';
         if (boss.life <= boss.maxLife / 4) {
             color = '#F00';
@@ -394,8 +395,8 @@ export function renderProficiencyDetails(context: CanvasRenderingContext2D, stat
         lineWidths.push(lineWidth);
     }
     h = Math.max(h, textLines.length * 20 + 20);
-    x = Math.max(10, Math.min(CANVAS_WIDTH - 10 - w, x - w / 2));
-    y = Math.max(10, Math.min(CANVAS_HEIGHT - 10 - h, y - h - 10));
+    x = Math.max(10, Math.min(window.CANVAS_WIDTH - 10 - w, x - w / 2));
+    y = Math.max(10, Math.min(window.CANVAS_HEIGHT - 10 - h, y - h - 10));
     context.fillStyle = 'white';
     context.fillRect(x, y, w, h);
     context.fillStyle = 'black';

@@ -1,5 +1,4 @@
 import { armorTypes } from 'app/armor';
-import { CANVAS_SCALE, CELL_SIZE } from 'app/constants';
 import { applyUniqueItemEnchantments, generateArmor, generateWeapon, resetArmor, resetWeapon } from 'app/utils/item';
 import { addUniqueEnchantmentToItem } from 'app/uniqueEnchantments';
 import { uniqueEnchantmentHash } from 'app/uniqueEnchantmentHash';
@@ -131,9 +130,9 @@ export function getContextMenu(state: GameState): MenuOption[] {
                         if (level === 1) {
                             state.hero.overworldY = 0;
                         } else if (level === 5) {
-                            state.hero.overworldY = -CELL_SIZE * 3;
+                            state.hero.overworldY = -window.CELL_SIZE * 3;
                         } else {
-                            state.hero.overworldY = -CELL_SIZE * (3 + 2 * Math.floor(level / 10));
+                            state.hero.overworldY = -window.CELL_SIZE * (3 + 2 * Math.floor(level / 10));
                         }
                         if (!state.dungeon) {
                             state.hero.y = state.hero.overworldY;
@@ -276,7 +275,7 @@ export function addContextMenuListeners(state: GameState): void {
         if (isKeyboardKeyDown(KEY.CONTROL)) {
             event.preventDefault();
             const [x, y] = getMousePosition();
-            getMousePosition(mainCanvas, CANVAS_SCALE);
+            getMousePosition(mainCanvas, window.CANVAS_SCALE);
             const menu = getContextMenu(state);
             showContextMenu(menu, x, y);
         } else if (!(event.target as HTMLElement).closest('.contextMenu')) {

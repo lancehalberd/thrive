@@ -75,6 +75,10 @@ interface Vitals {
     attacksPerSecond: number
     // Indiciates the next timestamp that an attack can be performed.
     attackCooldown: number
+    // Tracks how much damage over time an enemy has taken in the current frame.
+    // Used to limit how much damage over time can stack.
+    frameDamageOverTime: number
+    slowEffects: SlowEffect[]
 }
 
 type MasteryMap = {[key in ArmorType|WeaponType]?: number}

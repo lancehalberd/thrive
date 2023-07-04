@@ -1,4 +1,3 @@
-import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_SPEED } from 'app/constants';
 import { fillCircle } from 'app/render/renderGeometry';
 import { shootEnemyBullet } from 'app/utils/enemy';
 import { getTargetVector, turnTowardsAngle } from 'app/utils/geometry';
@@ -13,7 +12,7 @@ export const turret: EnemyDefinition = {
         armor: 2,
     },
     initialParams: {},
-    dropChance: 2 * BASE_DROP_CHANCE,
+    dropChance: 2 * window.BASE_DROP_CHANCE,
     uniqueMultiplier: 2,
     experienceFactor: 2,
     radius: 24,
@@ -29,7 +28,7 @@ export const turret: EnemyDefinition = {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             for (let i = 0; i < 3; i++) {
                 const theta = enemy.theta - Math.PI / 6 + Math.PI / 6 * i;
-                shootEnemyBullet(state, enemy, BASE_ENEMY_BULLET_SPEED * Math.cos(theta), BASE_ENEMY_BULLET_SPEED * Math.sin(theta), {duration: 2000});
+                shootEnemyBullet(state, enemy, window.BASE_ENEMY_BULLET_SPEED * Math.cos(theta), window.BASE_ENEMY_BULLET_SPEED * Math.sin(theta), {duration: 2000});
             }
         }
     },

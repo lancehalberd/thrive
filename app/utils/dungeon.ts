@@ -96,7 +96,7 @@ export function createCaveDungeon(state: GameState, seed: number, radius: number
             continue;
         }
         discs.push(newDisc);
-        // TODO: Add different enemy generators and apply them at random.
+        // window.TODO: Add different enemy generators and apply them at random.
         if (dungeonRandomizer.generateAndMutate() < 0.2) {
             createEnemy(state, newDisc.x, newDisc.y, greatSlime, level, newDisc);
         } else if (dungeonRandomizer.generateAndMutate() < 0.2) {
@@ -149,7 +149,7 @@ export function createArenaDungeon(state: GameState, seed: number, radius: numbe
                 radius: dungeonRandomizer.element(platformSizes),
             });
             projectDiscToDisc(newDisc, previousDisc, dungeonRandomizer.range(32, 64));
-            // TODO: Add different enemy generators and apply them at random.
+            // window.TODO: Add different enemy generators and apply them at random.
             if (dungeonRandomizer.generateAndMutate() < 0.2) {
                 createEnemy(state, newDisc.x, newDisc.y, greatSlime, level, newDisc);
             } else if (dungeonRandomizer.generateAndMutate() < 0.2) {

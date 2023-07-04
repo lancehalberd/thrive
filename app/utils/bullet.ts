@@ -1,4 +1,3 @@
-import { FRAME_LENGTH } from 'app/constants';
 import { getClosestElement, turnTowardsAngle } from 'app/utils/geometry';
 
 export function updateCirclingBullet(state: GameState, bullet: Bullet): void {
@@ -9,7 +8,7 @@ export function updateCirclingBullet(state: GameState, bullet: Bullet): void {
     ) {
         return;
     }
-    bullet.theta += FRAME_LENGTH * bullet.vTheta / 1000;
+    bullet.theta += window.FRAME_LENGTH * bullet.vTheta / 1000;
     bullet.baseX = bullet.source.x + bullet.orbitRadius * Math.cos(bullet.theta);
     bullet.baseY = bullet.source.y + bullet.orbitRadius * Math.sin(bullet.theta);
     if (bullet.frequency && bullet.amplitude) {
@@ -23,14 +22,14 @@ export function updateCirclingBullet(state: GameState, bullet: Bullet): void {
         bullet.y = bullet.baseY;
     }
     if (bullet.friction) {
-        const multiplier = (1 - bullet.friction) ** (FRAME_LENGTH / 1000);
+        const multiplier = (1 - bullet.friction) ** (window.FRAME_LENGTH / 1000);
         bullet.vTheta = Math.max(0.2, bullet.vTheta * multiplier);
     }
 }
 
 export function updateSimpleBullet(state: GameState, bullet: Bullet): void {
-    bullet.baseX += bullet.vx * FRAME_LENGTH / 1000;
-    bullet.baseY += bullet.vy * FRAME_LENGTH / 1000;
+    bullet.baseX += bullet.vx * window.FRAME_LENGTH / 1000;
+    bullet.baseY += bullet.vy * window.FRAME_LENGTH / 1000;
     if (bullet.frequency && bullet.amplitude) {
         const theta = Math.atan2(bullet.vy, bullet.vx) + Math.PI / 2;
         const p = Math.min(1, bullet.time / 200);
@@ -42,7 +41,7 @@ export function updateSimpleBullet(state: GameState, bullet: Bullet): void {
         bullet.y = bullet.baseY;
     }
     if (bullet.friction) {
-        const multiplier = (1 - bullet.friction) ** (FRAME_LENGTH / 1000);
+        const multiplier = (1 - bullet.friction) ** (window.FRAME_LENGTH / 1000);
         bullet.vx *= multiplier;
         bullet.vy *= multiplier;
     }

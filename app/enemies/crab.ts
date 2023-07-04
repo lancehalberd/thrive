@@ -1,4 +1,3 @@
-import { BASE_DROP_CHANCE, BASE_ENEMY_BULLET_RADIUS, BASE_ENEMY_BULLET_SPEED } from 'app/constants';
 import { fillCircle } from 'app/render/renderGeometry';
 import { isEnemyOffDisc, moveEnemyInDirection, renderNormalizedEnemy, shootBulletArc, shootBulletAtHero } from 'app/utils/enemy';
 import { getTargetVector } from 'app/utils/geometry';
@@ -11,9 +10,6 @@ export const crab: EnemyDefinition = {
         attacksPerSecond: 1,
     },
     initialParams: {},
-    dropChance: 1.5 * BASE_DROP_CHANCE,
-    uniqueMultiplier: 2,
-    experienceFactor: 2,
     radius: 24,
     update(state: GameState, enemy: Enemy): void {
         enemy.theta = Math.PI / 2;
@@ -40,7 +36,7 @@ export const crab: EnemyDefinition = {
             }
             if (isAggro && enemy.attackCooldown <= state.fieldTime) {
                 enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
-                shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage});
+                shootBulletAtHero(state, enemy, window.BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * window.BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage});
             }
             return;
         }
@@ -70,14 +66,14 @@ export const crab: EnemyDefinition = {
         }
         if (enemy.modeTime % 1500 === 0) {
             const duration = 500;
-            shootBulletArc(state, enemy, 0, Math.PI / 8, 3, enemy.mode === 'moveRight' ? 1.5 * BASE_ENEMY_BULLET_SPEED : BASE_ENEMY_BULLET_SPEED, {duration});
-            shootBulletArc(state, enemy, Math.PI, Math.PI / 8, 3, enemy.mode === 'moveLeft' ? 1.5 * BASE_ENEMY_BULLET_SPEED : BASE_ENEMY_BULLET_SPEED, {duration});
+            shootBulletArc(state, enemy, 0, Math.PI / 8, 3, enemy.mode === 'moveRight' ? 1.5 * window.BASE_ENEMY_BULLET_SPEED : window.BASE_ENEMY_BULLET_SPEED, {duration});
+            shootBulletArc(state, enemy, Math.PI, Math.PI / 8, 3, enemy.mode === 'moveLeft' ? 1.5 * window.BASE_ENEMY_BULLET_SPEED : window.BASE_ENEMY_BULLET_SPEED, {duration});
         }
         if (isAggro && enemy.attackCooldown <= state.fieldTime) {
             enemy.attackCooldown = state.fieldTime + 1000 / enemy.attacksPerSecond;
             //shootEnemyBullet(state, enemy, 100, 0);
             //shootEnemyBullet(state, enemy, -100, 0);
-            shootBulletAtHero(state, enemy, BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage, duration: 2000});
+            shootBulletAtHero(state, enemy, window.BASE_ENEMY_BULLET_SPEED, {radius: 1.5 * window.BASE_ENEMY_BULLET_RADIUS, damage: 2 * enemy.damage, duration: 2000});
         }
         if (enemy.modeTime >= 1000) {
             enemy.setMode('choose');

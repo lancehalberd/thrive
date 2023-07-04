@@ -1,5 +1,4 @@
 import { armorTypes } from 'app/armor';
-import { BASE_DROP_CHANCE } from 'app/constants';
 import { checkToAddGlobalUniqueEnchantments } from 'app/uniqueEnchantments';
 import { gainItemExperience } from 'app/utils/hero';
 import { addEnchantmentSlot, applyUniqueItemEnchantments, generateArmor, generateWeapon} from 'app/utils/item';
@@ -48,7 +47,7 @@ export function rollWeapon(state: GameState, weaponType: WeaponType, level: numb
 }
 
 export function checkToDropBasicLoot(state: GameState, source: Enemy): void {
-    if (rollWithMissBonus(state, 'dropItem', (source.definition.dropChance ?? BASE_DROP_CHANCE) + state.hero.dropChance)) {
+    if (rollWithMissBonus(state, 'dropItem', (source.definition.dropChance ?? window.BASE_DROP_CHANCE) + state.hero.dropChance)) {
         let targetLevel = source.level;
         let bonusLevelChance = state.hero.dropChance;
         if (bonusLevelChance > 0) {
