@@ -183,7 +183,7 @@ function renderEnemyBullet(context: CanvasRenderingContext2D, bullet: Bullet): v
         fill.addColorStop(0.8, 'red');
     }
     if (bullet.warningTime > 0) {
-        context.fillStyle = baseColor;
+        context.fillStyle = 'red';
         context.beginPath();
         context.arc(bullet.x, bullet.y, bullet.radius, 0, 2 * Math.PI);
         context.arc(bullet.x, bullet.y, bullet.radius - 2, 0, 2 * Math.PI, true);

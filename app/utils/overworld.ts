@@ -1,14 +1,15 @@
 import { overworldSpiderNova } from 'app/bosses/spider';
 import { bat } from 'app/enemies/bat';
-import { chaser } from 'app/enemies/chaser';
 import { chest } from 'app/enemies/chest';
 import { clam } from 'app/enemies/clam';
 import { crab } from 'app/enemies/crab';
+import { swampDragon } from 'app/enemies/dragon';
 import { thrivingReef } from 'app/events/thrivingReef';
 import { ent } from 'app/enemies/ent';
 import { lord } from 'app/enemies/lord';
 import { skeleton } from 'app/enemies/skeleton';
 import { greatSlime, slime } from 'app/enemies/slime';
+import { scorpion } from 'app/enemies/scorpion';
 import { snake } from 'app/enemies/snake';
 import { sniper } from 'app/enemies/sniper';
 import { squid} from 'app/enemies/squid';
@@ -331,11 +332,11 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
         } else if (randomizer.generateAndMutate() < 0.1) {
             createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
         }
-        if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(state, disc.x, disc.y - 100, slime, disc.level, disc);
+        if (randomizer.generateAndMutate() < 1) {
+            createEnemy(state, disc.x, disc.y - 100, scorpion, disc.level, disc);
         }
-        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
-            createEnemy(state, disc.x, disc.y + 100, slime, disc.level, disc);
+        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.5) {
+            createEnemy(state, disc.x, disc.y + 100, bat, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.5) {
             createEnemy(state, disc.x + 100, disc.y, skeleton, disc.level, disc);
@@ -355,10 +356,10 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
             createEnemy(state, disc.x, disc.y - 100, overworldSpiderNova, disc.level, disc);
         }
         if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
-            createEnemy(state, disc.x, disc.y + 100, chaser, disc.level, disc);
+            createEnemy(state, disc.x, disc.y + 100, snake, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(state, disc.x + 100, disc.y, bat, disc.level, disc);
+            createEnemy(state, disc.x + 100, disc.y, skeleton, disc.level, disc);
         }
         if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
             createEnemy(state, disc.x - 100, disc.y, slime, disc.level, disc);
@@ -389,6 +390,8 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
     }
     if (disc.name === 'Swamp') {
         if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.2) {
+            createEnemy(state, disc.x, disc.y, swampDragon, disc.level, disc);
+        } else if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.2) {
             createEnemy(state, disc.x, disc.y, greatSlime, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.5) {
@@ -406,6 +409,7 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
     if (disc.name === 'Frozen Peaks') {
     }
     if (disc.name === 'Descent') {
+        // Scorpion
     }
     if (disc.name === 'Badlands') {
     }
@@ -426,7 +430,7 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
         createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
     }
     if (randomizer.generateAndMutate() < 0.3) {
-        createEnemy(state, disc.x - 50, disc.y, chaser, disc.level, disc);
+        createEnemy(state, disc.x - 50, disc.y, scorpion, disc.level, disc);
     }
     if (randomizer.generateAndMutate() < 0.3) {
         createEnemy(state, disc.x + 50, disc.y, slime, disc.level, disc);

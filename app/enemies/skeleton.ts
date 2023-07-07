@@ -86,21 +86,9 @@ export const skeleton: EnemyDefinition<SkeletonParams> = {
         fillCircle(context, {x: 30, y: -10, radius: 20}, 'black');
         fillCircle(context, {x: 0, y: 20, radius: 10}, 'black');
 
-        /*const topMouthCurve = (v: number) => {
-            const theta = 0 * (1 - v) + (v) * - Math.PI;
-            return {
-                x: 100 * Math.cos(theta),
-                y: (100 - 30 * Math.sin(v * Math.PI)) * Math.sin(theta),
-            };
-        }
-        parametricCurve(context, [0, 1], 10, topMouthCurve);
-        */
         context.beginPath();
         context.lineWidth = 5;
         context.strokeStyle = 'black';
-        /*context.arc(0, -25, 70, Math.PI / 4, 3 * Math.PI / 4);
-        context.arc(0, -25, 85, 3 * Math.PI / 4,  Math.PI / 4, true);
-        context.arc(0, -25, 100, Math.PI / 4, 3 * Math.PI / 4);*/
         context.arc(0, -25, 73, Math.PI / 3, 2 * Math.PI / 3);
         context.arc(0, -25, 87, 2 * Math.PI / 3,  Math.PI / 3, true);
         context.arc(0, -25, 100, Math.PI / 3, 2 * Math.PI / 3);

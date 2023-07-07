@@ -89,7 +89,7 @@ export function getEnemyColor(level: number): string {
         return 'purple';
     }
     if (level < 40) {
-        return 'grey';
+        return 'brown';
     }
     if (level < 50) {
         return 'green';
@@ -256,6 +256,11 @@ export function moveEnemyInDirection(state: GameState, enemy: Enemy, theta: numb
     enemy.y += speed * Math.sin(theta) * window.FRAME_LENGTH / 1000;
 }
 
+
+export function turnTowardsDirection(state: GameState, enemy: Enemy, theta: number, turnSpeed = 0.2): void {
+    enemy.theta = turnTowardsAngle(enemy.theta, turnSpeed, theta);
+}
+
 export function turnTowardsTarget(state: GameState, enemy: Enemy, target: Circle, turnSpeed = 0.2): void {
     const {x, y} = getTargetVector(enemy, target);
     enemy.theta = turnTowardsAngle(enemy.theta, turnSpeed, Math.atan2(y, x));
@@ -285,6 +290,17 @@ export function moveEnemyToTarget(state: GameState, enemy: Enemy, {x, y}: Point,
     const distance = Math.sqrt(dx * dx + dy* dy);
     enemy.x += Math.min(speed * window.FRAME_LENGTH / 1000, distance) * Math.cos(enemy.theta);
     enemy.y += Math.min(speed * window.FRAME_LENGTH / 1000, distance) * Math.sin(enemy.theta);
+    return distance <= speed * window.FRAME_LENGTH / 1000;
+}
+
+export function moveEnemyToTargetWithoutTurning(state: GameState, enemy: Enemy, {x, y}: Point, speed = enemy.speed): boolean {
+    const dx = x - enemy.x, dy = y - enemy.y;
+    const distance = Math.sqrt(dx * dx + dy* dy);
+    if (!distance) {
+        return true;
+    }
+    enemy.x += Math.min(speed * window.FRAME_LENGTH / 1000, distance) * dx / distance;
+    enemy.y += Math.min(speed * window.FRAME_LENGTH / 1000, distance) * dy / distance;
     return distance <= speed * window.FRAME_LENGTH / 1000;
 }
 
