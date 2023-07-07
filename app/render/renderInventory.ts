@@ -161,7 +161,7 @@ function getItemTextLines(state: GameState, item: Item): string[] {
         return [
             getItemName(item),
             'Lv ' + item.level + ' ' + weaponTypeLabels[item.weaponType],
-            //Math.round(item.damage * item.shots.length * item.attacksPerSecond) + ' window.DPS',
+            //Math.round(item.damage * item.shots.length * item.attacksPerSecond) + ' DPS',
             item.damage + ' Damage',
             getWeaponAttacksPerSecond(state, item) + ' Attacks per second',
             ...getEnchantmentTextLines(state, item),
@@ -186,7 +186,7 @@ function getItemComparisonTextLines(state: GameState, newItem: Equipment, equipp
         return [
             getItemName(newItem),
             'Lv ' + newItem.level + ' ' + weaponTypeLabels[newItem.weaponType],
-            //oldDps + ' → ' + newDps + ' window.DPS',
+            //oldDps + ' → ' + newDps + ' DPS',
             equippedItem.damage +  ' → ' + newItem.damage + ' Damage',
             getWeaponAttacksPerSecond(state, equippedItem)
                 + ' → '

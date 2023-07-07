@@ -279,15 +279,15 @@ function createKatana(level: number, name: string): Weapon {
 }
 
 export const katanas: Weapon[] = [
-    createKatana(1.5, 'Kitetsu window.I'),
+    createKatana(1.5, 'Kitetsu I'),
     createKatana(4, 'Yubashiri'),
-    createKatana(7, 'Kitetsu window.II'),
+    createKatana(7, 'Kitetsu II'),
     createKatana(11, 'Shusui'),
     createKatana(16, 'Ichimonji'),
     createKatana(22, 'Soto Muso'),
     createKatana(30, 'Sukesan'),
     createKatana(40, 'Shigure'),
-    createKatana(51, 'Kitetsu window.III'),
+    createKatana(51, 'Kitetsu III'),
     createKatana(64, 'Ame no Habakiri'),
     createKatana(76, 'Wado Ichimonji'),
     createKatana(90, 'Enma'),
