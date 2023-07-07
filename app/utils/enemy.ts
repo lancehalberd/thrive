@@ -129,10 +129,11 @@ export function getBaseEnemyBullet(state: GameState, enemy: Enemy): Bullet {
         hitTargets: new Set(),
         armorShred: 0.05,
         warningTime: 0,
+        source: enemy,
     };
 }
 
-export function createBombBullet(state: GameState, enemy: Enemy, x: number, y: number, stats: Partial<Bullet> = {}) {
+export function createBombBullet(state: GameState, enemy: Enemy, x: number, y: number, stats: Partial<Bullet<Enemy>> = {}) {
     const bullet: Bullet = {
         ...getBaseEnemyBullet(state, enemy),
         baseX: x,
@@ -149,7 +150,7 @@ export function createBombBullet(state: GameState, enemy: Enemy, x: number, y: n
 
 }
 
-export function shootEnemyBullet(state: GameState, enemy: Enemy, vx: number, vy: number, stats: Partial<Bullet> = {}) {
+export function shootEnemyBullet(state: GameState, enemy: Enemy, vx: number, vy: number, stats: Partial<Bullet<Enemy>> = {}) {
     const bullet: Bullet = {
         ...getBaseEnemyBullet(state, enemy),
         vx, vy,
@@ -160,9 +161,9 @@ export function shootEnemyBullet(state: GameState, enemy: Enemy, vx: number, vy:
     return bullet;
 }
 
-export function shootCirclingBullet(state: GameState, enemy: Enemy, theta: number, radius: number, stats: Partial<Bullet> = {}) {
+export function shootCirclingBullet(state: GameState, enemy: Enemy, theta: number, radius: number, stats: Partial<Bullet<Enemy>> = {}) {
     //const mag = Math.sqrt(vx * vx + vy * vy);
-    state.enemyBullets.push({
+    const bullet = {
         time: 0,
         //x: enemy.x + vx / mag * enemy.radius,
         //y: enemy.y + vy / mag * enemy.radius,
@@ -186,17 +187,20 @@ export function shootCirclingBullet(state: GameState, enemy: Enemy, theta: numbe
         armorShred: 0.05,
         warningTime: 0,
         ...stats,
-    });
+    };
+    bullet.update(state, bullet);
+    state.enemyBullets.push(bullet);
+
 }
 
-export function shootBulletArc(state: GameState, enemy: Enemy, theta: number, angle: number, count: number, speed: number, stats: Partial<Bullet> = {}) {
+export function shootBulletArc(state: GameState, enemy: Enemy, theta: number, angle: number, count: number, speed: number, stats: Partial<Bullet<Enemy>> = {}) {
     for (let i = 0; i < count; i++) {
         const bulletTheta = count > 1 ? (theta - angle / 2 + angle * i / (count - 1)) : theta;
         shootEnemyBullet(state, enemy, speed * Math.cos(bulletTheta), speed * Math.sin(bulletTheta), stats);
     }
 }
 
-export function shootBulletCircle(state: GameState, enemy: Enemy, theta: number, count: number, speed: number, stats: Partial<Bullet> = {}) {
+export function shootBulletCircle(state: GameState, enemy: Enemy, theta: number, count: number, speed: number, stats: Partial<Bullet<Enemy>> = {}) {
     for (let i = 0; i < count; i++) {
         const bulletTheta = theta + 2 * Math.PI * i / count;
         shootEnemyBullet(state, enemy, speed * Math.cos(bulletTheta), speed * Math.sin(bulletTheta), stats);
@@ -230,13 +234,13 @@ export function isEnemyPositionInvalid(state: GameState, enemy: Enemy): boolean 
     return false;
 }
 
-export function shootBulletAtHero(state: GameState, enemy: Enemy, speed: number, stats: Partial<Bullet> = {}) {
+export function shootBulletAtHero(state: GameState, enemy: Enemy, speed: number, stats: Partial<Bullet<Enemy>> = {}) {
     const {x, y} = getTargetVector(enemy, state.hero);
     const theta = Math.atan2(y, x);
     shootEnemyBullet(state, enemy, speed * Math.cos(theta), speed * Math.sin(theta), stats);
 }
 
-export function shootBulletAtHeroHeading(state: GameState, enemy: Enemy, speed: number, leadTime: number, stats: Partial<Bullet> = {}) {
+export function shootBulletAtHeroHeading(state: GameState, enemy: Enemy, speed: number, leadTime: number, stats: Partial<Bullet<Enemy>> = {}) {
     const {x, y} = getTargetVector(enemy, {
         x: state.hero.x + state.hero.vx * leadTime / 1000,
         y: state.hero.y + state.hero.vy * leadTime / 1000,

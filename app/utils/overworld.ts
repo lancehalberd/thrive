@@ -14,6 +14,7 @@ import { snake } from 'app/enemies/snake';
 import { sniper } from 'app/enemies/sniper';
 import { squid} from 'app/enemies/squid';
 import { swampThing } from 'app/enemies/swampThing';
+import { dustDevil, tornado } from 'app/enemies/tornado';
 import { turret } from 'app/enemies/turret';
 import { urchin } from 'app/enemies/urchin';
 import { createDisc, findClosestDiscToDisc, linkDiscs, projectDiscToClosestDisc } from 'app/utils/disc';
@@ -332,11 +333,11 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
         } else if (randomizer.generateAndMutate() < 0.1) {
             createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
         }
-        if (randomizer.generateAndMutate() < 1) {
+        if (randomizer.generateAndMutate() < 0.5) {
             createEnemy(state, disc.x, disc.y - 100, scorpion, disc.level, disc);
         }
-        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.5) {
-            createEnemy(state, disc.x, disc.y + 100, bat, disc.level, disc);
+        if (disc.radius >= 300 && randomizer.generateAndMutate() < 1) {
+            createEnemy(state, disc.x, disc.y + 100, dustDevil, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.5) {
             createEnemy(state, disc.x + 100, disc.y, skeleton, disc.level, disc);
@@ -403,43 +404,186 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
         return;
     }
     if (disc.name === 'Foothills') {
+        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.2) {
+            // PLACEHOLDER for centipede
+            createEnemy(state, disc.x, disc.y, ent, disc.level, disc);
+        } else if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.2) {
+            // PLACEHOLDER for trebuchet
+            createEnemy(state, disc.x, disc.y, turret, disc.level, disc);
+        } else if (randomizer.generateAndMutate() < 0.2) {
+            createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for ronin
+            createEnemy(state, disc.x - 50, disc.y, scorpion, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for ronin
+            createEnemy(state, disc.x + 50, disc.y, scorpion, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for wolf
+            createEnemy(state, disc.x, disc.y + 50, bat, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for wolf
+            createEnemy(state, disc.x, disc.y - 50, bat, disc.level, disc);
+        }
     }
     if (disc.name === 'Mountains') {
+        if (disc.radius >= 300 && randomizer.generateAndMutate() < 1) {
+            createEnemy(state, disc.x, disc.y + 100, tornado, disc.level, disc);
+        } else if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.2) {
+            // PLACEHOLDER for Golem
+            createEnemy(state, disc.x, disc.y, turret, disc.level, disc);
+        } else if (randomizer.generateAndMutate() < 0.2) {
+            createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for naga priest
+            createEnemy(state, disc.x - 50, disc.y, squid, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for naga priest
+            createEnemy(state, disc.x + 50, disc.y, squid, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for naga wizard
+            createEnemy(state, disc.x, disc.y + 50, sniper, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for naga wizard
+            createEnemy(state, disc.x, disc.y - 50, sniper, disc.level, disc);
+        }
     }
     if (disc.name === 'Frozen Peaks') {
+        if (randomizer.generateAndMutate() < 0.2) {
+            // PLACEHOLDER for Giant Snowflake
+            createEnemy(state, disc.x, disc.y, ent, disc.level, disc);
+        } else if (randomizer.generateAndMutate() < 0.2) {
+            // PLACEHOLDER for Frost Dragon
+            createEnemy(state, disc.x, disc.y, swampDragon, disc.level, disc);
+        } else if (randomizer.generateAndMutate() < 0.2) {
+            createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for Yeti
+            createEnemy(state, disc.x - 50, disc.y, crab, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for Yeti
+            createEnemy(state, disc.x + 50, disc.y, crab, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for White Wolf
+            createEnemy(state, disc.x, disc.y + 50, lord, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for White Wolf
+            createEnemy(state, disc.x, disc.y - 50, lord, disc.level, disc);
+        }
     }
     if (disc.name === 'Descent') {
-        // Scorpion
+        if (randomizer.generateAndMutate() < 0.2) {
+            // PLACEHOLDER for Naga Mystic
+            createEnemy(state, disc.x, disc.y, lord, disc.level, disc);
+        } else if (randomizer.generateAndMutate() < 0.2) {
+            // PLACEHOLDER for Mimic
+            createEnemy(state, disc.x, disc.y, clam, disc.level + 1, disc);
+        }  else if (randomizer.generateAndMutate() < 0.2) {
+            createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for Naga Priest
+            createEnemy(state, disc.x - 50, disc.y, scorpion, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for Naga Wizard
+            createEnemy(state, disc.x + 50, disc.y, slime, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for vampire bat
+            createEnemy(state, disc.x, disc.y + 50, bat, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for vampire bat
+            createEnemy(state, disc.x, disc.y - 50, bat, disc.level, disc);
+        }
     }
     if (disc.name === 'Badlands') {
+        if (randomizer.generateAndMutate() < 0.2) {
+            // PLACEHOLDER for Necromancer
+            createEnemy(state, disc.x, disc.y, lord, disc.level, disc);
+        } else if (randomizer.generateAndMutate() < 0.2) {
+            // PLACEHOLDER for Trebuchet
+            createEnemy(state, disc.x, disc.y, ent, disc.level + 1, disc);
+        }  else if (randomizer.generateAndMutate() < 0.2) {
+            createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(state, disc.x - 50, disc.y, swampThing, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(state, disc.x + 50, disc.y, swampThing, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(state, disc.x, disc.y + 50, sniper, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(state, disc.x, disc.y - 50, sniper, disc.level, disc);
+        }
     }
     if (disc.name === 'Inferno') {
+        if (randomizer.generateAndMutate() < 0.2) {
+            // PLACEHOLDER for Flame Cyclone
+            createEnemy(state, disc.x, disc.y, tornado, disc.level, disc);
+        } else if (randomizer.generateAndMutate() < 0.2) {
+            // PLACEHOLDER for Flame Dragon
+            createEnemy(state, disc.x, disc.y, swampDragon, disc.level, disc);
+        } else if (randomizer.generateAndMutate() < 0.2) {
+            createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for Magma Thing
+            createEnemy(state, disc.x - 50, disc.y, swampThing, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for Magma Thing
+            createEnemy(state, disc.x + 50, disc.y, swampThing, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for ???
+            createEnemy(state, disc.x, disc.y + 50, overworldSpiderNova, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            // PLACEHOLDER for ???
+            createEnemy(state, disc.x, disc.y - 50, overworldSpiderNova, disc.level, disc);
+        }
     }
     if (disc.name === 'Abyss') {
-    }
-    // For undefined biomes, just include a variety of enemies that can drop dungeons.
-    if (randomizer.generateAndMutate() < 0.2) {
-        createEnemy(state, disc.x, disc.y, lord, disc.level, disc);
-    } else if (randomizer.generateAndMutate() < 0.2) {
-        createEnemy(state, disc.x, disc.y, urchin, disc.level, disc);
-    } else if (randomizer.generateAndMutate() < 0.2) {
-        createEnemy(state, disc.x, disc.y, turret, disc.level, disc);
-    } else if (randomizer.generateAndMutate() < 0.2) {
-        createEnemy(state, disc.x, disc.y, clam, disc.level, disc);
-    }  else if (randomizer.generateAndMutate() < 0.2) {
-        createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
-    }
-    if (randomizer.generateAndMutate() < 0.3) {
-        createEnemy(state, disc.x - 50, disc.y, scorpion, disc.level, disc);
-    }
-    if (randomizer.generateAndMutate() < 0.3) {
-        createEnemy(state, disc.x + 50, disc.y, slime, disc.level, disc);
-    }
-    if (randomizer.generateAndMutate() < 0.3) {
-        createEnemy(state, disc.x, disc.y + 50, bat, disc.level, disc);
-    }
-    if (randomizer.generateAndMutate() < 0.3) {
-        createEnemy(state, disc.x, disc.y - 50, overworldSpiderNova, disc.level, disc);
+        if (randomizer.generateAndMutate() < 0.2) {
+            createEnemy(state, disc.x, disc.y, lord, disc.level, disc);
+        } else if (randomizer.generateAndMutate() < 0.2) {
+            createEnemy(state, disc.x, disc.y, urchin, disc.level, disc);
+        } else if (randomizer.generateAndMutate() < 0.2) {
+            createEnemy(state, disc.x, disc.y, turret, disc.level, disc);
+        } else if (randomizer.generateAndMutate() < 0.2) {
+            createEnemy(state, disc.x, disc.y, clam, disc.level, disc);
+        }  else if (randomizer.generateAndMutate() < 0.2) {
+            createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(state, disc.x - 50, disc.y, scorpion, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(state, disc.x + 50, disc.y, slime, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(state, disc.x, disc.y + 50, bat, disc.level, disc);
+        }
+        if (randomizer.generateAndMutate() < 0.3) {
+            createEnemy(state, disc.x, disc.y - 50, overworldSpiderNova, disc.level, disc);
+        }
     }
 }
 

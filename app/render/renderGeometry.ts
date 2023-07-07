@@ -12,6 +12,18 @@ export function fillCircle(context: CanvasRenderingContext2D, circle: Circle, co
     }
 }
 
+export function drawArc(context: CanvasRenderingContext2D, {x, y, radius}: Circle, startTheta = 0, endTheta = 2 * Math.PI, reverse = false) {
+    context.arc(x, y, radius, startTheta, endTheta, reverse);
+}
+
+export function drawOval(context: CanvasRenderingContext2D, {x, y, w, h}: Rect, startTheta = 0, endTheta = 2 * Math.PI, reverse = false) {
+    context.save();
+        context.translate(x, y);
+        context.scale(w, h);
+        context.arc(0, 0, 1, startTheta, endTheta, reverse);
+    context.restore();
+}
+
 export function drawRect(context: CanvasRenderingContext2D, {x, y, w, h}: Rect, reverse = false): void {
     if (reverse) {
         context.moveTo(x, y);

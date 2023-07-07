@@ -1,4 +1,4 @@
-interface Bullet extends Circle {
+interface Bullet<BulletSource extends (Hero|Enemy) = any> extends Circle {
     // These are the base location points for oscillating bullets.
     baseX: number
     baseY: number
@@ -21,7 +21,8 @@ interface Bullet extends Circle {
     // Total duration of the bullet in milliseconds.
     // A bullet expires when time >= duration.
     duration: number
-    source?: Hero|Enemy
+    source: BulletSource
+    anchor?: Point
     update(state: GameState, bullet: Bullet): void
     onDeath?: (state: GameState, bullet: Bullet) => void
     onHit?: (state: GameState, bullet: Bullet) => void

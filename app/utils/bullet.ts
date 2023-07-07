@@ -1,7 +1,8 @@
 import { getClosestElement, turnTowardsAngle } from 'app/utils/geometry';
 
 export function updateCirclingBullet(state: GameState, bullet: Bullet): void {
-    if (!bullet.source
+    const anchor = bullet.anchor || bullet.source;
+    if (!anchor
         || typeof(bullet.theta) !== 'number'
         || typeof(bullet.vTheta) !== 'number'
         || typeof(bullet.orbitRadius) !== 'number'
@@ -9,8 +10,8 @@ export function updateCirclingBullet(state: GameState, bullet: Bullet): void {
         return;
     }
     bullet.theta += window.FRAME_LENGTH * bullet.vTheta / 1000;
-    bullet.baseX = bullet.source.x + bullet.orbitRadius * Math.cos(bullet.theta);
-    bullet.baseY = bullet.source.y + bullet.orbitRadius * Math.sin(bullet.theta);
+    bullet.baseX = anchor.x + bullet.orbitRadius * Math.cos(bullet.theta);
+    bullet.baseY = anchor.y + bullet.orbitRadius * Math.sin(bullet.theta);
     if (bullet.frequency && bullet.amplitude) {
         const theta = bullet.theta;
         const p = Math.min(1, bullet.time / 200);
@@ -66,7 +67,7 @@ export function updateBoomeringBullet(state: GameState, bullet: Bullet): void {
     }
 }
 
-function turnBulletTowardsTarget(bullet: Bullet, rate: number = 0.1, target?: Circle): void {
+function turnBulletTowardsTarget(bullet: Bullet, rate: number = 0.1, target?: Point): void {
     if (!target) {
         return;
     }
@@ -94,6 +95,6 @@ export function updateHeroSeekingBullet(state: GameState, bullet: Bullet): void 
 }
 
 export function updateSourceSeekingBullet(state: GameState, bullet: Bullet): void {
-    turnBulletTowardsTarget(bullet, 0.2, bullet.source);
+    turnBulletTowardsTarget(bullet, 0.2, bullet.anchor || bullet.source);
     updateSimpleBullet(state, bullet);
 }
