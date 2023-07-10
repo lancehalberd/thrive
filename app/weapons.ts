@@ -169,7 +169,7 @@ function generateDaggerShot(timingOffset: number, thetaOffset: number): Shot {
                 vy: weapon.speed * Math.sin(source.theta + thetaOffset / source.attackChargeLevel / source.attackChargeLevel),
                 damage: Math.ceil(weapon.damage * getChargeDamage(state, source.attackChargeLevel) * source.damage * critDamage),
                 // Dagger gains charge 40% faster than average if every bullet hits.
-                chargeGain: 0.02,
+                chargeGain: 0.05,
                 isCrit: critDamage > 1,
                 radius: weapon.radius + (source.attackChargeLevel - 1),
             };
@@ -196,7 +196,10 @@ function createDagger(level: number, name: string): Weapon {
         getAttacksPerSecond: () => window.BASE_ATTACKS_PER_SECOND,
         critChance: 0.05,
         critDamage: 0.5,
-        damage: Math.ceil(0.3 * getBaseWeaponDpsForLevel(level) / window.BASE_ATTACKS_PER_SECOND),
+        // Dagger would deal 4x sword damage if you hit every shot.
+        // However, it is hard to hit most shots, and armor means
+        // each shot is less effective than the raw numbers suggest.
+        damage: Math.ceil(4 * getBaseWeaponDpsForLevel(level) / window.BASE_ATTACKS_PER_SECOND / 7),
         damageOverTimeStackSize: 16,
         chargeLevel: 2,
         range: 250,
@@ -352,7 +355,7 @@ function getMorningStarShots(state: GameState, weapon: Weapon): Shot[] {
 }
 
 function createMorningStar(level: number, name: string): Weapon {
-    const attacksPerSecond = window.BASE_ATTACKS_PER_SECOND / 3;
+    const attacksPerSecond = 3;
     return {
         type: 'weapon',
         weaponType: 'morningStar',
@@ -362,8 +365,8 @@ function createMorningStar(level: number, name: string): Weapon {
         getAttacksPerSecond:getMorningStarAttacksPerSecond,
         critChance: 0.05,
         critDamage: 0.5,
-        // This results in 1.2x normal damage if all attacks hit.
-        damage: Math.ceil(0.4 * getBaseWeaponDpsForLevel(level) / attacksPerSecond),
+        // This results in 1.4x normal damage if all attacks hit.
+        damage: Math.ceil(1.4 * getBaseWeaponDpsForLevel(level) / attacksPerSecond),
         damageOverTimeStackSize: 2,
         chargeLevel: 2,
         range: 150,
