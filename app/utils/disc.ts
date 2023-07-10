@@ -70,3 +70,16 @@ export function linkDiscs(discs: Disc[]): void {
         }
     }
 }
+
+// Assuming discA and discB are touching, this returns the point on the edge
+// of discA closest to the center of discB.
+// This is useful for pathing from discA to discB. If there are no obstacles
+// you can travel from anywhere on discA to this point and then from this
+// point to anywhere on discB.
+export function getConnectionPoint(discA: Disc, discB: Disc): Point {
+     const p = discA.radius / (discA.radius + discB.radius);
+     return {
+        x: discA.x + p * (discB.x - discA.x),
+        y: discA.y + p * (discB.y - discA.y),
+    };
+}

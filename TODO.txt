@@ -10,84 +10,102 @@ Extract chase player into an update function that can be composed with other upd
 
 Fix discs are not linked across cell boundaries on the world map.
 
+Dungeon Ideas:
+    Wolf Den
+
 
 Enemy Ideas:
 Beach
     Urchin
     Clam
+    ----
     Squid
     Crab
 
 Desert
-    Skeleton
     Turret
+    Lord
+    ----
+    Skeleton
     Scorpion
     Dust Devil
 
 Field
-    overworldSpiderNova
+    Bandit
+    Lord
+    ----
     Slime
     Bat
-    Bandit - dagger inspired attack
-    Wolf - Lunge attack with 4 parallel bullets around the wolf
-        - Snapping attack with 6 spinning bullets 3 to a side, snapping together. 400ms tell before they move.
+    Wolf
 
 Forest
-    Sniper
-    Snake
     Ent
     Arrow Turret - At long range shoots large bullets infrequently like a sniper
         - At close range, warms up and starts tracking the player for 1.5s then rapidly shoots short range bullets for 2s, perhaps leading the player.
+    ----
+    Sniper
+    Snake
+    Spider
     Spinning Faye - Shoots boomerang bullets out quickly, switching angles by 45 degrees each shot
         - Switches between slowly chasing a player, pausing and dashing towards where the player is going.
     Enrapturing Faye - Shoots a nova of boomerangs then dashes past the player, does a small circle, then repeats
 
 Swamp
     Great Slime
-    Water Strider- Circles behind the player, stops and shoots 3 bullet arcs at them
-    Gator
     Swamp Dragon - Add poison dot to attacks
         - Add bullets the drop acid trails
+    ----
+    Water Strider- Circles behind the player, stops and shoots 3 bullet arcs at them
+    Gator
 
-FootHills (Wolf)
-    Ronin - katana inspired attack
+FootHills
     Trebuchet - turret that shoots explosive shells
     Centipede - segmented monster like rock dragon.
         - Segments have on death effect, maybe AOE dot with long ~5 second duration
         - Gets faster with fewer segments
+    ----
+    Wolf
+    Ronin - katana inspired attack
 
 Mountain
     Tornado
     Golem - large slow tanky enemy
+    ----
     Naga Priest - Heals other mobs and shoots at player
     Naga Wizard - Shoots helix shots
         - Summons nova bombs, # bullets scale with level, maybe make bullets accelerate
 
 Frozen Peaks
-    Yeti
     Frost Dragon - Like Swamp Dragon with stun effect and shots that leave a trail of slow ice pools.
     Giant Snow Flake - has slowing attack, summons snow flakes that chase and blow up near player and paralyze them
+    ----
+    Yeti
     White Wolf - Can summon 1-2 5 levels lower Wolf mobs as minions
 
 Descent (Bat, Naga Priest, Naga Wizard)
     Naga Mystic - Shields 1-2 allies (cannot be shielded)
-    Vampire Bat -  Summons bats, inflicts darkness, life steal, maybe gains life when minions are defeated
     Mimic - Looks like a chest and appears to drop an item, but the item is actually a monster
         Monster does drop the item when defeated
         Monster uses paralyzing+stunning attacks at close range
+    ----
+    Vampire Bat -  Summons bats, inflicts darkness, life steal, maybe gains life when minions are defeated
 
-
-
-Badlands (Swamp Thing, Sniper, Trebuchet)
-    Necromancer summons skeletons
+Badlands
+    Necromancer - summons skeletons
+    Trebuchet
+    ----
+    Swamp Thing
+    Sniper
 
 Inferno
     Flame Cyclone - Shoots cyclone bullets, 5xDOT, spiral bullets 2xDOT split into 5 way novas that deal 0.5-1xDOT.
+    ----
     Magma Thing - Like Swamp thing but pools are smaller, last longer, deal 3xDOT and apply armor break for 5 seconds
         Armor Break just prevents armor recovery for the duration. Maybe also sets armor to 50% base armor.
 
-
 Abyss
+
+
 
 Bad unique interactions:
 

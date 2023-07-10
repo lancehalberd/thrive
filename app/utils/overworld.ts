@@ -1,4 +1,5 @@
 import { overworldSpiderNova } from 'app/bosses/spider';
+import { bandit } from 'app/enemies/bandit';
 import { bat } from 'app/enemies/bat';
 import { chest } from 'app/enemies/chest';
 import { clam } from 'app/enemies/clam';
@@ -17,6 +18,7 @@ import { swampThing } from 'app/enemies/swampThing';
 import { dustDevil, tornado } from 'app/enemies/tornado';
 import { turret } from 'app/enemies/turret';
 import { urchin } from 'app/enemies/urchin';
+import { wolf } from 'app/enemies/wolf';
 import { createDisc, findClosestDiscToDisc, linkDiscs, projectDiscToClosestDisc } from 'app/utils/disc';
 import { createEnemy } from 'app/utils/enemy';
 import { getTargetVector } from 'app/utils/geometry';
@@ -330,6 +332,8 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
     if (disc.name === 'Desert') {
         if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
             createEnemy(state, disc.x, disc.y, turret, disc.level, disc);
+        } else if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
+            createEnemy(state, disc.x, disc.y, lord, disc.level, disc);
         } else if (randomizer.generateAndMutate() < 0.1) {
             createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
         }
@@ -348,21 +352,23 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
         return;
     }
     if (disc.name === 'Field') {
-        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
-            createEnemy(state, disc.x, disc.y, urchin, disc.level, disc);
+        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.5) {
+            createEnemy(state, disc.x, disc.y, bandit, disc.level, disc);
+        } else if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.5) {
+            createEnemy(state, disc.x, disc.y, lord, disc.level, disc);
         } else if (randomizer.generateAndMutate() < 0.1) {
             createEnemy(state, disc.x, disc.y, chest, disc.level + 1, disc);
         }
-        if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(state, disc.x, disc.y - 100, overworldSpiderNova, disc.level, disc);
+        if (randomizer.generateAndMutate() < 1) {
+            createEnemy(state, disc.x, disc.y - 100, wolf, disc.level, disc);
         }
-        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
-            createEnemy(state, disc.x, disc.y + 100, snake, disc.level, disc);
+        if (disc.radius >= 300 && randomizer.generateAndMutate() < 1) {
+            createEnemy(state, disc.x, disc.y + 100, wolf, disc.level, disc);
         }
-        if (randomizer.generateAndMutate() < 0.3) {
-            createEnemy(state, disc.x + 100, disc.y, skeleton, disc.level, disc);
+        if (randomizer.generateAndMutate() < 0.5) {
+            createEnemy(state, disc.x + 100, disc.y, slime, disc.level, disc);
         }
-        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.3) {
+        if (disc.radius >= 300 && randomizer.generateAndMutate() < 0.5) {
             createEnemy(state, disc.x - 100, disc.y, slime, disc.level, disc);
         }
         return;
@@ -415,19 +421,17 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
         }
         if (randomizer.generateAndMutate() < 0.3) {
             // PLACEHOLDER for ronin
-            createEnemy(state, disc.x - 50, disc.y, scorpion, disc.level, disc);
+            createEnemy(state, disc.x - 50, disc.y, bandit, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
             // PLACEHOLDER for ronin
-            createEnemy(state, disc.x + 50, disc.y, scorpion, disc.level, disc);
+            createEnemy(state, disc.x + 50, disc.y, bandit, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
-            // PLACEHOLDER for wolf
-            createEnemy(state, disc.x, disc.y + 50, bat, disc.level, disc);
+            createEnemy(state, disc.x, disc.y + 50, wolf, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
-            // PLACEHOLDER for wolf
-            createEnemy(state, disc.x, disc.y - 50, bat, disc.level, disc);
+            createEnemy(state, disc.x, disc.y - 50, wolf, disc.level, disc);
         }
     }
     if (disc.name === 'Mountains') {
@@ -476,11 +480,11 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
         }
         if (randomizer.generateAndMutate() < 0.3) {
             // PLACEHOLDER for White Wolf
-            createEnemy(state, disc.x, disc.y + 50, lord, disc.level, disc);
+            createEnemy(state, disc.x, disc.y + 50, wolf, disc.level, disc);
         }
         if (randomizer.generateAndMutate() < 0.3) {
             // PLACEHOLDER for White Wolf
-            createEnemy(state, disc.x, disc.y - 50, lord, disc.level, disc);
+            createEnemy(state, disc.x, disc.y - 50, wolf, disc.level, disc);
         }
     }
     if (disc.name === 'Descent') {
@@ -562,7 +566,7 @@ function addOverworldEnemiesToDisc(state: GameState, randomizer: typeof SRandom,
     }
     if (disc.name === 'Abyss') {
         if (randomizer.generateAndMutate() < 0.2) {
-            createEnemy(state, disc.x, disc.y, lord, disc.level, disc);
+            createEnemy(state, disc.x, disc.y, ent, disc.level, disc);
         } else if (randomizer.generateAndMutate() < 0.2) {
             createEnemy(state, disc.x, disc.y, urchin, disc.level, disc);
         } else if (randomizer.generateAndMutate() < 0.2) {

@@ -161,6 +161,18 @@ export function shootEnemyBullet(state: GameState, enemy: Enemy, vx: number, vy:
     return bullet;
 }
 
+export function shootBulletInDirection(state: GameState, enemy: Enemy, theta: number, speed: number, stats: Partial<Bullet<Enemy>> = {}) {
+    const bullet: Bullet = {
+        ...getBaseEnemyBullet(state, enemy),
+        vx: speed * Math.cos(theta),
+        vy: speed * Math.sin(theta),
+        ...stats,
+    }
+    //const mag = Math.sqrt(vx * vx + vy * vy);
+    state.enemyBullets.push(bullet);
+    return bullet;
+}
+
 export function shootCirclingBullet(state: GameState, enemy: Enemy, theta: number, radius: number, stats: Partial<Bullet<Enemy>> = {}) {
     //const mag = Math.sqrt(vx * vx + vy * vy);
     const bullet = {
