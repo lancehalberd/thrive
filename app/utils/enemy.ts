@@ -142,6 +142,7 @@ export function createBombBullet(state: GameState, enemy: Enemy, x: number, y: n
         x, y,
         warningTime: 800,
         duration: window.BASE_ENEMY_BULLET_DURATION,
+        isEnemyPiercing: true,
         ...stats,
     }
     //const mag = Math.sqrt(vx * vx + vy * vy);

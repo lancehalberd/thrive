@@ -714,7 +714,7 @@ function updateEnemyBullets(state: GameState): void {
             continue;
         }
         let hitTarget = false;
-        if (!hero.roll && bulletDistance2 < (state.hero.radius + bullet.radius) ** 2) {
+        if (!hero.roll && !bullet.hitTargets.has(state.hero) && bulletDistance2 < (state.hero.radius + bullet.radius) ** 2) {
             if (bullet.slowEffect) {
                 applySlowEffect(state.hero, bullet.slowEffect);
             }
@@ -738,6 +738,7 @@ function updateEnemyBullets(state: GameState): void {
                 }
                 hero.armor = Math.max(hero.baseArmor / 10, hero.armor * (1 - armorShred));
                 hero.lastTimeDamaged = state.fieldTime;
+                bullet.hitTargets.add(state.hero);
                 damageHero(state, bullet.damage);
             }
         } else if (!bullet.shaveStarted && doCirclesIntersect(bullet, {...state.hero, radius: state.hero.radius + shaveRadius})) {
@@ -749,7 +750,7 @@ function updateEnemyBullets(state: GameState): void {
         } else if (bullet.shaveStarted && !bullet.shaveCompleted && !doCirclesIntersect(bullet, {...state.hero, radius: state.hero.radius + shaveRadius})) {
             shavebullet(bullet);
         }
-        if (!hitTarget) {
+        if (!hitTarget || bullet.isEnemyPiercing) {
             state.enemyBullets.push(bullet);
         }
     }
