@@ -104,15 +104,15 @@ export function useGuardSkill(state: GameState): void {
         return;
     }
     const guardSkill = state.hero.guardSkill;
-    guardSkill.charges--;
     if (state.hero.equipment.armor.armorType === 'lightArmor') {
-        /*let rollDx = state.mouse.x - window.FIELD_CENTER.x, rollDy = state.mouse.y - window.FIELD_CENTER.y;
-        const magnitude = Math.sqrt(rollDx * rollDx + rollDy * rollDy);
-        if (magnitude > maxRollDistance) {
-            rollDx *= maxRollDistance / magnitude;
-            rollDy *= maxRollDistance / magnitude;
-        }*/
         let [dx, dy] = getMovementDeltas(state);
+        if (dx === 0 && dy === 0) {
+            dx = state.mouse.x - window.FIELD_CENTER.x;
+            dy = state.mouse.y - window.FIELD_CENTER.y;
+        }
+        if (dx === 0 && dy === 0) {
+            return;
+        }
         const m = Math.sqrt(dx * dx + dy * dy);
         if (m > 1) {
             dx /= m;
@@ -125,17 +125,20 @@ export function useGuardSkill(state: GameState): void {
             time: 0,
             duration: 200,
         };
+        guardSkill.charges--;
         return;
     }
     if (state.hero.equipment.armor.armorType === 'mediumArmor') {
         state.hero.guardSkill.duration = 300;
         state.hero.guardSkill.time = 0;
+        guardSkill.charges--;
         return;
     }
     if (state.hero.equipment.armor.armorType === 'heavyArmor') {
         const bonus = getTotalProficiency(state, 'heavyArmor');
         guardSkill.duration = baseShieldDuration * (1 + bonus / 100);
         guardSkill.time = 0;
+        guardSkill.charges--;
         state.hero.armor = state.hero.baseArmor * 10;
         return;
     }

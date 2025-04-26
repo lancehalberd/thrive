@@ -91,7 +91,11 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
             loot.render(context, state);
         }
         for (const bullet of state.heroBullets) {
-            renderHeroBullet(context, bullet);
+            if (bullet.render) {
+                bullet.render?.(context, state, bullet);
+            } else {
+                renderDefaultHeroBullet(context, bullet);
+            }
         }
         state.activeLoot?.render(context, state);
         for (const enemy of state.enemies) {
@@ -104,7 +108,7 @@ export function render(context: CanvasRenderingContext2D, state: GameState): voi
             if (bullet.render) {
                 bullet.render?.(context, state, bullet);
             } else {
-                renderEnemyBullet(context, bullet);
+                renderDefaultEnemyBullet(context, bullet);
             }
         }
         renderHero(context, state, state.hero);
@@ -174,7 +178,7 @@ function renderEnemyLifebar(context: CanvasRenderingContext2D, enemy: Enemy): vo
         renderBar(context, {x: enemy.x - 15, y: enemy.y - enemy.radius - 8, w: 30, h: 6}, enemy.life / enemy.maxLife, color);
     }
 }
-function renderEnemyBullet(context: CanvasRenderingContext2D, bullet: Bullet): void {
+function renderDefaultEnemyBullet(context: CanvasRenderingContext2D, bullet: Bullet): void {
     const baseColor = bullet.damageOverTime ? '#CF4' : 'red';
     let fill: string|CanvasGradient = baseColor;
     if (bullet.damageOverTime) {
@@ -205,7 +209,7 @@ function renderEnemyBullet(context: CanvasRenderingContext2D, bullet: Bullet): v
         }
     }
 }
-function renderHeroBullet(context: CanvasRenderingContext2D, bullet: Bullet): void {
+function renderDefaultHeroBullet(context: CanvasRenderingContext2D, bullet: Bullet): void {
     const baseColor = bullet.damageOverTime ? '#4FC' : 'green';
     if (bullet.warningTime > 0) {
         context.fillStyle = baseColor;

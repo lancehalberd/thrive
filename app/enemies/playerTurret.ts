@@ -19,6 +19,9 @@ export const playerTurret: EnemyDefinition<PlayerTurretParams> = {
     isInvulnerable: true,
     update(state: GameState, enemy: Enemy<PlayerTurretParams>): void {
         const closestEnemy = getClosestElement(enemy, state.enemies.filter(e => isEnemyTargetable(state, e)));
+        if (!closestEnemy) {
+            return;
+        }
         const {x, y} = getTargetVector(enemy, closestEnemy);
         enemy.theta = turnTowardsAngle(enemy.theta, 0.2, Math.atan2(y, x));
 

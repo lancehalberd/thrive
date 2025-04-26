@@ -109,18 +109,52 @@ export const bows: Weapon[] = [
     createBow(95, 'Dragonbone Greabow'),
 ];
 
-
+// TODO:
+// Create BulletShape with render + hitPoints
+// Change sword bullet pattern to be fast/fast/slow with the slow attack dealing more damage and having larger radius/range
 const swordShots: Shot[] = [
     {
         generateBullet(state: GameState, source: Hero, weapon: Weapon, target: Point): Bullet {
             return {
                 ...basicBullet(state, source, weapon, target),
+                isEnemyPiercing: true,
+                update(state: GameState, bullet: Bullet) {
+                    updateSimpleBullet(state, bullet);
+                    bullet.radius *= 1.1;
+                },
+                render(context: CanvasRenderingContext2D, state: GameState, bullet: Bullet) {
+                    const baseColor = bullet.damageOverTime ? '#4FC' : 'green';
+                    /*context.beginPath();
+                    context.lineWidth = 1;
+                    context.strokeStyle = 'red';
+                    context.arc(bullet.x, bullet.y, bullet.radius, 0, 2 * Math.PI);
+                    context.stroke();*/
+
+                    context.save();
+                        context.translate(bullet.x, bullet.y);
+                        context.rotate(Math.atan2(bullet.vy, bullet.vx));
+                        const S = bullet.radius;
+                        context.fillStyle = 'blue';
+                        const x = Math.cos(Math.PI / 2) * S, y = -Math.sin(Math.PI / 2) * S;
+                        //context.fillRect(x + -0.1 * S, y +  -0.1 * S, 0.2 * S, 0.2 * S);
+                        //context.fillRect(x + -0.1 * S, -y + -0.1 * S, 0.2 * S, 0.2 * S);
+                        context.beginPath();
+                        context.fillStyle = baseColor;
+                        context.strokeStyle = 'white';
+                        context.moveTo(x, y);
+                        context.bezierCurveTo(1.2 * S, -0.2 * S, 1.2 * S, 0.2 * S, x, -y);
+                        context.bezierCurveTo(0.7 * S, 0.2 * S, 0.7 * S, -0.2 * S, x, y);
+                        context.fill();
+                        //context.stroke();
+                    context.restore();
+                }
             };
         },
     }
 ];
 
 function createSword(level: number, name: string): Weapon {
+    const speed = window.BASE_BULLET_SPEED;
     return {
         type: 'weapon',
         weaponType: 'sword',
@@ -133,9 +167,9 @@ function createSword(level: number, name: string): Weapon {
         damage: Math.ceil(getBaseWeaponDpsForLevel(level) / window.BASE_ATTACKS_PER_SECOND),
         damageOverTimeStackSize: 5,
         chargeLevel: 2,
-        range: 350,
-        speed: window.BASE_BULLET_SPEED,
-        radius: Math.ceil(1.2 * window.BASE_BULLET_RADIUS),
+        range: 160,
+        speed,
+        radius: Math.ceil(2 * window.BASE_BULLET_RADIUS),
         duration: window.BASE_BULLET_DURATION,
         enchantmentSlots: [],
         bonusEnchantmentSlots: [],
